@@ -122,6 +122,14 @@ curl -s -H "Authorization: token $GH_TOKEN" \
 (تحديث المرفقات واستبدالها). **ملاحظة**: نص ملاحظات الـ Release يبقى من الإنشاء الأول؛
 لتحديثه استخدم `gh release edit` أو API `/releases/{id}` مع حقل `body`.
 
+**نقل التاغ إلى الـ commit الأخير للإصدار** (التاغ يبقى عند أول commit أُنشئ منه؛ إن أردت
+أن يطابق الـ commit الذي بُنيت منه المرفقات النهائية):
+```bash
+git tag -f v{mod_version}-mc1.8.9 <آخر sha>   # مثال: git tag -f vb12.7-mc1.8.9 ae6a3f2
+git push origin v{mod_version}-mc1.8.9 --force # يشغّل دورة بناء على التاغ تنتهي بـ
+                                              # clobber upload نفسه — النتيجة النهائية متسقة
+```
+
 **لترقية إصدار المود:** غيّر `mod_version` في `gradle.properties` (مثلاً `b12.8`)، اعتمد،
 وادفع إلى `main` ثم `release/build` — يصدر Release وتاغ جديدان تلقائياً.
 
