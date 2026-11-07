@@ -1,5 +1,8 @@
 pluginManagement {
     repositories {
+        // Vendored plugins first: makes the build independent of jitpack.io
+        // (jitpack evicted com.github.ccbluex:ForgeGradle:a3d86a59c0 in Nov 2026).
+        maven { url = new File(settingsDir, 'maven-repo').toURI() }
         mavenCentral()
         gradlePluginPortal()
         maven { url = "https://maven.minecraftforge.net/" }
