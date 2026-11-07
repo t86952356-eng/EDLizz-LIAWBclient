@@ -1,0 +1,115 @@
+# LIZZ_HANDOFF.md — ملف تسليم عميل Lizz (يتحدّث في كل مهمة)
+
+> ⚠️ **قاعدة دائمة من المستخدم**: هذا الملف يُحدَّث **في نهاية كل مهمة**.
+> - إذا نبّه المستخدم على مشكلة في مهمة ما (برمجية كانت أو تصميمية/شكلية)، أضِف نقطة
+>   تشرحها تحت «سجل الأخطاء والدروس» بحيث لا تتكرر في المهام القادمة.
+> - إذا انتهت المهمة دون تنبيهات، أضِف سطراً في «سجل المهام» بعلامة: تمت دون مشاكل.
+> - الـ changelog داخل إصدارات GitHub Release يكون **بالإنجليزية فقط**.
+> - بعد كل مهمة: بناء السورس المعدّل ونشر Release يحتوي **source.zip + مود JAR** (الطريقة
+>   الكاملة في `AI_BUILD_GUIDE.md`).
+
+---
+
+## 1) معلومات العميل
+
+| البند | القيمة |
+|---|---|
+| اسم العميل | **Lizz** (داخل الكود: `CLIENT_NAME = "L"+"izz"`) — يعرف أيضاً بـ **LAWIB / LIAWB client** |
+| الإصدار الحالي | **b12.7** (`LiquidBounce.kt` → `clientVersionText` و`gradle.properties` → `mod_version`) |
+| اللعبة | Minecraft **1.8.9** — Forge `11.15.1.2318` — mappings `stable_22` |
+| الأساس | **LiquidBounce Legacy** (فرع المجتمع النهائي، آخر إصدار رسمي منه b100) |
+| مود id | `Lizz` — الاسم الظاهر في mcmod.info: `LAWIB` |
+| المؤلفون (mcmod.info) | CCBlueX، PickBowen، bzym2، RainRuin، sunbox |
+| عنوان النافذة | `LIAWB client 1.8.9 b12.7 \| 免费注册加群：815061613` (عنوان مجتمع صيني — رقم مجموعة QQ) |
+| التوزيع الرسمي | عبر Discord العميل: **discord.gg/Y2U2gWyRUN** (فيديو «Lizz 7.0 (fork lb b100)») |
+| المستودع | `https://github.com/t86952356-eng/EDLizz-LIAWBclient` (عام، فرع `main`) |
+| سجل التسمية | الفورك بدأ بـ «LIAWB client (chat prefix rebrand)» من LiquidBounce Legacy، ثم أُضيف MusicPlayer، ثم ClickGUI بأسلوب Fatality في b12.7 |
+
+**مواقع العلامة التجارية في السورس** (عند أي إعادة تسمية مستقبلية):
+- `src/main/java/net/ccbluex/liquidbounce/LiquidBounce.kt` — `CLIENT_NAME`، `clientTitle`، `clientVersionText`.
+- `src/main/resources/mcmod.info` — modid/name/description/authors.
+- `ui/client/clickgui` الجديد (واجهة ويب بعنوان «Lizz ClickGUI» في `web/WebServer.kt`).
+- `WaterMark.kt` — أنماط من بينها `Lizz Morden`.
+- حزمة `net.ccbluex.liquidbounce` نفسها **لم تُعَد تسميتها** (فورك LB قياسي).
+
+## 2) البناء والنشر
+
+**الطريقة الكاملة الموثقة خطوة بخطوة في `AI_BUILD_GUIDE.md`** (ملف إلزامي القراءة قبل
+أي بناء). خلاصة سريعة:
+- JDK **8** (ليس 17) + Gradle 6.9.4 + Kotlin 2.0.21.
+- الإضافات الحرجة موثّنة في `maven-repo/` بسبب احتلال jitpack (نوفمبر 2026) — **لا تحذفها**.
+- النشر: اعتماد على `main` ثم `git push origin main:release/build` ← workflow
+  `.github/workflows/release.yml` يبني وينشر Release بتاغ `v{mod_version}-mc1.8.9`
+  يحتوي `lizz-{mod_version}.jar` + `lizz-{mod_version}-source.zip`.
+
+## 3) معلومات برمجية
+
+### البنية العامة
+- **السورس**: `src/main/java` (ملفات `.kt` و`.java` معاً — 670 Kotlin + 125 Java)،
+  والموارد في `src/main/resources` (mcmod.info، `liquidbounce.forge.mixins.json`،
+  `liquidbounce_at.cfg`، `assets/`، `instructions.html`).
+- **الحزم الأساسية** تحت `net.ccbluex.liquidbounce`:
+  - `LiquidBounce.kt` — نقطة الدخول (`@Mod`-style Forge mod + MixinLoader).
+  - `features/module/modules/` — الموديولات مصنفة: `combat`, `exploit`, `fun`, `misc`,
+    `movement`, `player`, `render`, `world`. الأنماط الفرعية في مجلدات داخلية
+    (speedmodes/flymodes/longjumpmodes/disablers ...).
+  - `event/` — ناقل أحداث بأسلوب `handler<EventType> { ... }` (الأحداث في `Events.kt`،
+    و`async/` للأحداث غير المتزامنة).
+  - `value/` — نظام إعدادات موحد: `Value<T>` + دوال مساعدة (`boolean`, `integer`,
+    `float`, `text`, `choices`, ...) تُستخدم كـ `private val x by boolean("Name", false)`.
+  - `injection/forge/mixins/` — مكسرات مصنفة: `block`, `client`, `entity`, `gui`, `item`,
+    `network`, `packets`, `render`, `resources`, `tweaks`, `world`.
+  - `ui/client/clickgui` — واجهة ClickGUI (أُعيدت هيكلتها في b12.7 بأسلوب Fatality، مع
+    واجهة ويب عبر `web/WebServer.kt`).
+  - `file/` — حفظ/تحميل الإعدادات (FileManager + FileConfig + configs).
+  - `script/` — نظام سكربتات العميل (ScriptManager + api + remapper).
+  - `auth/`, `cape/`, `tabs/`, `lang/`, `api/`, `utils/`.
+- **نمط الموديول القياسي**: `object Xxx : Module("Name", Category.X, ...)` مع خصائص
+  `by boolean/float/...` ومعالجات `handler<Event>`. (مثال مرجعي نظيف: `AutoTool.kt`.)
+
+### نظام البناء (خلاصات حرجة)
+- `shadowJar` ينتج الـ jar النهائي بدمج تبعيات `include` (Kotlin stdlib، coroutines،
+  Mixin 0.7.11، Elixir، TheAltening، DiscordIPC، okhttp، flatlaf، xchart، jlayer،
+  **وكل jars في `libs/`**: ViaVersion/ViaBackwards/ViaRewind (مقلّصة لجافا 8)، mcef،
+  nashorn، filters).
+- ثم `reobfShadowJar` يحوّل الأسماء إلى SRG (**إلزامي** وإلا انهار المود على اللعبة
+  الحقيقية — موصول بـ `shadowJar.finalizedBy tasks.reobfShadowJar`؛ لا تلمسه).
+- `jar { enabled = false }` — الناتج الوحيد المهم: `build/libs/lizz-{version}.jar`.
+- `compileKotlin` يستثني `**/clickgui/style/styles/nextgen/**` — كود ClickGUI «nextgen»
+  منقول من FDPClient ويعتمد واجهات FDP غير متوفرة هنا؛ **يبقى مستثنى** حتى تُنقل تبعياته.
+- `zip_include/` غير موجود في المستودع؛ مهمة `copyZipInclude` تتجاهله بصمت (طبيعي).
+- `addons/` (ملفات .kt سائبة مثل GrimFly.kt وAntiVelocity.kt) **ليست جزءاً من البناء**
+  — مرجع/مسودات فقط.
+- معلومات `mcmod.info` تُوسَّع من `mod_version` و`minecraft_version` وقت البناء.
+
+### ملاحظات إصدار/توافق
+- التغيير في `mod_version` (`gradle.properties`) وحده يكفي لإصدار جديد (التاغ والاسم
+  يتبعانه تلقائياً في الـ workflow).
+- الإعدادات المحفوظة للعميل تربط الموديولات بأسمائها — إعادة تسمية موديول تحتاج alias
+  للتوافق (نفس مبدأ «ملف/كامل» المعتمد في AtroNextGen).
+
+## 4) سجل الأخطاء والدروس (محدَّث في كل مهمة)
+
+### المهمة 1 — نوفمبر 2026 — «البناء والنشر عبر GitHub مثل Atro NextGen»
+الهدف: بناء السورس إلى مود JAR عبر GitHub Actions ونشر Release يحتوي source.zip + JAR،
+وإنشاء ملفي التوثيق (هذا الملف + `AI_BUILD_GUIDE.md`).
+
+| # | الخطأ | السبب | الحل المطبّق |
+|---|---|---|---|
+| 1 | exit code 126 من `./gradlew` على Actions | `gradlew` مسجل بصلاحية 644 وليس 755 | `git update-index --chmod=+x gradlew` + اعتماد (ولا تنسَ `chmod +x gradlew` محلياً) |
+| 2 | `could not resolve plugin artifact 'com.github.ccbluex:ForgeGradle:a3d86a59c0'` بعد ~20 ثانية من بدء Gradle | **jitpack حذف ملفات الإضافة من تخزينه** (الحالة "ok" والملفات 404). تأكد أيضاً أن تبعياتها `jAstyle` محذوفة، بينما `lzma-java` و`named-regexp` متوفرتان على Maven Central، و`SpecialSource` و`mixingradle` متوفرتان على jitpack | بناء ForgeGradle **من المصدر بنفس الـ commit** (Gradle 7.0.2 + JDK 8 + publish) وإعادة كتابة إحداثيات POM إلى صيغة jitpack، ثم **توثين** ForgeGradle + mixingradle + jAstyle في `maven-repo/` داخل المستودع وجعله أول مستودع في `settings.gradle` |
+| 3 | `inconsistent module metadata: bad version` أثناء بناء ForgeGradle | وسم `<version>` داخل POM الخاص بـ SpecialSource (`1.7.4-SNAPSHOT`) لا يطابق اسم مجلد الإصدار المثبّت | مطابقة النسخة داخل الـ POM مع المسار حرفياً (`1.7.4-SpecialSource-1.6.1-gf5cd633-34`) |
+| 4 | 429 Too Many Requests من repo.maven.apache.org داخل sandbox | مشكلة البيئة المحلية المعروفة (طلبات Gradle متزامنة) | مرآة `maven-central.storage-download.googleapis.com` **مؤقتاً للبناء المحلي فقط** (لا تُدفع للمستودع)؛ على Actions لا تحدث |
+| 5 | عملية Gradle «تعلّق» بعد BUILD SUCCESSFUL داخل sandbox | الـ daemon أحادي الاستخدام لا يُغلق دائماً | تشغيل البناءات في الخلفية + قراءة السجل؛ نجاح البناء يستدل به من السجل |
+| 6 | توقّع مبدئي بأن الجافا 17 | قياس خاطئ من مشروع آخر (AtroNextGen يستخدم 21) | الحسم من ملفات البناء: **جافا 8** (sourceCompatibility 1.8 + Gradle 6.9.4 لا يدعم 17) — موثق في AI_BUILD_GUIDE §2 |
+
+**النتيجة**: نجاح البناء على GitHub Actions (run 42381010275) وإصدار
+[`vb12.7-mc1.8.9`](https://github.com/t86952356-eng/EDLizz-LIAWBclient/releases/tag/vb12.7-mc1.8.9)
+بمرفقات `lizz-b12.7.jar` (43.8MB، مُتحقق من reobf SRG وmanifest وmcmod.info)
+و`lizz-b12.7-source.zip` (58.7MB).
+
+## 5) سجل المهام
+
+| التاريخ | المهمة | الحالة |
+|---|---|---|
+| نوفمبر 2026 | المهمة 1: بناء السورس إلى مود JAR عبر GitHub Actions + نشر Release (source.zip + JAR) + إنشاء ملفي التوثيق | ✅ تمت — انتهت دون تنبيهات من المستخدم على أي مشكلة إضافية (حتى لحظة كتابة هذا الملف) |
