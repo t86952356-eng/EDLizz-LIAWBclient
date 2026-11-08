@@ -52,8 +52,17 @@ jobs:
           mkdir -p dist
           # Mod JAR (shadowed + reobfuscated to SRG names, production-ready)
           cp "build/libs/${ARCHIVES_NAME}-${LB_VERSION}.jar" "dist/${ARCHIVES_NAME}-${LB_VERSION}.jar"
-          # Full source archive of the exact built commit
-          git archive --format=zip --prefix="${ARCHIVES_NAME}-${LB_VERSION}/" -o "dist/${ARCHIVES_NAME}-${LB_VERSION}-source.zip" HEAD
+          # Full source archive of the exact built commit, recompressed at level 9
+          # (git archive's default compression leaves several MB on the table)
+          git archive --format=tar --prefix="${ARCHIVES_NAME}-${LB_VERSION}/" HEAD > /tmp/source.tar
+          SRC_OUT="dist/${ARCHIVES_NAME}-${LB_VERSION}-source.zip" python3 - <<'PY'
+          import os, tarfile, zipfile
+          with tarfile.open('/tmp/source.tar') as tar, \
+               zipfile.ZipFile(os.environ['SRC_OUT'], 'w', zipfile.ZIP_DEFLATED, compresslevel=9) as z:
+              for m in tar:
+                  if m.isfile():
+                      z.writestr(m.name, tar.extractfile(m).read())
+          PY
           ls -lh dist
 
       - name: Create GitHub Release
@@ -67,10 +76,7 @@ jobs:
           set -euo pipefail
           TAG="v${LB_VERSION}-mc${MC_VERSION}"
           TITLE="Lizz [v${LB_VERSION}] — Minecraft ${MC_VERSION} (Forge)"
-          gh release create "$TAG" dist/* \
-            --target "$GITHUB_SHA" \
-            --title "$TITLE" \
-            --notes "Lizz [v${LB_VERSION}] for Minecraft ${MC_VERSION} on Forge.
+          DEFAULT_NOTES="Lizz [v${LB_VERSION}] for Minecraft ${MC_VERSION} on Forge.
 
           - **Client**: Lizz / LAWIB (based on LiquidBounce Legacy)
           - **Minecraft**: ${MC_VERSION}
@@ -79,5 +85,18 @@ jobs:
 
           **Assets**
           - \`${ARCHIVES_NAME}-${LB_VERSION}.jar\` — the mod JAR. Place it into your \`.minecraft/mods\` folder with Forge ${MC_VERSION} installed.
-          - \`${ARCHIVES_NAME}-${LB_VERSION}-source.zip\` — full client source code (GPL-3.0)." \
-            || gh release upload "$TAG" dist/* --clobber
+          - \`${ARCHIVES_NAME}-${LB_VERSION}-source.zip\` — full client source code (GPL-3.0)."
+          # Per-release changelog: RELEASE_NOTES.md (English) in the repo root wins if present
+          if [ -f RELEASE_NOTES.md ]; then
+            gh release create "$TAG" dist/* \
+              --target "$GITHUB_SHA" \
+              --title "$TITLE" \
+              --notes-file RELEASE_NOTES.md \
+              || gh release upload "$TAG" dist/* --clobber
+          else
+            gh release create "$TAG" dist/* \
+              --target "$GITHUB_SHA" \
+              --title "$TITLE" \
+              --notes "$DEFAULT_NOTES" \
+              || gh release upload "$TAG" dist/* --clobber
+          fi

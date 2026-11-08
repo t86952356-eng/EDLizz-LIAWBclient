@@ -15,15 +15,15 @@
 | البند | القيمة |
 |---|---|
 | اسم العميل | **Lizz** (داخل الكود: `CLIENT_NAME = "L"+"izz"`) — يعرف أيضاً بـ **LAWIB / LIAWB client** |
-| الإصدار الحالي | **b12.7** (`LiquidBounce.kt` → `clientVersionText` و`gradle.properties` → `mod_version`) |
+| الإصدار الحالي | **b12.8** (`LiquidBounce.kt` → `clientVersionText` و`gradle.properties` → `mod_version`) |
 | اللعبة | Minecraft **1.8.9** — Forge `11.15.1.2318` — mappings `stable_22` |
 | الأساس | **LiquidBounce Legacy** (فرع المجتمع النهائي، آخر إصدار رسمي منه b100) |
 | مود id | `Lizz` — الاسم الظاهر في mcmod.info: `LAWIB` |
 | المؤلفون (mcmod.info) | CCBlueX، PickBowen، bzym2، RainRuin، sunbox |
-| عنوان النافذة | `LIAWB client 1.8.9 b12.7 \| 免费注册加群：815061613` (عنوان مجتمع صيني — رقم مجموعة QQ) |
+| عنوان النافذة | `LIAWB client 1.8.9 b12.8 \| 免费注册加群：815061613` (عنوان مجتمع صيني — رقم مجموعة QQ) |
 | التوزيع الرسمي | عبر Discord العميل: **discord.gg/Y2U2gWyRUN** (فيديو «Lizz 7.0 (fork lb b100)») |
 | المستودع | `https://github.com/t86952356-eng/EDLizz-LIAWBclient` (عام، فرع `main`) |
-| سجل التسمية | الفورك بدأ بـ «LIAWB client (chat prefix rebrand)» من LiquidBounce Legacy، ثم أُضيف MusicPlayer، ثم ClickGUI بأسلوب Fatality في b12.7 |
+| سجل التسمية | الفورك بدأ بـ «LIAWB client (chat prefix rebrand)» من LiquidBounce Legacy، ثم أُضيف MusicPlayer، ثم ClickGUI بأسلوب Fatality في b12.7، ثم إصدار تخفيف الحجم في b12.8 |
 
 **مواقع العلامة التجارية في السورس** (عند أي إعادة تسمية مستقبلية):
 - `src/main/java/net/ccbluex/liquidbounce/LiquidBounce.kt` — `CLIENT_NAME`، `clientTitle`، `clientVersionText`.
@@ -74,6 +74,11 @@
   nashorn، filters).
 - ثم `reobfShadowJar` يحوّل الأسماء إلى SRG (**إلزامي** وإلا انهار المود على اللعبة
   الحقيقية — موصول بـ `shadowJar.finalizedBy tasks.reobfShadowJar`؛ لا تلمسه).
+- ثم `optimizeJar` (أضيف في b12.8): يزيل LocalVariableTable من كل classes (يحفظ
+  LineNumberTable للـ stack traces) ويعيد ضغط الـ jar بمستوى 9 — موصول بـ
+  `tasks.reobfShadowJar.finalizedBy tasks.optimizeJar`. قواعد الحجم الكاملة في
+  `AI_BUILD_GUIDE.md` §10 — **لا تُرجع حشواً ميتاً** (lombok include / pdfbox /
+  src/main.rar / أصول nextgen-clickgui / أصوات fdpclient.wav).
 - `jar { enabled = false }` — الناتج الوحيد المهم: `build/libs/lizz-{version}.jar`.
 - `compileKotlin` يستثني `**/clickgui/style/styles/nextgen/**` — كود ClickGUI «nextgen»
   منقول من FDPClient ويعتمد واجهات FDP غير متوفرة هنا؛ **يبقى مستثنى** حتى تُنقل تبعياته.
@@ -108,8 +113,23 @@
 بمرفقات `lizz-b12.7.jar` (43.8MB، مُتحقق من reobf SRG وmanifest وmcmod.info)
 و`lizz-b12.7-source.zip` (58.7MB).
 
+### المهمة 2 — نوفمبر 2026 — «تخفيف حجم العميل بشكل ممتاز» (b12.8)
+الهدف: تقليص حجم مرفقات الـ Release (JAR كان 43.8MB وsource.zip كان 58.7MB) دون أي
+تغيير وظيفي. قواعد الحجم الجديدة موثقة في `AI_BUILD_GUIDE.md` §10.
+
+| # | المشكلة/الدرس | التفصيل | الحل |
+|---|---|---|---|
+| 1 | حشو مكتشف في الـ JAR | تحليل محتوى `lizz-b12.7.jar`: pdfbox+fontbox (3.2MB) قادمة عبر xchart لتصدير PDF/SVG غير المستخدم، lombok (~2MB) مظللة بلا فائدة، أصول nextgen-clickgui (5.4MB) يعود إليها كود مستثنى من الترجمة، 4 أصوات wav (0.75MB) بلا أي مرجع، وPNGs/JPEGs غير مضغوطة (~14MB) | استثناءات تبعيات + compileOnly لحساب lombok + حذف الأصول الميتة + quantize للـ PNG (256 لون) + إعادة ترميز JPEG q70 |
+| 2 | `src/main.rar` (18.5MB) داخل مجلد src | أرشيف RAR غريب معتمد في المستودع بلا أي مرجع — يضخم source.zip فقط | حُذف من المستودع (موجود في تاريخ git) |
+| 3 | **`visitLocalVariable` ليس على ClassVisitor** | المحاولة الأولى لمهمة optimizeJar وضعت إزالة LVT على مستوى ClassVisitor — ASM لا يستدعيها إطلاقاً (LVT attribute على مستوى Method) وفشل صامت بدون الاختبار | اختبار مستقل بـ ASM كشف الخطأ؛ الصيغة الصحيحة: `visitMethod` يلف الـ MethodVisitor الأصلي بـ MethodVisitor يفرغ `visitLocalVariable` و`visitLocalVariableAnnotation` — مُختبر: LVT تُزال وLNT/Frames تبقى |
+| 4 | **ترتيب تعريف المهام في build.gradle** | `tasks.reobfShadowJar.finalizedBy ...` يجب أن يأتي بعد بلوك `reobf { }` وإلا فشل configuration (المهمة غير موجودة بعد) | نُقلت كتلة optimizeJar كاملة إلى بعد بلوك reobf مع تعليق تحذيري |
+| 5 | javap غير متوفر في sandbox (JRE فقط) | تحقّقات سابقة كانت تمر صامتة (grep -c يرجع 0 دائماً عند غياب الأمر) | مسبار مستقل DebugInfoProbe.java بـ ASM يعدّ callbacks فعلياً — النتائج الحقيقية: LNT=180 في LiquidBounce.class |
+| 6 | تحميل JDK 8 من adoptium يفشل بصمت أحياناً | أول محاولة nohup+curl -s ماتت بلا أثر في السجل | إعادة المحاولة مع `-w "%{http_code}"` وظهور الأخطاء نجحت من أول مرة (98.7MB) |
+| 7 | تشابك تبعيات xchart غير بديهي | xchart 3.8.8 يسحب `de.rototor.pdfbox:graphics2d` (وليس graphics2d-pdfbox) + `de.erichseifert.vectorgraphics2d:VectorGraphics2D` | تأكيد الأسماء من POM الرسمي قبل كتابة excludes — لا تخمّن أسماء الـ modules |
+
 ## 5) سجل المهام
 
 | التاريخ | المهمة | الحالة |
 |---|---|---|
 | نوفمبر 2026 | المهمة 1: بناء السورس إلى مود JAR عبر GitHub Actions + نشر Release (source.zip + JAR) + إنشاء ملفي التوثيق | ✅ تمت — انتهت دون تنبيهات من المستخدم على أي مشكلة إضافية (حتى لحظة كتابة هذا الملف) |
+| نوفمبر 2026 | المهمة 2: تخفيف حجم العميل بشكل ممتاز (b12.8): حذف حشو ميت + ضغط أصول + optimizeJar + source.zip ضغط 9 + RELEASE_NOTES.md | ✅ تمت — انتهت دون تنبيهات من المستخدم على أي مشكلة (نتيجة: JAR وsource.zip أصغر بـ ~40%) |

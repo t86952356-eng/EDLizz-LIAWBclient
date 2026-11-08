@@ -2,8 +2,8 @@
 
 > هذا الملف مكتوب ليقرأه وكيل ذكاء اصطناعي (AI Agent) في محادثة جديدة، ليتمكن من بناء
 > مشروع Lizz ونشر إصدار (Release) بنجاح من أول مرة، دون تكرار الأخطاء التي حُلّت مسبقاً.
-> آخر تحديث: نوفمبر 2026. إصدار مُختبر ناجح: `lizz-b12.7.jar` لـ Minecraft 1.8.9 (Forge)
-> عبر Release بتاغ `vb12.7-mc1.8.9`.
+> آخر تحديث: نوفمبر 2026. إصدار مُختبر ناجح: `lizz-b12.8.jar` لـ Minecraft 1.8.9 (Forge)
+> عبر Release بتاغ `vb12.8-mc1.8.9` (إصدار تحسين الحجم — انظر §10).
 > ملف مرافق إلزامي: `LIZZ_HANDOFF.md` (معلومات العميل + البرمجة + سجل الأخطاء).
 
 ---
@@ -29,9 +29,9 @@
 | **JDK للبناء** | **`8`** | `build.gradle` (`sourceCompatibility = 1.8`) + CI الأصلي |
 | Gradle Wrapper | `6.9.4` (مرآة huaweicloud) | `gradle/wrapper/gradle-wrapper.properties` |
 | Kotlin | `2.0.21` | `gradle.properties` → `kotlin_version` |
-| إصدار المود | `b12.7` | `gradle.properties` → `mod_version` |
+| إصدار المود | `b12.8` | `gradle.properties` → `mod_version` |
 | اسم الـ artifact | `lizz` | `gradle.properties` → `archives_base_name` |
-| ناتج البناء | `build/libs/lizz-b12.7.jar` | — |
+| ناتج البناء | `build/libs/lizz-b12.8.jar` | — |
 
 > ⚠️ **جافا هي 8 وليست 17.** Gradle 6.9.4 لا يعمل أصلاً على JDK 17+ (أول دعم لـ17 كان
 > Gradle 7.3). الـ CI الرسمي لـ LiquidBounce Legacy يستخدم `java-version: 8` حرفياً.
@@ -109,12 +109,15 @@ curl -s -H "Authorization: token $GH_TOKEN" \
 
 **ما ينتج تلقائياً عند النجاح:**
 - Release بعنوان: `Lizz [v{mod_version}] — Minecraft 1.8.9 (Forge)`
-- تاغ: `v{mod_version}-mc1.8.9` (مثال: `vb12.7-mc1.8.9`) يشير إلى نفس الـ commit المبني.
+- تاغ: `v{mod_version}-mc1.8.9` (مثال: `vb12.8-mc1.8.9`) يشير إلى نفس الـ commit المبني.
 - المرفقات:
   - `lizz-{mod_version}.jar` — مود JAR نهائي (مضغوط بـ shadow + مُعاد تحويله إلى أسماء SRG
-    عبر `reobfShadowJar` — يعمل على اللعبة الحقيقية).
-  - `lizz-{mod_version}-source.zip` — السورس الكامل للـ commit المبني (`git archive`).
+    عبر `reobfShadowJar`، ثم مُحسّن بالحجم عبر `optimizeJar` — انظر §10 — ويعمل على اللعبة الحقيقية).
+  - `lizz-{mod_version}-source.zip` — السورس الكامل للـ commit المبني (معاد ضغطه بمستوى 9).
 - الـ changelog/ملاحظات الإصدار **بالإنجليزية فقط** (قاعدة مستخدم دائمة).
+- **آلية الـ changelog**: إذا وُجد ملف `RELEASE_NOTES.md` في جذر المستودع يُستخدم نصاً
+  لملاحظات الـ Release كما هو (اكتب فيه الـ changelog بالإنجليزية عند كل إصدار)؛ إن لم
+  يوجد تُستخدم الملاحظات الافتراضية المضمّنة في الـ workflow.
 
 **إعادة تشغيل نفس الإصدار (مثلاً بعد إضافة ملفات توثيق):** ادفع commit جديداً إلى
 `main` ثم `release/build`. يُنشئ الـ workflow نفس التاغ؛ `gh release create` سيفشل لوجود
@@ -163,10 +166,10 @@ git push origin v{mod_version}-mc1.8.9 --force # يشغّل دورة بناء ع
 ## 7) التحقق من صحة مود JAR قبل الإعلان عنه (مُختبر)
 
 ```bash
-unzip -p build/libs/lizz-b12.7.jar META-INF/MANIFEST.MF   # يجب أن يحوي: FMLCorePlugin,
+unzip -p build/libs/lizz-b12.8.jar META-INF/MANIFEST.MF   # يجب أن يحوي: FMLCorePlugin,
 # MixinConfigs: liquidbounce.forge.mixins.json, TweakClass, FMLAT: liquidbounce_at.cfg
-unzip -p build/libs/lizz-b12.7.jar mcmod.info              # "version": "b12.7" موسّعة
-unzip -p build/libs/lizz-b12.7.jar net/ccbluex/liquidbounce/injection/forge/mixins/entity/MixinEntity.class \
+unzip -p build/libs/lizz-b12.8.jar mcmod.info              # "version": "b12.8" موسّعة
+unzip -p build/libs/lizz-b12.8.jar net/ccbluex/liquidbounce/injection/forge/mixins/entity/MixinEntity.class \
   | strings | grep -cE "field_[0-9]+_|func_[0-9]+_"        # > 0 يعني أن reobf (SRG) تم بنجاح
 ```
 
@@ -197,3 +200,25 @@ unzip -p build/libs/lizz-b12.7.jar net/ccbluex/liquidbounce/injection/forge/mixi
 - `.github/workflows/release.yml` — الـ Release workflow.
 - `.github/workflows/build.yml` — CI قديم موروث من upstream (يستهدف فرع `legacy` غير
   موجود؛ لا يُشغّل أبداً — اتركه كما هو).
+
+## 10) قواعد حجم الملفات (مهمة b12.8 — لا تُرجع الأحجام القديمة!)
+
+أُجريت في b12.8 حملة تخفيف حجم شاملة: الـ JAR نزل من 43.8MB إلى ~25MB والـ source.zip
+من 58.7MB إلى ~36MB **بدون أي تغيير وظيفي**. قواعد إلزامية للحفاظ على ذلك:
+
+1. **مهمة `optimizeJar`** (في `build.gradle`، موصولة بعد `reobfShadowJar`): تزيل
+   LocalVariableTable من كل classes (تحفظ LineNumberTable للـ stack traces) وتعيد ضغط
+   الـ jar بمستوى 9. تعمل تلقائياً مع `gradlew build` — لا تعطّلها. تبعيات ASM تأتي من
+   ForgeGradle نفسه (`asm-debug-all`) فلا تضف شيئاً.
+2. **ممنوع إعادة ما يلي** (كانت حشواً ميتاً):
+   - `include` لـ lombok (تُستخدم `compileOnly` + `annotationProcessor` فقط).
+   - تبعيات تصدير PDF/SVG لـ xchart (`graphics2d` من rototor + `VectorGraphics2D`) —
+     الكود يستخدم `BitmapEncoder` (PNG) فقط. مستثناة في `dependencies` وفي `shadowJar`.
+   - `src/main.rar` (حُذف — 18.5MB بلا أي مرجع).
+   - أصول `fdpclient/nextgen-clickgui/` (حُذفت — 5.4MB؛ يرجع إليها كود nextgen غير المترجم
+     فقط — موجودة في تاريخ git عند الحاجة عند نقل ذلك الكود).
+   - أصوات `fdpclient/sound/*.wav` الأربعة (حُذفت — 0.75MB بلا أي مرجع ولا sounds.json).
+3. **الصور الجديدة**: قبل إضافة أي PNG كبير (>200KB) إلى الموارد، مرّره على أداة تحويل
+   لـ 256 لون (نفس سكربت quantize المستخدم في b12.8)؛ ومعظم الصور الحالية palette بالفعل.
+4. **`RELEASE_NOTES.md`** يُكتب بالإنجليزية عند كل إصدار ويُدفع مع نفس الاعتماد.
+5. حجم الـ JAR الناتج المتوقع: **20-26MB**. إن قفز فوق ذلك فشيء عاد للحشو — راجع النقطة 2.

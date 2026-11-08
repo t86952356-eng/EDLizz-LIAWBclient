@@ -1,3 +1,11 @@
+import org.objectweb.asm.ClassReader
+import org.objectweb.asm.ClassVisitor
+import org.objectweb.asm.ClassWriter
+import org.objectweb.asm.Label
+import org.objectweb.asm.MethodVisitor
+import org.objectweb.asm.Opcodes
+import org.objectweb.asm.TypePath
+
 plugins {
     id "java"
     id "idea"
@@ -108,9 +116,18 @@ dependencies { // unless this
 
     // my add
     implementation 'javazoom:jlayer:1.0.1'
-    include "org.projectlombok:lombok:1.18.24"
+    // Lombok is compile-time only (annotation processing). Shading it into the mod jar
+    // wasted ~2MB — compileOnly keeps javac processor discovery working without packaging it.
+    compileOnly "org.projectlombok:lombok:1.18.24"
+    annotationProcessor "org.projectlombok:lombok:1.18.24"
 
-    include("org.knowm.xchart:xchart:3.8.8")
+    include("org.knowm.xchart:xchart:3.8.8") {
+        // Only BitmapEncoder (PNG bitmap) export is used. The PDF/SVG export backends
+        // (de.rototor.pdfbox:graphics2d → pdfbox+fontbox ~3.2MB and VectorGraphics2D)
+        // are dead weight in the mod jar — excluded for size.
+        exclude module: "graphics2d"
+        exclude module: "VectorGraphics2D"
+    }
 
     // HTTP Client
     include("com.squareup.okhttp3:okhttp:5.0.0-alpha.14") {
@@ -142,6 +159,12 @@ shadowJar {
     exclude "org/apache/log4j/**"
     exclude "org/apache/commons/**"
     exclude "org/junit/**"
+
+    // Belt-and-braces: pdfbox/fontbox/vectorgraphics backends are never used at runtime
+    exclude "org/apache/pdfbox/**"
+    exclude "org/apache/fontbox/**"
+    exclude "de/rototor/**"
+    exclude "de/erichseifert/**"
 }
 
 // Java 9+ 的 module-info.class 会让 ForgeGradle 的 reobf 转换器抛 IllegalArgumentException，全部剔除
@@ -207,6 +230,85 @@ tasks.reobfShadowJar.mustRunAfter shadowJar
 // 在混淆（SRG）运行环境下 mixin @Shadow 解析失败直接崩溃。
 // finalizedBy 保证每次 shadowJar 之后必然执行 reobf。
 shadowJar.finalizedBy tasks.reobfShadowJar
+
+// ============ Size optimization: strip debug info + maximum compression ============
+// After reobf, rewrite every .class entry dropping LocalVariableTable/
+// LocalVariableTypeTable (LineNumberTable is KEPT, so stack traces stay readable),
+// then repack the whole jar with Deflater BEST_COMPRESSION. Saves several MB with
+// zero runtime impact.
+// NOTE: must be declared AFTER the reobf { } block because it wires tasks.reobfShadowJar.
+tasks.register("optimizeJar") {
+    group = "build"
+    description = "Strip LVT debug info from classes and repack the jar with max compression."
+    dependsOn tasks.reobfShadowJar
+    doLast {
+        def jarFile = file("${buildDir}/libs/${project.archives_base_name}-${project.mod_version}.jar")
+        if (!jarFile.exists()) {
+            println "optimizeJar: ${jarFile} not found, skipping"
+            return
+        }
+        def before = jarFile.length()
+        def tmp = new File(jarFile.parentFile, jarFile.name + ".opt.tmp")
+        def zin = new java.util.zip.ZipFile(jarFile)
+        try {
+            def zos = new java.util.zip.ZipOutputStream(new java.io.BufferedOutputStream(new java.io.FileOutputStream(tmp)))
+            zos.setLevel(java.util.zip.Deflater.BEST_COMPRESSION)
+            zin.entries().each { ze ->
+                if (ze.name ==~ /META-INF\/.*\.(SF|DSA|RSA)/) {
+                    return // drop stale signature files
+                }
+                def out = new java.util.zip.ZipEntry(ze.name)
+                out.time = ze.time
+                zos.putNextEntry(out)
+                if (!ze.isDirectory()) {
+                    def data = zin.getInputStream(ze).bytes
+                    if (ze.name.endsWith(".class")) {
+                        try {
+                            def cr = new ClassReader(data)
+                            def cw = new ClassWriter(cr, 0)
+                            cr.accept(new ClassVisitor(Opcodes.ASM5, cw) {
+                                @Override
+                                MethodVisitor visitMethod(int access, String name, String desc,
+                                                          String signature, String[] exceptions) {
+                                    def mv = super.visitMethod(access, name, desc, signature, exceptions)
+                                    // LocalVariableTable is a METHOD-level attribute — strip it per method
+                                    return new MethodVisitor(Opcodes.ASM5, mv) {
+                                        @Override
+                                        void visitLocalVariable(String n, String d, String s,
+                                                                Label start, Label end, int index) {
+                                            // drop LocalVariableTable
+                                        }
+                                        @Override
+                                        org.objectweb.asm.AnnotationVisitor visitLocalVariableAnnotation(
+                                                int typeRef, TypePath typePath, Label[] start, Label[] end,
+                                                int[] index, String d2, boolean visible) {
+                                            return null // drop LocalVariableTypeTable annotations
+                                        }
+                                    }
+                                }
+                            }, 0)
+                            data = cw.toByteArray()
+                        } catch (Throwable ignored) {
+                            // any unexpected parse problem: keep original bytes
+                        }
+                    }
+                    zos.write(data)
+                }
+                zos.closeEntry()
+            }
+            zos.finish()
+            zos.close()
+        } finally {
+            zin.close()
+        }
+        jarFile.delete()
+        if (!tmp.renameTo(jarFile)) {
+            java.nio.file.Files.move(tmp.toPath(), jarFile.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING)
+        }
+        println "optimizeJar: ${jarFile.name} ${(before / 1048576d).round(2)}MB -> ${((jarFile.length()) / 1048576d).round(2)}MB"
+    }
+}
+tasks.reobfShadowJar.finalizedBy tasks.optimizeJar
 
 task copyZipInclude(type: Copy) {
     from 'zip_include/'
