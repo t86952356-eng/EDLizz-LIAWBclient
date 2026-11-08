@@ -203,8 +203,9 @@ unzip -p build/libs/lizz-b12.8.jar net/ccbluex/liquidbounce/injection/forge/mixi
 
 ## 10) قواعد حجم الملفات (مهمة b12.8 — لا تُرجع الأحجام القديمة!)
 
-أُجريت في b12.8 حملة تخفيف حجم شاملة: الـ JAR نزل من 43.8MB إلى ~25MB والـ source.zip
-من 58.7MB إلى ~36MB **بدون أي تغيير وظيفي**. قواعد إلزامية للحفاظ على ذلك:
+أُجريت في b12.8 حملة تخفيف حجم شاملة: الـ JAR نزل من 43.8MB إلى **25.1MB (‎-43%)** والـ source.zip
+من 58.7MB إلى **28.4MB (‎-52%)** **بدون أي تغيير وظيفي** (مُتحقق: SRG reobf سليم، manifest
+سليم، LVT مُزالة وLNT/Frames محفوظة، صفر entries للحشو الميت). قواعد إلزامية للحفاظ على ذلك:
 
 1. **مهمة `optimizeJar`** (في `build.gradle`، موصولة بعد `reobfShadowJar`): تزيل
    LocalVariableTable من كل classes (تحفظ LineNumberTable للـ stack traces) وتعيد ضغط

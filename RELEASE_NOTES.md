@@ -6,8 +6,8 @@ Dramatically reduced the download size of both release artifacts with **zero fun
 
 | Artifact | Before (b12.7) | After (b12.8) | Saved |
 |---|---|---|---|
-| Mod JAR | ~43.8 MB | ~25 MB (expected) | ~40%+ |
-| Source zip | ~58.7 MB | ~36 MB (expected) | ~38% |
+| Mod JAR | 43.77 MB | **25.12 MB** | −43% |
+| Source zip | 58.67 MB | **28.43 MB** | −52% |
 
 ### What was removed
 - **Apache PDFBox + FontBox (~3.2 MB)** — pulled transitively by xchart for PDF/SVG chart export; only PNG bitmap export (`BitmapEncoder`) is ever used. Excluded via dependency excludes + shadowJar excludes.
@@ -28,3 +28,4 @@ Dramatically reduced the download size of both release artifacts with **zero fun
 ### Technical
 - No code behavior changed; all modules, mixins and reobfuscation flow untouched.
 - `optimizeJar` failure for any single class falls back to keeping that class as-is (safe by design).
+- Post-release verification: zip integrity OK, zero dead-weight entries (pdfbox/fontbox/lombok), manifest + mcmod.info correct (b12.8), SRG reobf confirmed, LocalVariableTable stripped while LineNumberTable/StackMapTable fully preserved.

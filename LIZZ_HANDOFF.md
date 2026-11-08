@@ -126,10 +126,21 @@
 | 5 | javap غير متوفر في sandbox (JRE فقط) | تحقّقات سابقة كانت تمر صامتة (grep -c يرجع 0 دائماً عند غياب الأمر) | مسبار مستقل DebugInfoProbe.java بـ ASM يعدّ callbacks فعلياً — النتائج الحقيقية: LNT=180 في LiquidBounce.class |
 | 6 | تحميل JDK 8 من adoptium يفشل بصمت أحياناً | أول محاولة nohup+curl -s ماتت بلا أثر في السجل | إعادة المحاولة مع `-w "%{http_code}"` وظهور الأخطاء نجحت من أول مرة (98.7MB) |
 | 7 | تشابك تبعيات xchart غير بديهي | xchart 3.8.8 يسحب `de.rototor.pdfbox:graphics2d` (وليس graphics2d-pdfbox) + `de.erichseifert.vectorgraphics2d:VectorGraphics2D` | تأكيد الأسماء من POM الرسمي قبل كتابة excludes — لا تخمّن أسماء الـ modules |
+| 8 | **فشل configuration: `The current scope already contains a variable of the name desc`** | Groovy (عكس Java) يرفض تظليل اسم باراميتر الدالة الخارجية (`visitMethod(... String desc ...)`) داخل anonymous class متداخل — لا يعجبه تكرار `desc` في الداخل | أعد تسمية باراميترات الدوال الداخلية (`String d2`) — تذكر: Groovy أصرم من Java في قواعد scope داخل anonymous classes |
+| 9 | البناء المحلي الكامل يُقتل بصمت بالذاكرة في الـ sandbox | FG setup + ترجمة 795 ملفاً تحتاج أكثر من ذاكرة 4GB المتاحة؛ العملية تختفي بلا رسالة خطأ | اكتفِ محلياً بـ configuration-phase validation (يكفي لكشف أخطاء build.gradle) ودع `gradle build` الكامل لـ GitHub Actions (7GB) — القناة الموثوقة |
+| 10 | مرايا Gradle تتجمد أحياناً منتصف التحميل | huawei أوقف النقل عند 64MB ثم عاد بـ 9MB/s، وtencent بطيء (~200KB/s) | استأنف بـ `curl -C -` من huawei بعد التجمّد؛ بعد اكتمال الـ zip فكّه وشغّل `bin/gradle` مباشرة بدلاً من الـ wrapper |
+
+**النتيجة**: نجاح البناء على GitHub Actions (run 42446020034) وإصدار
+[`vb12.8-mc1.8.9`](https://github.com/t86952356-eng/EDLizz-LIAWBclient/releases/tag/vb12.8-mc1.8.9)
+بمرفقات `lizz-b12.8.jar` (**25.12MB — كان 43.77MB، ‎-43%**)
+و`lizz-b12.8-source.zip` (**28.43MB — كان 58.67MB، ‎-52%**)، والـ changelog بالإنجليزية من
+`RELEASE_NOTES.md`. التحقق بعد النشر: zip سليم، صفر entries للحشو الميت (pdfbox/lombok/...)،
+manifest وmcmod.info صحيحان (b12.8)، SRG reobf مؤكد (47 اسم SRG في MixinEntity)،
+LVT مُزالة (55→0، 408→0) مع بقاء LNT (180، 1329) وFrames كاملة.
 
 ## 5) سجل المهام
 
 | التاريخ | المهمة | الحالة |
 |---|---|---|
 | نوفمبر 2026 | المهمة 1: بناء السورس إلى مود JAR عبر GitHub Actions + نشر Release (source.zip + JAR) + إنشاء ملفي التوثيق | ✅ تمت — انتهت دون تنبيهات من المستخدم على أي مشكلة إضافية (حتى لحظة كتابة هذا الملف) |
-| نوفمبر 2026 | المهمة 2: تخفيف حجم العميل بشكل ممتاز (b12.8): حذف حشو ميت + ضغط أصول + optimizeJar + source.zip ضغط 9 + RELEASE_NOTES.md | ✅ تمت — انتهت دون تنبيهات من المستخدم على أي مشكلة (نتيجة: JAR وsource.zip أصغر بـ ~40%) |
+| نوفمبر 2026 | المهمة 2: تخفيف حجم العميل بشكل ممتاز (b12.8): حذف حشو ميت + ضغط أصول + optimizeJar + source.zip ضغط 9 + RELEASE_NOTES.md | ✅ تمت — انتهت دون تنبيهات من المستخدم على أي مشكلة (النتيجة: JAR أصغر بـ 43% وsource.zip أصغر بـ 52%) |
