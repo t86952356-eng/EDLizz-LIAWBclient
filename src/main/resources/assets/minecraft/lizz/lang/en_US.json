@@ -53,7 +53,7 @@
         "notification.moduleEnabled": "Enabled %s",
         "notification.moduleDisabled": "Disabled %s",
 
-        "module.aimbot.description": "Automatically faces selected entities around you.",
+        "module.aimAssist.description": "Automatically faces selected entities around you.",
 
         "module.autoArmor.description": "Automatically equips the best armor in your inventory.",
 
@@ -95,7 +95,7 @@
 
         "module.noFriends.description": "Allows you to attack friends.",
 
-        "module.superKnockback.description": "Increases knockback dealt to other entities.",
+        "module.moreKB.description": "Increases knockback dealt to other entities.",
 
         "module.teleportHit.description": "Allows to hit entities from far away.",
 
@@ -111,7 +111,6 @@
 
         "module.antiHunger.description": "Prevents you from getting hungry.",
 
-        "module.bedGodMode.description": "Allows you to walk around lying in a bed. (For 1.9)",
 
         "module.clip.description": "Allows you to clip through blocks.",
 
@@ -229,7 +228,6 @@
         
         "module.ghostHand.description": "Allows you to interact with selected blocks through walls.",
         
-        "module.godMode.description": "GodMode Exploit for AAC",
         
         "module.hUD.description": "Toggles visibility of the HUD.",
         
@@ -261,7 +259,6 @@
         
         "module.liquidChat.description": "Allows you to chat with other LiquidBounce users.",
         
-        "module.liquidWalk.description": "Allows you to walk on water.",
         
         "module.liquids.description": "Allows you to interact with liquids.",
         

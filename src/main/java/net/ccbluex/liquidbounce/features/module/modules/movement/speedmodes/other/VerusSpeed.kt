@@ -19,7 +19,7 @@ import net.ccbluex.liquidbounce.utils.movement.MovementUtils.speed
 import net.ccbluex.liquidbounce.utils.movement.MovementUtils.strafe
 import net.minecraft.potion.Potion
 
-object BlocksMCHop : SpeedMode("BlocksMCHop") {
+object VerusSpeed : SpeedMode("Verus") {
 
     override fun onUpdate() {
         val player = mc.thePlayer ?: return

@@ -41,48 +41,50 @@ import net.minecraft.util.Vec3
 
 object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false) {
 
+    val mode by choices("Mode", arrayOf("Custom"), "Custom")
+
     private val swordMode by choices(
         "SwordMode",
         arrayOf("None", "NCP", "UpdatedNCP", "AAC5", "SwitchItem", "InvalidC08", "Blink","PostPlace", "GrimAC", "BlocksMC", "SilenceGrim", "MoonVia"),
         "None"
-    )
+    ) { mode == "Custom" }
 
-    private val bmcTicks by int("BMC Ticks", 1, 1..20) { swordMode == "BlocksMC" }
-    private val bmcOldOffset by boolean("BMC OldOffset", false) { swordMode == "BlocksMC" }
-    private val reblinkTicks by int("ReblinkTicks", 10, 1..20) { swordMode == "Blink" }
+    private val bmcTicks by int("BMC Ticks", 1, 1..20) { mode == "Custom" && swordMode == "BlocksMC" }
+    private val bmcOldOffset by boolean("BMC OldOffset", false) { mode == "Custom" && swordMode == "BlocksMC" }
+    private val reblinkTicks by int("ReblinkTicks", 10, 1..20) { mode == "Custom" && swordMode == "Blink" }
 
-    private val blockForwardMultiplier by float("BlockForwardMultiplier", 1f, 0.2F..1f)
-    private val blockStrafeMultiplier by float("BlockStrafeMultiplier", 1f, 0.2F..1f)
+    private val blockForwardMultiplier by float("BlockForwardMultiplier", 1f, 0.2F..1f) { mode == "Custom" }
+    private val blockStrafeMultiplier by float("BlockStrafeMultiplier", 1f, 0.2F..1f) { mode == "Custom" }
 
     private val consumeMode by choices(
         "ConsumeMode",
         arrayOf("None", "UpdatedNCP", "AAC5", "SwitchItem", "InvalidC08", "Intave", "Drop", "BlocksMC", "SilenceSW", "SilenceBW", "MoonGrim", "BowDraw"),
         "None"
-    )
+    ) { mode == "Custom" }
 
-    private val consumeForwardMultiplier by float("ConsumeForwardMultiplier", 1f, 0.2F..1f)
-    private val consumeStrafeMultiplier by float("ConsumeStrafeMultiplier", 1f, 0.2F..1f)
+    private val consumeForwardMultiplier by float("ConsumeForwardMultiplier", 1f, 0.2F..1f) { mode == "Custom" }
+    private val consumeStrafeMultiplier by float("ConsumeStrafeMultiplier", 1f, 0.2F..1f) { mode == "Custom" }
     private val consumeFoodOnly by boolean(
         "ConsumeFood",
         true
-    ) { consumeForwardMultiplier > 0.2F || consumeStrafeMultiplier > 0.2F }
+    ) { mode == "Custom" && (consumeForwardMultiplier > 0.2F || consumeStrafeMultiplier > 0.2F) }
     private val consumeDrinkOnly by boolean(
         "ConsumeDrink",
         true
-    ) { consumeForwardMultiplier > 0.2F || consumeStrafeMultiplier > 0.2F }
+    ) { mode == "Custom" && (consumeForwardMultiplier > 0.2F || consumeStrafeMultiplier > 0.2F) }
 
     private val bowPacket by choices(
         "BowMode",
         arrayOf("None", "UpdatedNCP", "AAC5", "SwitchItem", "InvalidC08", "MoonVia"),
         "None"
-    )
+    ) { mode == "Custom" }
 
-    private val bowForwardMultiplier by float("BowForwardMultiplier", 1f, 0.2F..1f)
-    private val bowStrafeMultiplier by float("BowStrafeMultiplier", 1f, 0.2F..1f)
+    private val bowForwardMultiplier by float("BowForwardMultiplier", 1f, 0.2F..1f) { mode == "Custom" }
+    private val bowStrafeMultiplier by float("BowStrafeMultiplier", 1f, 0.2F..1f) { mode == "Custom" }
 
     // Blocks
-    val soulSand by boolean("SoulSand", true)
-    val liquidPush by boolean("LiquidPush", true)
+    val soulSand by boolean("SoulSand", true) { mode == "Custom" }
+    val liquidPush by boolean("LiquidPush", true) { mode == "Custom" }
 
     private var shouldSwap = false
     private var shouldBlink = true
@@ -726,4 +728,7 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false) {
                 block is BlockButton || block is BlockBeacon || block is BlockBrewingStand ||
                 block is BlockSign
     }
+
+    override val tag
+        get() = mode
 }

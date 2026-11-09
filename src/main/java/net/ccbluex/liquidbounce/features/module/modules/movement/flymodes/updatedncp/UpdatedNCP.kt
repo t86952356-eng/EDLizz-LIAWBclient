@@ -3,7 +3,7 @@
  * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
  * https://github.com/CCBlueX/LiquidBounce/
  */
-package net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.blocksmc
+package net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.updatedncp
 
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.WorldEvent
@@ -43,7 +43,7 @@ import net.minecraft.world.World
  *
  * @author EclipsesDev
  */
-object BlocksMC : FlyMode("BlocksMC"), Listenable {
+object UpdatedNCP : FlyMode("UpdatedNCP"), Listenable {
 
     private var isFlying = false
     private var isNotUnder = false

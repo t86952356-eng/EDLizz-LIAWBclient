@@ -15,9 +15,9 @@ import net.minecraft.network.play.client.C03PacketPlayer
 /*
 * Working on Watchdog
 * Tested on: mc.hypixel.net
-* Credit: @localpthebest / HypixelPacket
+* Credit: @localpthebest / WatchdogNCP-Packet
 */
-object HypixelTimer : NoFallMode("HypixelTimer") {
+object WatchdogNCPPacket : NoFallMode("WatchdogNCP-Packet") {
 
     override fun onPacket(event: PacketEvent) {
         val player = mc.thePlayer ?: return

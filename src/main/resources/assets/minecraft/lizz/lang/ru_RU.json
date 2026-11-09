@@ -17,7 +17,7 @@
         "notification.moduleEnabled": "Включен %s",
         "notification.moduleDisabled": "Выключен %s",
 
-        "module.aimbot.description": "Автоматически наводит прицел на врагов вокруг вас.",
+        "module.aimAssist.description": "Автоматически наводит прицел на врагов вокруг вас.",
 
         "module.autoArmor.description": "Автоматически одевает лучшую броню из инвентаря.",
 
@@ -55,7 +55,7 @@
 
         "module.noFriends.description": "Позволяет атаковать друзей.",
 
-        "module.superKnockback.description": "Увеличивает вашу отталкивающую силу(КБ) при ударе.",
+        "module.moreKB.description": "Увеличивает вашу отталкивающую силу(КБ) при ударе.",
 
         "module.teleportHit.description": "Позволяет бить цели с большого расстояния.",
 
@@ -69,7 +69,6 @@
 
         "module.antiHunger.description": "Убирает уменьшение шкалы голода.",
 
-        "module.bedGodMode.description": "Позволяет ходить, лёжа в кровати. (Для 1.9)",
 
         "module.clip.description": "Позволяет проходить сквозь блоки.",
 
@@ -183,7 +182,6 @@
         
         "module.ghostHand.description": "Позволяет взаимодействовать с выбранными блоками сквозь стены.",
         
-        "module.godMode.description": "GodMode эксплойт для AAC",
         
         "module.hUD.description": "Включает отображение Худа(HUD).",
         
@@ -213,7 +211,6 @@
         
         "module.liquidChat.description": "Чат для общения с другими пользователями LiquidBounce.",
         
-        "module.liquidWalk.description": "Позволяет ходить по воде.",
         
         "module.liquids.description": "Позволяет взаимодействовать с жидкостями (вода/лава...).",
         

@@ -3,7 +3,7 @@
  * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
  * https://github.com/CCBlueX/LiquidBounce/
  */
-package net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.hypixel
+package net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.watchdogncp
 
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.modules.movement.Fly
@@ -24,7 +24,7 @@ import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt
 
-object BoostHypixel : FlyMode("BoostHypixel") {
+object WatchdogNCPStable : FlyMode("WatchdogNCP-Stable") {
     private var state = 1
     private var moveSpeed = 0.0
     private var lastDistance = 0.0
@@ -135,7 +135,7 @@ object BoostHypixel : FlyMode("BoostHypixel") {
         when (val packet = event.packet) {
             is S08PacketPlayerPosLook -> {
                 Fly.state = false
-                chat("§8[§c§lBoostHypixel-§a§lFly§8] §cSetback detected.")
+                chat("§8[§c§lWatchdogNCP-Stable-§a§lFly§8] §cSetback detected.")
             }
 
             is C03PacketPlayer -> packet.onGround = false

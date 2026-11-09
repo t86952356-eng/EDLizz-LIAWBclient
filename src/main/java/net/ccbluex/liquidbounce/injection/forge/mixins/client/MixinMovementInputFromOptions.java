@@ -7,7 +7,7 @@ package net.ccbluex.liquidbounce.injection.forge.mixins.client;
 
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.MovementInputEvent;
-import net.ccbluex.liquidbounce.features.module.modules.combat.SuperKnockback;
+import net.ccbluex.liquidbounce.features.module.modules.combat.MoreKB;
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffolds.Scaffold;
 import net.minecraft.util.MovementInput;
 import net.minecraft.util.MovementInputFromOptions;
@@ -20,8 +20,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class MixinMovementInputFromOptions extends MixinMovementInput {
 
     @Inject(method = "updatePlayerMoveState", at = @At(value = "FIELD", target = "Lnet/minecraft/util/MovementInputFromOptions;jump:Z"))
-    private void hookSuperKnockbackInputBlock(CallbackInfo ci) {
-        SuperKnockback module = SuperKnockback.INSTANCE;
+    private void hookMoreKBInputBlock(CallbackInfo ci) {
+        MoreKB module = MoreKB.INSTANCE;
 
         if (module.shouldBlockInput()) {
             if (module.getOnlyMove()) {

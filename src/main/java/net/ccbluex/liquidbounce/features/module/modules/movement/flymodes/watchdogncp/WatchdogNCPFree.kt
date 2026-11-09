@@ -3,7 +3,7 @@
  * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
  * https://github.com/CCBlueX/LiquidBounce/
  */
-package net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.hypixel
+package net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.watchdogncp
 
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.Fly.startY
@@ -13,7 +13,7 @@ import net.ccbluex.liquidbounce.utils.timing.TickTimer
 import java.math.BigDecimal
 import java.math.RoundingMode
 
-object FreeHypixel : FlyMode("FreeHypixel") {
+object WatchdogNCPFree : FlyMode("WatchdogNCP-Free") {
     private val timer = TickTimer()
     private var startYaw = 0f
     private var startPitch = 0f

@@ -19,7 +19,7 @@ import net.minecraft.entity.EntityLivingBase
 import org.lwjgl.input.Mouse
 
 /**
- * HypixelAimbot —— 参考 Aimbot 写的"硬锁"版。
+ * HypixelAimbot —— 参考 AimAssist 写的"硬锁"版。
  *
  * 逻辑：
  * 1. 取 范围内 + FOV 内 + 射线可见（[net.minecraft.entity.player.EntityPlayer.canEntityBeSeen]）的敌人；

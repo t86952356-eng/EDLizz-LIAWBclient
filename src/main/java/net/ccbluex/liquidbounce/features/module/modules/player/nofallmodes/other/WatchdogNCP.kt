@@ -12,9 +12,9 @@ import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
 /*
 * Working on Watchdog
 * Tested on: mc.hypixel.net
-* Credit: @localpthebest / Hypixel
+* Credit: @localpthebest / WatchdogNCP
 */
-object Hypixel : NoFallMode("Hypixel") {
+object WatchdogNCP : NoFallMode("WatchdogNCP") {
 
     private var jump = false
 

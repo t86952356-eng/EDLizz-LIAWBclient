@@ -3,7 +3,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.Spee
 import net.ccbluex.liquidbounce.utils.extensions.isMoving
 import net.ccbluex.liquidbounce.utils.extensions.tryJump
 
-object PredictionTimer2 : SpeedMode("PredictionTimer2") {
+object WatchdogProtection : SpeedMode("Watchdog-Protection") {
     private var tickCounter = 0
     private var hasJumpedThisCycle = false
     override fun onStrafe() {

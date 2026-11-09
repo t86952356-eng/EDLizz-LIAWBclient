@@ -11,11 +11,11 @@ import net.ccbluex.liquidbounce.event.async.waitTicks
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.aac.*
-import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.blocksmc.BlocksMC
-import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.blocksmc.BlocksMC2
-import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.hypixel.BoostHypixel
-import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.hypixel.FreeHypixel
-import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.hypixel.Hypixel
+import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.updatedncp.UpdatedNCP
+import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.updatedncp.UpdatedNCP2
+import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.watchdogncp.WatchdogNCPStable
+import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.watchdogncp.WatchdogNCPFree
+import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.watchdogncp.WatchdogNCP
 import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.other.MatrixTest
 import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.ncp.NCP
 import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.ncp.OldNCP
@@ -55,11 +55,11 @@ object Fly : Module("Fly", Category.MOVEMENT) {
         // CubeCraft
         CubeCraft,
 
-        // Hypixel
-        Hypixel, BoostHypixel, FreeHypixel,
+        // WatchdogNCP
+        WatchdogNCP, WatchdogNCPStable, WatchdogNCPFree,
 
         // Other server specific flys
-        NeruxVace, Minesucht, BlocksMC, BlocksMC2,
+        NeruxVace, Minesucht, UpdatedNCP, UpdatedNCP2,
 
         // Spartan
         Spartan, Spartan2, BugSpartan,
@@ -85,9 +85,9 @@ object Fly : Module("Fly", Category.MOVEMENT) {
 
         MineSecure, HawkEye, HAC, WatchCat, NeruxVace, Minesucht,
 
-        BlocksMC, BlocksMC2,
+        UpdatedNCP, UpdatedNCP2,
 
-        Hypixel, BoostHypixel, FreeHypixel,
+        WatchdogNCP, WatchdogNCPStable, WatchdogNCPFree,
 
         NCP, OldNCP,
 
@@ -126,10 +126,10 @@ object Fly : Module("Fly", Category.MOVEMENT) {
     val aacMotion by float("AAC3.3.12-Motion", 10f, 0.1f..10f) { mode == "AAC3.3.12" }
     val aacMotion2 by float("AAC3.3.13-Motion", 10f, 0.1f..10f) { mode == "AAC3.3.13" }
 
-    // Hypixel
-    val hypixelBoost by boolean("Hypixel-Boost", true) { mode == "Hypixel" }
-    val hypixelBoostDelay by int("Hypixel-BoostDelay", 1200, 50..2000) { mode == "Hypixel" && hypixelBoost }
-    val hypixelBoostTimer by float("Hypixel-BoostTimer", 1f, 0.1f..5f) { mode == "Hypixel" && hypixelBoost }
+    // WatchdogNCP
+    val hypixelBoost by boolean("Hypixel-Boost", true) { mode == "WatchdogNCP" }
+    val hypixelBoostDelay by int("Hypixel-BoostDelay", 1200, 50..10000) { mode == "WatchdogNCP" && hypixelBoost }
+    val hypixelBoostTimer by float("Hypixel-BoostTimer", 1f, 0.1f..5f) { mode == "WatchdogNCP" && hypixelBoost }
 
     // Other
     val neruxVaceTicks by int("NeruxVace-Ticks", 6, 2..20) { mode == "NeruxVace" }
@@ -141,14 +141,14 @@ object Fly : Module("Fly", Category.MOVEMENT) {
     val boostMotion by float("BoostMotion", 6.5f, 1f..9.85f) { mode == "Verus" }
     val yBoost by float("YBoost", 0.42f, 0f..10f) { mode == "Verus" }
 
-    // BlocksMC
-    val stable by boolean("Stable", false) { mode == "BlocksMC" || mode == "BlocksMC2" }
-    val timerSlowed by boolean("TimerSlowed", true) { mode == "BlocksMC" || mode == "BlocksMC2" }
-    val boostSpeed by float("BoostSpeed", 6f, 1f..15f) { mode == "BlocksMC" || mode == "BlocksMC2" }
-    val extraBoost by float("ExtraSpeed", 1f, 0.0F..2f) { mode == "BlocksMC" || mode == "BlocksMC2" }
-    val stopOnLanding by boolean("StopOnLanding", true) { mode == "BlocksMC" || mode == "BlocksMC2" }
-    val stopOnNoMove by boolean("StopOnNoMove", false) { mode == "BlocksMC" || mode == "BlocksMC2" }
-    val debugFly by boolean("Debug", false) { mode == "BlocksMC" || mode == "BlocksMC2" }
+    // UpdatedNCP
+    val stable by boolean("Stable", false) { mode == "UpdatedNCP" || mode == "UpdatedNCP2" }
+    val timerSlowed by boolean("TimerSlowed", true) { mode == "UpdatedNCP" || mode == "UpdatedNCP2" }
+    val boostSpeed by float("BoostSpeed", 6f, 1f..15f) { mode == "UpdatedNCP" || mode == "UpdatedNCP2" }
+    val extraBoost by float("ExtraSpeed", 1f, 0.0F..2f) { mode == "UpdatedNCP" || mode == "UpdatedNCP2" }
+    val stopOnLanding by boolean("StopOnLanding", true) { mode == "UpdatedNCP" || mode == "UpdatedNCP2" }
+    val stopOnNoMove by boolean("StopOnNoMove", false) { mode == "UpdatedNCP" || mode == "UpdatedNCP2" }
+    val debugFly by boolean("Debug", false) { mode == "UpdatedNCP" || mode == "UpdatedNCP2" }
 
     // Fireball
     val pitchMode by choices("PitchMode", arrayOf("Custom", "Smart"), "Custom") { mode == "Fireball" }
@@ -209,7 +209,7 @@ object Fly : Module("Fly", Category.MOVEMENT) {
     override fun onDisable() {
         val thePlayer = mc.thePlayer ?: return
 
-        if (!mode.startsWith("AAC") && mode != "Hypixel" && mode != "VerusGlide"
+        if (!mode.startsWith("AAC") && mode != "WatchdogNCP" && mode != "VerusGlide"
             && mode != "SmoothVanilla" && mode != "Vanilla" && mode != "Rewinside"
             && mode != "Fireball" && mode != "Collide" && mode != "Jump"
         ) {
@@ -246,7 +246,7 @@ object Fly : Module("Fly", Category.MOVEMENT) {
         if (!mark || mode == "Vanilla" || mode == "SmoothVanilla")
             return@handler
 
-        val y = startY + 2.0 + (if (mode == "BoostHypixel") 0.42 else 0.0)
+        val y = startY + 2.0 + (if (mode == "WatchdogNCP-Stable") 0.42 else 0.0)
         drawPlatform(
             y,
             if (mc.thePlayer.entityBoundingBox.maxY < y) Color(0, 255, 0, 90) else Color(255, 0, 0, 90),

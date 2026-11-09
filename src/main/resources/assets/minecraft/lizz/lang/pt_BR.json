@@ -17,7 +17,7 @@
         "notification.moduleEnabled": "Ativado %s",
         "notification.moduleDisabled": "Desativado %s",
 
-        "module.aimbot.description": "Enfrenta automaticamente as entidades selecionadas ao seu redor.",
+        "module.aimAssist.description": "Enfrenta automaticamente as entidades selecionadas ao seu redor.",
 
         "module.autoArmor.description": "Equipa automaticamente a melhor armadura em seu inventário.",
 
@@ -55,7 +55,7 @@
 
         "module.noFriends.description": "Permite atacar amigos.",
 
-        "module.superKnockback.description": "Aumenta o knockback negociado para outras entidades.",
+        "module.moreKB.description": "Aumenta o knockback negociado para outras entidades.",
 
         "module.teleportHit.description": "Permite atingir entidades de longe.",
 
@@ -67,7 +67,6 @@
 
         "module.antiHunger.description": "Impede que você fique com fome.",
 
-        "module.bedGodMode.description": "Permite andar deitado em uma cama. (Para a versão 1.9)",
 
         "module.clip.description": "Permite atravessar blocos.",
 
@@ -181,7 +180,6 @@
 
         "module.ghostHand.description": "Permite que você interaja com blocos selecionados através de paredes.",
 
-        "module.godMode.description": "Exploit GodMode para AAC",
 
         "module.hUD.description": "Alterna a visibilidade do HUD.",
 
@@ -209,7 +207,6 @@
 
         "module.liquidChat.description": "Permite que você intereja com outros usuários do LiquidBounce.",
 
-        "module.liquidWalk.description": "Permite que você ande sobre a água.",
 
         "module.liquids.description": "Permite que você interaja com líquidos.",
 

@@ -9,7 +9,7 @@ import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.modules.combat.SuperKnockback
+import net.ccbluex.liquidbounce.features.module.modules.combat.MoreKB
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffolds.Scaffold
 import net.ccbluex.liquidbounce.utils.extensions.isMoving
 import net.ccbluex.liquidbounce.utils.extensions.setSprintSafely
@@ -53,12 +53,12 @@ object Sprint : Module("Sprint", Category.MOVEMENT, gameDetecting = false) {
     fun correctSprintState(movementInput: MovementInput, isUsingItem: Boolean) {
         val player = mc.thePlayer ?: return
 
-        if (SuperKnockback.breakSprint()) {
+        if (MoreKB.breakSprint()) {
             player setSprintSafely false
             return
         }
 
-        if (!handleEvents() || onlyOnSprintPress && !player.isSprinting && !mc.gameSettings.keyBindSprint.isKeyDown && !SuperKnockback.startSprint() && !isSprinting)
+        if (!handleEvents() || onlyOnSprintPress && !player.isSprinting && !mc.gameSettings.keyBindSprint.isKeyDown && !MoreKB.startSprint() && !isSprinting)
             return
 
         if (Scaffold.handleEvents()) {

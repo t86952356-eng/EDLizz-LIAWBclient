@@ -1,11 +1,11 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
-import PredictionTimer2
+import WatchdogProtection
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.aac.*
-import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.hypixel.*
+import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.watchdogncp.*
 import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.intave.*
 import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.matrix.*
 import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.ncp.*
@@ -33,9 +33,9 @@ object Speed : Module("Speed", Category.MOVEMENT) {
         VulcanHop, VulcanLowHop, VulcanGround288,
         OldMatrixHop, MatrixHop, MatrixSlowHop,
         IntaveHop14,
-        TeleportCubeCraft, HypixelHop, HypixelLowHop, BlocksMCHop,
+        TeleportCubeCraft, WatchdogNCPHop, WatchdogNCPLowHop, VerusSpeed,
         Boost, Frame, MiJump, OnGround, SlowHop, Legit, CustomSpeed,
-        PredictionTimer, PredictionTimer2, FastLowHop,
+        WatchdogProtection2, WatchdogProtection, FastLowHop,
         GrimACSpeed, Grim2Speed,   // Grim 模式
         TargetBoost                // MoonLight EntityCollide 目标加速
     )
@@ -104,15 +104,15 @@ object Speed : Module("Speed", Category.MOVEMENT) {
     val matrixLowHop by boolean("LowHop", true) { mode.get() == "MatrixHop" || mode.get() == "MatrixSlowHop" }
     val extraGroundBoost by float("ExtraGroundBoost", 0.2f, 0f..0.5f) { mode.get() == "MatrixHop" || mode.get() == "MatrixSlowHop" }
 
-    // HypixelLowHop Speed
-    val glide by boolean("Glide", true) { mode.get() == "HypixelLowHop" }
+    // WatchdogNCP-LowHop Speed
+    val glide by boolean("Glide", true) { mode.get() == "WatchdogNCP-LowHop" }
 
-    // BlocksMCHop Speed
-    val fullStrafe by boolean("FullStrafe", true) { mode.get() == "BlocksMCHop" }
-    val bmcLowHop by boolean("LowHop", true) { mode.get() == "BlocksMCHop" }
-    val bmcDamageBoost by boolean("DamageBoost", true) { mode.get() == "BlocksMCHop" }
-    val damageLowHop by boolean("DamageLowHop", false) { mode.get() == "BlocksMCHop" }
-    val safeY by boolean("SafeY", true) { mode.get() == "BlocksMCHop" }
+    // Verus Speed (former BlocksMCHop)
+    val fullStrafe by boolean("FullStrafe", true) { mode.get() == "Verus" }
+    val bmcLowHop by boolean("LowHop", true) { mode.get() == "Verus" }
+    val bmcDamageBoost by boolean("DamageBoost", true) { mode.get() == "Verus" }
+    val damageLowHop by boolean("DamageLowHop", false) { mode.get() == "Verus" }
+    val safeY by boolean("SafeY", true) { mode.get() == "Verus" }
 
     // GrimAC Speed 选项（新版）
     val grimBoundingBoxSize by float("GrimBoundingBoxSize", 0.4f, 0f..1f) { mode.get() == "GrimAC" }
@@ -123,13 +123,13 @@ object Speed : Module("Speed", Category.MOVEMENT) {
     val grim2HighPing by boolean("Grim2HighPing", false) { mode.get() == "Grim2" }
     val grim2Speed by float("Grim2Speed", 1f, 0f..1f) { mode.get() == "Grim2" }
 
-    // PredictionTimer
-    val predictionGroundTimer by float("PredictionGroundTimer", 1.5f, 1f..3.0f) { mode.get() == "PredictionTimer" }
+    // Watchdog-Protection2 (former PredictionTimer)
+    val predictionGroundTimer by float("PredictionGroundTimer", 1.5f, 1f..3.0f) { mode.get() == "Watchdog-Protection2" }
 
-    // PredictionTimer2
-    val prediction2TimerSpeed by float("Prediction2TimerSpeed", 1.5f, 1f..3.0f) { mode.get() == "PredictionTimer2" }
-    val prediction2CycleLength by int("Prediction2CycleLength", 8, 5..60) { mode.get() == "PredictionTimer2" }
-    val prediction2BoostDuration by int("Prediction2BoostDuration", 2, 1..5) { mode.get() == "PredictionTimer2" }
+    // Watchdog-Protection (former PredictionTimer2)
+    val prediction2TimerSpeed by float("Prediction2TimerSpeed", 1.5f, 1f..3.0f) { mode.get() == "Watchdog-Protection" }
+    val prediction2CycleLength by int("Prediction2CycleLength", 8, 5..60) { mode.get() == "Watchdog-Protection" }
+    val prediction2BoostDuration by int("Prediction2BoostDuration", 2, 1..5) { mode.get() == "Watchdog-Protection" }
 
     // FastLowHop 选项
     val fastLowHopGroundSpeed by float("FastLowHopGroundSpeed", 1.6f, 1f..2.5f) { mode.get() == "FastLowHop" }

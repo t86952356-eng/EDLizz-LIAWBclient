@@ -5,7 +5,7 @@ import net.ccbluex.liquidbounce.utils.extensions.isMoving
 import net.ccbluex.liquidbounce.features.module.modules.movement.Speed.predictionGroundTimer
 import net.ccbluex.liquidbounce.utils.extensions.tryJump
 
-object PredictionTimer : SpeedMode("PredictionTimer") {
+object WatchdogProtection2 : SpeedMode("Watchdog-Protection2") {
     // 添加跳跃计数器，用于跟踪是第几次跳跃
     private var jumpCount = 0
     // 标记是否已经在这次跳跃中增加了计数器

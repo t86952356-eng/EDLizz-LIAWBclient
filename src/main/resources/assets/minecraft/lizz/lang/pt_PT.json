@@ -18,7 +18,7 @@
         "notification.moduleEnabled": "Ligaste %s",
         "notification.moduleDisabled": "Desligastes %s",
 
-        "module.aimbot.description": "Automaticamente olha nas entidades selecionadas á volta de ti.",
+        "module.aimAssist.description": "Automaticamente olha nas entidades selecionadas á volta de ti.",
 
         "module.autoArmor.description": "Automaticamente equipa a melhor armadura no teu inventário.",
 
@@ -56,7 +56,7 @@
 
         "module.noFriends.description": "Permite que tu ataques amigos.",
 
-        "module.superKnockback.description": "UNTRANSLATED: Increases knockback dealt to other entities.",
+        "module.moreKB.description": "UNTRANSLATED: Increases knockback dealt to other entities.",
 
         "module.teleportHit.description": "Permite que tu ataques jogadores de longe.",
 
@@ -68,7 +68,6 @@
 
         "module.antiHunger.description": "Prevém que tu fiques com fome.",
 
-        "module.bedGodMode.description": "Permite que tu andes enquanto estás numa cama (Para 1.9)",
 
         "module.clip.description": "UNTRANSLATED: Allows you to clip through blocks.",
 
@@ -180,7 +179,6 @@
         
         "module.ghostHand.description": "UNTRANSLATED: Allows you to interact with selected blocks through walls.",
         
-        "module.godMode.description": "UNTRANSLATED: GodMode Exploit for AAC",
         
         "module.hUD.description": "UNTRANSLATED: Toggles visibility of the HUD.",
         
@@ -208,7 +206,6 @@
         
         "module.liquidChat.description": "Permite que tu fales com outros utilizadores do LiquidBounce.",
         
-        "module.liquidWalk.description": "Permite que tu andes em água.",
         
         "module.liquids.description": "Permite que tu interajas com líquidos.",
         

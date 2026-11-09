@@ -17,7 +17,7 @@
         "notification.moduleEnabled": "%s се активира",
         "notification.moduleDisabled": "%s се деактивира",
 
-        "module.aimbot.description": "Автоматично се обръща към избрани обекти около вас.",
+        "module.aimAssist.description": "Автоматично се обръща към избрани обекти около вас.",
 
         "module.autoArmor.description": "Автоматично оборудва най-добрата броня в инвентара ви.",
 
@@ -55,7 +55,7 @@
 
         "module.noFriends.description": "Позволява ви да атакувате приятели.",
 
-        "module.superKnockback.description": "Увеличава отхвърлянето, раздадено на други субекти.",
+        "module.moreKB.description": "Увеличава отхвърлянето, раздадено на други субекти.",
 
         "module.teleportHit.description": "Позволява да се удрят обекти от далеч.",
 
@@ -69,7 +69,6 @@
 
         "module.antiHunger.description": "Предпазва от огладняване.",
 
-        "module.bedGodMode.description": "Позволява ви да се разхождате легнали в леглото. (За 1.9)",
 
         "module.clip.description": "Позволява ви да 'клипвате' пред блокове.",
 
@@ -183,7 +182,6 @@
         
         "module.ghostHand.description": "Позволява ви да взаимодействате с избрани блокове през стени.",
         
-        "module.godMode.description": "Прави ви на бог (за AAC)",
         
         "module.hUD.description": "Превключва видимост на HUD.",
         
@@ -213,7 +211,6 @@
         
         "module.liquidChat.description": "Позволява ви да разговаряте с други потребители на Liquidbounce.",
         
-        "module.liquidWalk.description": "Позволява ви да ходите по вода.",
         
         "module.liquids.description": "Ви позволява да общувате с течности.",
         

@@ -3,7 +3,7 @@
  * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
  * https://github.com/CCBlueX/LiquidBounce/
  */
-package net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.hypixel
+package net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.watchdogncp
 
 import net.ccbluex.liquidbounce.event.JumpEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.Speed.glide
@@ -16,11 +16,11 @@ import net.ccbluex.liquidbounce.utils.movement.MovementUtils.strafe
 import net.minecraft.potion.Potion
 
 /**
- * Working on Hypixel (Watchdog)
+ * Working on Watchdog
  * Tested on: play.hypixel.net
  * Credit: @LiquidSquid / Nextgen
  */
-object HypixelLowHop : SpeedMode("HypixelLowHop") {
+object WatchdogNCPLowHop : SpeedMode("WatchdogNCP-LowHop") {
 
     override fun onUpdate() {
         val player = mc.thePlayer ?: return

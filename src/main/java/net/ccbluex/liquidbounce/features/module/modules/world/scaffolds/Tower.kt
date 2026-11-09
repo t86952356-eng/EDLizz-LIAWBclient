@@ -153,7 +153,7 @@ object Tower : Configurable("Tower"), MinecraftInstance, Listenable {
     // Handle jump events
     val onJump = handler<JumpEvent> { event ->
         if (onJumpValues.get()) {
-            if (Scaffold.scaffoldMode == "GodBridge" && (Scaffold.jumpAutomatically) || !Scaffold.shouldJumpOnInput)
+            if (Scaffold.scaffoldMode == "FastBridge" && (Scaffold.jumpAutomatically) || !Scaffold.shouldJumpOnInput)
                 return@handler
             if (towerModeValues.get() == "None" || towerModeValues.get() == "Jump")
                 return@handler

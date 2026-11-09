@@ -65,7 +65,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_G) {
      */
     val scaffoldMode by choices(
         "ScaffoldMode", arrayOf(
-            "Normal", "Rewinside", "Expand", "Telly", "GodBridge",
+            "Normal", "Rewinside", "Expand", "Telly", "FastBridge",
             "EdgeSneak", "StraightEdgeSneak", "SDShiftBridge", "Legit"
         ), "Normal"
     )
@@ -82,7 +82,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_G) {
     private val expandLength by int("ExpandLength", 1, 1..6) { scaffoldMode == "Expand" }
 
     // Placeable delay
-    private val placeDelayValue = boolean("PlaceDelay", true) { scaffoldMode != "GodBridge" }
+    private val placeDelayValue = boolean("PlaceDelay", true) { scaffoldMode != "FastBridge" }
     private val delay by intRange("Delay", 0..0, 0..1000) { placeDelayValue.isActive() }
 
     // Extra clicks
@@ -109,22 +109,22 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_G) {
     // Basic stuff
     val sprint by boolean("Sprint", false)
     private val swing by boolean("Swing", true).subjective()
-    private val down by boolean("Down", true) { !sameY && scaffoldMode !in arrayOf("GodBridge", "Telly") }
+    private val down by boolean("Down", true) { !sameY && scaffoldMode !in arrayOf("FastBridge", "Telly") }
 
     private val ticksUntilRotation by intRange("TicksUntilRotation", 3..3, 1..8) {
         scaffoldMode == "Telly"
     }
 
-    // GodBridge mode sub-values
-    private val waitForRots by boolean("WaitForRotations", false) { isGodBridgeEnabled }
-    private val useOptimizedPitch by boolean("UseOptimizedPitch", false) { isGodBridgeEnabled }
-    private val customGodPitch by float(
-        "GodBridgePitch", 73.5f, 0f..90f
-    ) { isGodBridgeEnabled && !useOptimizedPitch }
+    // FastBridge mode sub-values
+    private val waitForRots by boolean("WaitForRotations", false) { isFastBridgeEnabled }
+    private val useOptimizedPitch by boolean("UseOptimizedPitch", false) { isFastBridgeEnabled }
+    private val customFastBridgePitch by float(
+        "FastBridgePitch", 73.5f, 0f..90f
+    ) { isFastBridgeEnabled && !useOptimizedPitch }
 
     private val autoJump by boolean("Autojump", false)
-    val jumpAutomatically by boolean("JumpAutomatically", true) { scaffoldMode == "GodBridge" }
-    private val blocksToJumpRange by intRange("BlocksToJumpRange", 4..4, 1..8) { scaffoldMode == "GodBridge" && !jumpAutomatically }
+    val jumpAutomatically by boolean("JumpAutomatically", true) { scaffoldMode == "FastBridge" }
+    private val blocksToJumpRange by intRange("BlocksToJumpRange", 4..4, 1..8) { scaffoldMode == "FastBridge" && !jumpAutomatically }
 
     // Telly mode sub-values
     private val startHorizontally by boolean("StartHorizontally", true) { scaffoldMode == "Telly" }
@@ -140,29 +140,29 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_G) {
     private val verticalClutchBlocks by int("VerticalClutchBlocks", 2, 1..3) {
         allowClutching && scaffoldMode !in arrayOf("Telly", "Expand")
     }
-    private val blockSafe by boolean("BlockSafe", false) { !isGodBridgeEnabled }
+    private val blockSafe by boolean("BlockSafe", false) { !isFastBridgeEnabled }
 
     // Eagle
     private val eagleValue =
-        choices("Eagle", arrayOf("Normal", "Silent", "Off"), "Normal") { scaffoldMode != "GodBridge" }
+        choices("Eagle", arrayOf("Normal", "Silent", "Off"), "Normal") { scaffoldMode != "FastBridge" }
     val eagle by eagleValue
     private val eagleMode by choices("EagleMode", arrayOf("Both", "OnGround", "InAir"), "Both")
-    { eagle != "Off" && scaffoldMode != "GodBridge" }
+    { eagle != "Off" && scaffoldMode != "FastBridge" }
     private val adjustedSneakSpeed by boolean("AdjustedSneakSpeed", true)
-    { eagle == "Silent" && scaffoldMode != "GodBridge" }
-    private val eagleSpeed by float("EagleSpeed", 0.3f, 0.3f..1.0f) { eagle != "Off" && scaffoldMode != "GodBridge" }
-    val eagleSprint by boolean("EagleSprint", false) { eagle == "Normal" && scaffoldMode != "GodBridge" }
-    private val blocksToEagle by intRange("BlocksToEagle", 0..0, 0..10) { eagle != "Off" && scaffoldMode != "GodBridge" }
+    { eagle == "Silent" && scaffoldMode != "FastBridge" }
+    private val eagleSpeed by float("EagleSpeed", 0.3f, 0.3f..1.0f) { eagle != "Off" && scaffoldMode != "FastBridge" }
+    val eagleSprint by boolean("EagleSprint", false) { eagle == "Normal" && scaffoldMode != "FastBridge" }
+    private val blocksToEagle by intRange("BlocksToEagle", 0..0, 0..10) { eagle != "Off" && scaffoldMode != "FastBridge" }
     private val edgeDistance by float("EagleEdgeDistance", 0f, 0f..0.5f)
-    { eagle != "Off" && scaffoldMode != "GodBridge" }
-    private val useMaxSneakTime by boolean("UseMaxSneakTime", true) { eagle != "Off" && scaffoldMode != "GodBridge" }
+    { eagle != "Off" && scaffoldMode != "FastBridge" }
+    private val useMaxSneakTime by boolean("UseMaxSneakTime", true) { eagle != "Off" && scaffoldMode != "FastBridge" }
     private val maxSneakTicks by intRange("MaxSneakTicks", 3..3, 0..10) { useMaxSneakTime }
     private val blockSneakingAgainUntilOnGround by boolean("BlockSneakingAgainUntilOnGround", true)
     { useMaxSneakTime && eagleMode != "OnGround" }
 
     // Rotation Options
     private val modeList =
-        choices("Rotations", arrayOf("Off", "Normal", "Stabilized", "ReverseYaw", "GodBridge", "Hypixel", "UnfairPitch"), "Normal")
+        choices("Rotations", arrayOf("Off", "Normal", "Stabilized", "ReverseYaw", "FastBridge", "Hypixel", "UnfairPitch"), "Normal")
     private val hypixelMinPitch by float("HypixelMinPitch", 55f, 50f..90f) { modeList.get() == "Hypixel" }
     private val hypixelMaxPitch by float("HypixelMaxPitch", 75f, 50f..90f) { modeList.get() == "Hypixel" }
     // Unfair Pitch（MoonLight 非法超大俯仰）：yaw 保持玩家朝向，pitch 越过 90°「超低头」，
@@ -177,8 +177,8 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_G) {
     }
 
     // Search options
-    val searchMode by choices("SearchMode", arrayOf("Area", "Center"), "Area") { scaffoldMode != "GodBridge" }
-    private val minDist by float("MinDist", 0f, 0f..0.2f) { scaffoldMode !in arrayOf("GodBridge", "Telly") }
+    val searchMode by choices("SearchMode", arrayOf("Area", "Center"), "Area") { scaffoldMode != "FastBridge" }
+    private val minDist by float("MinDist", 0f, 0f..0.2f) { scaffoldMode !in arrayOf("FastBridge", "Telly") }
 
     // Zitter
     private val zitterMode by choices("Zitter", arrayOf("Off", "Teleport", "Smooth"), "Off")
@@ -203,10 +203,10 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_G) {
     private val jumpDiagonalStrafe by floatRange("JumpDiagonalStrafe", 0.4f..0.45f, 0.1f..1f) { jumpStrafe }
 
     // Safety
-    private val sameY by boolean("SameY", false) { scaffoldMode != "GodBridge" }
-    private val jumpOnUserInput by boolean("JumpOnUserInput", true) { sameY && scaffoldMode != "GodBridge" }
+    private val sameY by boolean("SameY", false) { scaffoldMode != "FastBridge" }
+    private val jumpOnUserInput by boolean("JumpOnUserInput", true) { sameY && scaffoldMode != "FastBridge" }
 
-    private val safeWalkValue = boolean("SafeWalk", true) { scaffoldMode != "GodBridge" }
+    private val safeWalkValue = boolean("SafeWalk", true) { scaffoldMode != "FastBridge" }
     private val airSafe by boolean("AirSafe", false) { safeWalkValue.isActive() }
 
     // Visuals
@@ -229,7 +229,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_G) {
         get() = !jumpOnUserInput || !mc.gameSettings.keyBindJump.isKeyDown && mc.thePlayer.posY >= launchY && !mc.thePlayer.onGround
 
     private val shouldKeepLaunchPosition
-        get() = sameY && shouldJumpOnInput && scaffoldMode != "GodBridge"
+        get() = sameY && shouldJumpOnInput && scaffoldMode != "FastBridge"
 
     // Zitter
     private var zitterDirection = false
@@ -249,12 +249,12 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_G) {
     private var requestedStopSneak = false
 
     private val isEagleEnabled
-        get() = eagle != "Off" && !shouldGoDown && scaffoldMode != "GodBridge" && scaffoldMode != "SDShiftBridge" && scaffoldMode != "StraightEdgeSneak"
+        get() = eagle != "Off" && !shouldGoDown && scaffoldMode != "FastBridge" && scaffoldMode != "SDShiftBridge" && scaffoldMode != "StraightEdgeSneak"
 
     // Downwards
     val shouldGoDown
         get() = down && !sameY && GameSettings.isKeyDown(mc.gameSettings.keyBindSneak) && scaffoldMode !in arrayOf(
-            "GodBridge", "Telly"
+            "FastBridge", "Telly"
         ) && blocksAmount() > 1
 
     // Current rotation
@@ -264,18 +264,18 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_G) {
     // Extra clicks
     private var extraClick = ExtraClickInfo(TimeUtils.randomClickDelay(extraClickCPS.first, extraClickCPS.last), 0L, 0)
 
-    // GodBridge
+    // FastBridge
     private var blocksPlacedUntilJump = 0
 
     private val isManualJumpOptionActive
-        get() = scaffoldMode == "GodBridge" && !jumpAutomatically
+        get() = scaffoldMode == "FastBridge" && !jumpAutomatically
 
     private var blocksToJump = blocksToJumpRange.random()
 
-    private val isGodBridgeEnabled
-        get() = scaffoldMode == "GodBridge" || scaffoldMode == "Normal" && options.rotationMode == "GodBridge"
+    private val isFastBridgeEnabled
+        get() = scaffoldMode == "FastBridge" || scaffoldMode == "Normal" && options.rotationMode == "FastBridge"
 
-    private var godBridgeTargetRotation: Rotation? = null
+    private var fastBridgeTargetRotation: Rotation? = null
 
     private val isLookingDiagonally: Boolean
         get() {
@@ -504,7 +504,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_G) {
         val ticks = if (options.keepRotation) {
             if (scaffoldMode == "Telly") 1 else options.resetTicks
         } else {
-            if (isGodBridgeEnabled) options.resetTicks else RotationUtils.resetTicks
+            if (isFastBridgeEnabled) options.resetTicks else RotationUtils.resetTicks
         }
 
         if (scaffoldMode == "Legit") {
@@ -523,8 +523,8 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_G) {
             return@handler
         }
 
-        if (!Tower.isTowering && isGodBridgeEnabled && options.rotationsActive) {
-            generateGodBridgeRotations(ticks)
+        if (!Tower.isTowering && isFastBridgeEnabled && options.rotationsActive) {
+            generateFastBridgeRotations(ticks)
             return@handler
         }
         if (modeList.get() == "Hypixel" && options.rotationsActive) {
@@ -675,9 +675,9 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_G) {
             return@handler
         }
 
-        if (!isGodBridgeEnabled || !player.onGround) return@handler
+        if (!isFastBridgeEnabled || !player.onGround) return@handler
         if (waitForRots) {
-            godBridgeTargetRotation?.run {
+            fastBridgeTargetRotation?.run {
                 event.originalInput.sneak = event.originalInput.sneak || rotationDifference(this, currRotation) > getFixedAngleDelta()
             }
         }
@@ -927,7 +927,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_G) {
             val neighbor = blockPosition.offset(side)
             if (!neighbor.canBeClicked()) continue
 
-            if (!area || isGodBridgeEnabled) {
+            if (!area || isFastBridgeEnabled) {
                 currPlaceRotation = findTargetPlace(blockPosition, neighbor, Vec3(0.5, 0.5, 0.5), side, eyes, maxReach, raycast) ?: continue
                 placeRotation = compareDifferences(currPlaceRotation, placeRotation)
             } else {
@@ -944,7 +944,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_G) {
 
         placeRotation ?: return false
 
-        if (options.rotationsActive && !isGodBridgeEnabled) {
+        if (options.rotationsActive && !isFastBridgeEnabled) {
             val rotationDifference = rotationDifference(placeRotation.rotation, currRotation)
             val rotationDifference2 = rotationDifference(placeRotation.rotation / 90F, currRotation / 90F)
             val simPlayer = SimulatedPlayer.fromClientPlayer(player.movementInput)
@@ -1159,7 +1159,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_G) {
 
     private var isOnRightSide = false
 
-    private fun generateGodBridgeRotations(ticks: Int) {
+    private fun generateFastBridgeRotations(ticks: Int) {
         val player = mc.thePlayer ?: return
         val direction = if (options.applyServerSide) MovementUtils.direction.toDegreesF() + 180f else MathHelper.wrapAngleTo180_float(player.rotationYaw)
         val movingYaw = round(direction / 45) * 45
@@ -1185,11 +1185,11 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_G) {
                 if (isLeaningOffBlock && nextBlockIsAir) isOnRightSide = !isOnRightSide
             }
             val side = if (options.applyServerSide) if (isOnRightSide) 45f else -45f else 0f
-            Rotation(movingYaw + side, if (useOptimizedPitch) 73.5f else customGodPitch)
+            Rotation(movingYaw + side, if (useOptimizedPitch) 73.5f else customFastBridgePitch)
         } else {
             Rotation(movingYaw, 75.6f)
         }.fixedSensitivity()
-        godBridgeTargetRotation = rotation
+        fastBridgeTargetRotation = rotation
         setRotation(rotation, ticks)
     }
 

@@ -10,7 +10,6 @@ import de.florianmichael.vialoadingbase.ViaLoadingBase;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.EventState;
 import net.ccbluex.liquidbounce.event.JumpEvent;
-import net.ccbluex.liquidbounce.features.module.modules.movement.LiquidWalk;
 import net.ccbluex.liquidbounce.features.module.modules.movement.NoJumpDelay;
 import net.ccbluex.liquidbounce.features.module.modules.movement.Sprint;
 import net.ccbluex.liquidbounce.features.module.modules.render.Animations;
@@ -120,15 +119,6 @@ public abstract class MixinEntityLivingBase extends MixinEntity {
     @Inject(method = "onLivingUpdate", at = @At("HEAD"))
     private void headLiving(CallbackInfo callbackInfo) {
         if (NoJumpDelay.INSTANCE.handleEvents() || Scaffold.INSTANCE.handleEvents() && Tower.INSTANCE.getTowerModeValues().equals("Pulldown")) jumpTicks = 0;
-    }
-
-    @Inject(method = "onLivingUpdate", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/EntityLivingBase;isJumping:Z", ordinal = 1))
-    private void onJumpSection(CallbackInfo callbackInfo) {
-        final LiquidWalk liquidWalk = LiquidWalk.INSTANCE;
-
-        if (liquidWalk.handleEvents() && !isJumping && !isSneaking() && isInWater() && liquidWalk.getMode().equals("Swim")) {
-            updateAITick();
-        }
     }
 
     @ModifyConstant(method = "onLivingUpdate", constant = @Constant(doubleValue = 0.005D))

@@ -39,9 +39,9 @@ object NoFall : Module("NoFall", Category.PLAYER) {
         AAC3311,
         AAC3315,
 
-        // Hypixel (Watchdog)
-        Hypixel,
-        HypixelTimer,
+        // WatchdogNCP
+        WatchdogNCP,
+        WatchdogNCPPacket,
 
         // Vulcan
         VulcanFast288,

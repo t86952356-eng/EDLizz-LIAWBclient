@@ -51,7 +51,7 @@
         "notification.moduleEnabled": "已啟用 %s",
         "notification.moduleDisabled": "已停用 %s",
 
-        "module.aimbot.description": "自動瞄準範圍內的目標。",
+        "module.aimAssist.description": "自動瞄準範圍內的目標。",
 
         "module.autoArmor.description": "自動穿上最好的盔甲。",
 
@@ -93,7 +93,7 @@
 
         "module.noFriends.description": "忽略朋友功能。",
 
-        "module.superKnockback.description": "增加對其他生物的擊退。",
+        "module.moreKB.description": "增加對其他生物的擊退。",
 
         "module.teleportHit.description": "允許你手動攻擊時打擊遠處的生物。",
 
@@ -109,7 +109,6 @@
 
         "module.antiHunger.description": "防止饑餓。",
 
-        "module.bedGodMode.description": "允許你躺在床上四處走動。(對於1.9)",
 
         "module.clip.description": "允許你穿過方塊。",
 
@@ -227,7 +226,6 @@
 
         "module.ghostHand.description": "允許你穿過牆壁與指定的方塊互動。",
 
-        "module.godMode.description": "AAC的GodMode漏洞。",
 
         "module.hUD.description": "改變或開關遊戲作弊介面。",
 
@@ -257,7 +255,6 @@
 
         "module.liquidChat.description": "允許你與其他LiquidBounce用戶聊天。",
 
-        "module.liquidWalk.description": "允許你在水上行走。",
 
         "module.liquids.description": "允許你與液體互動。",
 

@@ -57,7 +57,7 @@ object Velocity : Module("Velocity", Category.COMBAT) {
             "Simple", "AAC", "AACPush", "AACZero", "AACv4",
             "Reverse", "SmoothReverse", "Jump", "Glitch", "Legit",
             "GhostBlock", "Vulcan", "S32Packet", "MatrixReduce",
-            "IntaveReduce", "Delay", "GrimC03", "Hypixel", "HypixelAir",
+            "IntaveReduce", "Delay", "GrimC03", "Hypixel", "WatchdogNCP",
             "Click", "BlocksMC", "GrimCombat", "Polar", "Buffer", "Grim",
             "NoSave"
         ), "Simple"
