@@ -209,7 +209,14 @@ WatchdogBypass.inventoryClicking أُسقطت/قُرّبت؛ KeyboardInputEvent 
 (القناة لا تُفعّل من هذا الوضع في المصدر أصلاً) فحُذف.
 
 **النتيجة**: compileKotlin محلي = **BUILD SUCCESSFUL** (35 خطأ في الجولة الأولى أُصلحت كلها)،
-والنشر عبر GitHub Actions (النتيجة تُستكمل أدناه بعد اكتمال البناء).
+ثم نجح البناء والنشر على GitHub Actions (run **42653938466**) وإصدار
+[`vb12.10-mc1.8.9`](https://github.com/t86952356-eng/EDLizz-LIAWBclient/releases/tag/vb12.10-mc1.8.9)
+بمرفقات `lizz-b12.10.jar` (**25.22MB** — ضمن النطاق 20-26MB) و`lizz-b12.10-source.zip` (**28.49MB**)،
+والـ changelog بالإنجليزية من `RELEASE_NOTES.md`. التحقق بعد النشر: manifest سليم (MixinConfigs/FMLAT/
+TweakClass/FMLCorePlugin)، mcmod.info = b12.10، SRG reobf مؤكد (47 اسماً في MixinEntity)، كل كلاسات
+الأوضاع الجديدة الـ 20 موجودة (velocitymodes=8 + noslowmodes=6 + MatrixSpeed/PolarSpeed/OldNCPYPort/
+WatchdogNCPNewSpeed + fly: WatchdogNCPNew/Matrix/MatrixDamage) + كلاسات PortedUtils الخمسة، وسلاسل
+الأوضاع والإعدادات الجديدة مؤكدة داخل Velocity.class وNoSlow.class.
 
 ## 5) سجل المهام
 
@@ -218,4 +225,4 @@ WatchdogBypass.inventoryClicking أُسقطت/قُرّبت؛ KeyboardInputEvent 
 | نوفمبر 2026 | المهمة 1: بناء السورس إلى مود JAR عبر GitHub Actions + نشر Release (source.zip + JAR) + إنشاء ملفي التوثيق | ✅ تمت — انتهت دون تنبيهات من المستخدم على أي مشكلة إضافية (حتى لحظة كتابة هذا الملف) |
 | نوفمبر 2026 | المهمة 2: تخفيف حجم العميل بشكل ممتاز (b12.8): حذف حشو ميت + ضغط أصول + optimizeJar + source.zip ضغط 9 + RELEASE_NOTES.md | ✅ تمت — انتهت دون تنبيهات من المستخدم على أي مشكلة (النتيجة: JAR أصغر بـ 43% وsource.zip أصغر بـ 52%) |
 | نوفمبر 2026 | المهمة 3: إعادة تسمية الموديولات والأوضاع (AimAssist/MoreKB/WatchdogNCP family/UpdatedNCP/FastBridge/Verus/Watchdog-Protection) + نظام Mode/Custom في NoSlow وDisabler مع tag + حد BoostDelay 10000 + حذف LiquidWalk/BedGodMode/GodMode (b12.9) | ✅ تمت — فشل بناء واحد بسبب خطأ استيراد في grim.kt (وثّق أعلاه وحُل فوراً)، ثم نجح النشر (run 42621643210) |
-| نوفمبر 2026 | المهمة 4 (b12.10): استخراج الأوضاع من عميل 1.8.9 آخر — NoSlow 6 + Velocity 7 من 8 (Polar لم يُستخرج: هو Legit مُعاد تسميته في المصدر) + Speed 4 + Fly 3 = 20 وضعاً + بنية PortedUtils مشتركة + ترقية b12.10 | ✅ تمت — compileKotlin محلي نجح (بعد إصلاح 35 خطأ) والنشر عبر Actions (يُستكمل بعد النشر) |
+| نوفمبر 2026 | المهمة 4 (b12.10): استخراج الأوضاع من عميل 1.8.9 آخر — NoSlow 6 + Velocity 7 من 8 (Polar لم يُستخرج: هو Legit مُعاد تسميته في المصدر) + Speed 4 + Fly 3 = 20 وضعاً + بنية PortedUtils مشتركة + ترقية b12.10 | ✅ تمت — compileKotlin محلي نجح (بعد إصلاح 35 خطأ) ونجح النشر على Actions (run 42653938466) والإصدار vb12.10-mc1.8.9 |
