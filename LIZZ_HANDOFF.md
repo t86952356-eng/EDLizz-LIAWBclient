@@ -15,15 +15,15 @@
 | البند | القيمة |
 |---|---|
 | اسم العميل | **Lizz** (داخل الكود: `CLIENT_NAME = "L"+"izz"`) — يعرف أيضاً بـ **LAWIB / LIAWB client** |
-| الإصدار الحالي | **b12.8** (`LiquidBounce.kt` → `clientVersionText` و`gradle.properties` → `mod_version`) |
+| الإصدار الحالي | **b12.9** (`LiquidBounce.kt` → `clientVersionText` و`gradle.properties` → `mod_version`) |
 | اللعبة | Minecraft **1.8.9** — Forge `11.15.1.2318` — mappings `stable_22` |
 | الأساس | **LiquidBounce Legacy** (فرع المجتمع النهائي، آخر إصدار رسمي منه b100) |
 | مود id | `Lizz` — الاسم الظاهر في mcmod.info: `LAWIB` |
 | المؤلفون (mcmod.info) | CCBlueX، PickBowen، bzym2، RainRuin، sunbox |
-| عنوان النافذة | `LIAWB client 1.8.9 b12.8 \| 免费注册加群：815061613` (عنوان مجتمع صيني — رقم مجموعة QQ) |
+| عنوان النافذة | `LIAWB client 1.8.9 b12.9 \| 免费注册加群：815061613` (عنوان مجتمع صيني — رقم مجموعة QQ) |
 | التوزيع الرسمي | عبر Discord العميل: **discord.gg/Y2U2gWyRUN** (فيديو «Lizz 7.0 (fork lb b100)») |
 | المستودع | `https://github.com/t86952356-eng/EDLizz-LIAWBclient` (عام، فرع `main`) |
-| سجل التسمية | الفورك بدأ بـ «LIAWB client (chat prefix rebrand)» من LiquidBounce Legacy، ثم أُضيف MusicPlayer، ثم ClickGUI بأسلوب Fatality في b12.7، ثم إصدار تخفيف الحجم في b12.8 |
+| سجل التسمية | الفورك بدأ بـ «LIAWB client (chat prefix rebrand)» من LiquidBounce Legacy، ثم أُضيف MusicPlayer، ثم ClickGUI بأسلوب Fatality في b12.7، ثم إصدار تخفيف الحجم في b12.8، ثم إعادة تسمية الموديولات والأوضاع (WatchdogNCP/UpdatedNCP/FastBridge/Verus/AimAssist/MoreKB) في b12.9 |
 
 **مواقع العلامة التجارية في السورس** (عند أي إعادة تسمية مستقبلية):
 - `src/main/java/net/ccbluex/liquidbounce/LiquidBounce.kt` — `CLIENT_NAME`، `clientTitle`، `clientVersionText`.
@@ -138,9 +138,45 @@
 manifest وmcmod.info صحيحان (b12.8)، SRG reobf مؤكد (47 اسم SRG في MixinEntity)،
 LVT مُزالة (55→0، 408→0) مع بقاء LNT (180، 1329) وFrames كاملة.
 
+### المهمة 3 — نوفمبر 2026 — «إعادة تسمية الموديولات + نظام Mode/Custom» (b12.9)
+الهدف: (1) إعادة تسمية شاملة: `Aimbot`→**AimAssist**، `SuperKnockback`→**MoreKB**، كل خيار فيه God
+في Scaffold/Scaffold2/Tower→**FastBridge** (شامل GodBridgePitch→FastBridgePitch واسم الخاصية
+الداخلية)، أوضاع Fly (Hypixel→**WatchdogNCP**، BoostHypixel→**WatchdogNCP-Stable**،
+FreeHypixel→**WatchdogNCP-Free**، BlocksMC→**UpdatedNCP**، BlocksMC2→**UpdatedNCP2**)، أوضاع
+NoFall (Hypixel→**WatchdogNCP**، HypixelTimer→**WatchdogNCP-Packet**)، أوضاع Speed
+(hypixelHop→**WatchdogNCP-Hop**، HypixelLowHop→**WatchdogNCP-LowHop**، BlocksmcHop→**Verus**،
+PredictionTimer2→**Watchdog-Protection**، PredictionTimer→**Watchdog-Protection2**)، ووضع
+Velocity (HypixelAir→**WatchdogNCP**)؛ (2) إضافة خيار `Mode` فيه مود `Custom` يضم كل الإعدادات
+الحالية ولا تظهر إلا باختياره + إظهار الوضع كـ tag في arraylist في **NoSlow** و**Disabler**؛
+(3) رفع حد `Hypixel-BoostDelay` في Fly من 2000 إلى **10000**؛ (4) حذف **LiquidWalk**
+و**BedGodMode** و**GodMode** بالكامل.
+
+| # | الخطأ | السبب | الحل المطبّق |
+|---|---|---|---|
+| 1 | فشل البناء الأول (run 42621311296) بـ `Unresolved reference 'Blink'` و`'Liquids'` في grim.kt | عند إزالة استيرادات الموديولات المحذوفة من `grim.kt` (الملف المُستورد لكل شيء) استُبدل سطر BedGodMode بـ `exploit.Blink` وسطر LiquidWalk بـ `movement.Liquids` — لكن الملفين موجودان فعلياً في حزمتين مختلفتين: `player.Blink` و`world.Liquids` (والاستيرادان الصحيحان موجودان أصلاً في مواضعهما الأبجدية في نفس الملف!) | حذف السطرين الخاطئين فقط — **الدرس: عند حذف موديول لا تستبدل استيراده بـ «جاره»؛ إما احذف السطر نهائياً أو تحقق من مسار الملف الفعلي** (أُضيف درس مرافق في AI_BUILD_GUIDE §6-8) |
+| 2 | `zh_TW.json` لا يمر فحص JSON قياسي رغم سلامة التعديلات | خطأ تاريخي موروث في الملف نفسه (فاصلة زائدة بعد `contributors`) موجود قبل هذه المهمة؛ محلّل Gson المتسامح في اللعبة يتقبله (عمل في b12.7 وb12.8) | لم يُعدل شيء — سُجل هنا حتى لا يُفاجئ فحص python json مستقبلي؛ باقي ملفات اللغة السبعة سليمة 100% |
+| 3 | تعارض اسم قيمة محتمل في Disabler | كانت هناك قيمة اسمها `Mode` داخل NoRotationDisabler؛ إضافة `Mode` جديد للواجهة كان سيتعارض معها في نظام الإعدادات (الحفظ بالاسم) | إعادة تسمية القيمة الداخلية إلى **`ModifyMode`** — القيم المحفوظة القديمة لها تعود للافتراضي بأمان (ListValue يتجاهل الأسماء غير الموجودة، بلا انهيار) |
+
+**ملاحظات تنفيذ**: أعيدت تسمية الحزم الداخلية أيضاً (`flymodes/hypixel`→`flymodes/watchdogncp`،
+`flymodes/blocksmc`→`flymodes/updatedncp`، `speedmodes/hypixel`→`speedmodes/watchdogncp`)؛
+حُدّثت مفاتيح اللغات السبعة (aimAssist/moreKB) وحُذفت مفاتيح الموديولات الثلاثة المحذوفة؛
+حُذف هوك LiquidWalk من `MixinEntityLivingBase.java` وحُدّث اسم هوك MoreKB في
+`MixinMovementInputFromOptions.java`؛ أسماء إعدادات Fly (`Hypixel-Boost`/`Hypixel-BoostDelay`/
+`Hypixel-BoostTimer`) بقيت كما هي بناءً على صياغة المستخدم (طلب تغيير الحد فقط).
+
+**النتيجة**: نجاح البناء على GitHub Actions (run 42621643210) وإصدار
+[`vb12.9-mc1.8.9`](https://github.com/t86952356-eng/EDLizz-LIAWBclient/releases/tag/vb12.9-mc1.8.9)
+بمرفقات `lizz-b12.9.jar` (**25.11MB** — ضمن النطاق المطلوب 20-26MB) و`lizz-b12.9-source.zip`
+(**28.43MB**)، والـ changelog بالإنجليزية من `RELEASE_NOTES.md`. التحقق بعد النشر: manifest سليم
+(MixinConfigs/FMLAT/TweakClass/FMLCorePlugin)، mcmod.info = b12.9، SRG reobf مؤكد (47 في
+MixinEntity)، كل الكلاسات الجديدة موجودة (AimAssist/MoreKB/WatchdogNCP*/UpdatedNCP*/
+WatchdogProtection*/VerusSpeed/FastBridge في Scaffold=11)، صفر كلاسات قديمة، و«Custom»
+و«ModifyMode» مؤكدتان في NoSlow/Disabler.
+
 ## 5) سجل المهام
 
 | التاريخ | المهمة | الحالة |
 |---|---|---|
 | نوفمبر 2026 | المهمة 1: بناء السورس إلى مود JAR عبر GitHub Actions + نشر Release (source.zip + JAR) + إنشاء ملفي التوثيق | ✅ تمت — انتهت دون تنبيهات من المستخدم على أي مشكلة إضافية (حتى لحظة كتابة هذا الملف) |
 | نوفمبر 2026 | المهمة 2: تخفيف حجم العميل بشكل ممتاز (b12.8): حذف حشو ميت + ضغط أصول + optimizeJar + source.zip ضغط 9 + RELEASE_NOTES.md | ✅ تمت — انتهت دون تنبيهات من المستخدم على أي مشكلة (النتيجة: JAR أصغر بـ 43% وsource.zip أصغر بـ 52%) |
+| نوفمبر 2026 | المهمة 3: إعادة تسمية الموديولات والأوضاع (AimAssist/MoreKB/WatchdogNCP family/UpdatedNCP/FastBridge/Verus/Watchdog-Protection) + نظام Mode/Custom في NoSlow وDisabler مع tag + حد BoostDelay 10000 + حذف LiquidWalk/BedGodMode/GodMode (b12.9) | ✅ تمت — فشل بناء واحد بسبب خطأ استيراد في grim.kt (وثّق أعلاه وحُل فوراً)، ثم نجح النشر (run 42621643210) |

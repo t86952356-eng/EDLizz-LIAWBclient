@@ -2,8 +2,8 @@
 
 > هذا الملف مكتوب ليقرأه وكيل ذكاء اصطناعي (AI Agent) في محادثة جديدة، ليتمكن من بناء
 > مشروع Lizz ونشر إصدار (Release) بنجاح من أول مرة، دون تكرار الأخطاء التي حُلّت مسبقاً.
-> آخر تحديث: نوفمبر 2026. إصدار مُختبر ناجح: `lizz-b12.8.jar` لـ Minecraft 1.8.9 (Forge)
-> عبر Release بتاغ `vb12.8-mc1.8.9` (إصدار تحسين الحجم — انظر §10).
+> آخر تحديث: نوفمبر 2026. إصدار مُختبر ناجح: `lizz-b12.9.jar` لـ Minecraft 1.8.9 (Forge)
+> عبر Release بتاغ `vb12.9-mc1.8.9` (إصدار إعادة تسمية الموديولات والأوضاع + نظام Mode/Custom).
 > ملف مرافق إلزامي: `LIZZ_HANDOFF.md` (معلومات العميل + البرمجة + سجل الأخطاء).
 
 ---
@@ -29,9 +29,9 @@
 | **JDK للبناء** | **`8`** | `build.gradle` (`sourceCompatibility = 1.8`) + CI الأصلي |
 | Gradle Wrapper | `6.9.4` (مرآة huaweicloud) | `gradle/wrapper/gradle-wrapper.properties` |
 | Kotlin | `2.0.21` | `gradle.properties` → `kotlin_version` |
-| إصدار المود | `b12.8` | `gradle.properties` → `mod_version` |
+| إصدار المود | `b12.9` | `gradle.properties` → `mod_version` |
 | اسم الـ artifact | `lizz` | `gradle.properties` → `archives_base_name` |
-| ناتج البناء | `build/libs/lizz-b12.8.jar` | — |
+| ناتج البناء | `build/libs/lizz-b12.9.jar` | — |
 
 > ⚠️ **جافا هي 8 وليست 17.** Gradle 6.9.4 لا يعمل أصلاً على JDK 17+ (أول دعم لـ17 كان
 > Gradle 7.3). الـ CI الرسمي لـ LiquidBounce Legacy يستخدم `java-version: 8` حرفياً.
@@ -162,14 +162,24 @@ git push origin v{mod_version}-mc1.8.9 --force # يشغّل دورة بناء ع
    موجود؛ Gradle يتجاهله بلا فشل. سلوك طبيعي — لا تعالجه.
 7. **توقّع جافا 17**: أي مرجع قديم يقول JDK 17 هو خطأ؛ هذا مشروع 1.8.9/Gradle 6.9.4 ويتطلب
    JDK 8 (راجع §2). (AtroNextGen هو الذي يستخدم JDK 21 — لا تخلط بين المشروعين.)
+8. **حذف/إعادة تسمية موديول → حدّث `grim.kt`** (المهمة 3، نوفمبر 2026): الملف
+   `features/module/modules/misc/grim.kt` يستورد كل موديولات المشروع (موديلطرفة لا يحتوي
+   كوداً). حذف موديول دون إزالة استيراده = `Unresolved reference` يفشل البناء. والقاعدة
+   المهمة: عند إزالة استيراد **لا تستبدله بـ«جاره»** — استُبدل سطر BedGodMode بـ
+   `exploit.Blink` ففشل البناء لأن Blink موجود فعلياً في `player.Blink` (وكذلك Liquids في
+   `world.Liquids` وليس movement). احذف السطر نهائياً أو تحقق من المسار الفعلي للملف.
+9. **قيمة `Mode` لا تتكرر في الموديول الواحد**: نظام الإعدادات يحفظ القيم بالاسم
+   (`Configurable.fromJsonF` يبحث بالاسم) — إضافة قيمة جديدة اسمها كقيمة موجودة في نفس
+   الموديول يكسر التحميل/الحفظ. عند إضافة `Mode` لمستوى أعلى في Disabler أُعيدت تسمية
+   القيمة الداخلية القديمة إلى `ModifyMode`. تحقق دائماً من تفرد أسماء القيم داخل الموديول.
 
 ## 7) التحقق من صحة مود JAR قبل الإعلان عنه (مُختبر)
 
 ```bash
-unzip -p build/libs/lizz-b12.8.jar META-INF/MANIFEST.MF   # يجب أن يحوي: FMLCorePlugin,
+unzip -p build/libs/lizz-{mod_version}.jar META-INF/MANIFEST.MF   # يجب أن يحوي: FMLCorePlugin,
 # MixinConfigs: liquidbounce.forge.mixins.json, TweakClass, FMLAT: liquidbounce_at.cfg
-unzip -p build/libs/lizz-b12.8.jar mcmod.info              # "version": "b12.8" موسّعة
-unzip -p build/libs/lizz-b12.8.jar net/ccbluex/liquidbounce/injection/forge/mixins/entity/MixinEntity.class \
+unzip -p build/libs/lizz-{mod_version}.jar mcmod.info              # "version": "{mod_version}" موسّعة
+unzip -p build/libs/lizz-{mod_version}.jar net/ccbluex/liquidbounce/injection/forge/mixins/entity/MixinEntity.class \
   | strings | grep -cE "field_[0-9]+_|func_[0-9]+_"        # > 0 يعني أن reobf (SRG) تم بنجاح
 ```
 
