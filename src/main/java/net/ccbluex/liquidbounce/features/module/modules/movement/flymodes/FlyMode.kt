@@ -11,6 +11,8 @@ open class FlyMode(val modeName: String) : MinecraftInstance {
     open fun onJump(event: JumpEvent) {}
     open fun onStep(event: StepEvent) {}
     open fun onMotion(event: MotionEvent) {}
+    open fun onMoveInput(event: MovementInputEvent) {}
+    open fun onStrafe(event: StrafeEvent) {}
     open fun onUpdate() {}
     open fun onTick() {}
 

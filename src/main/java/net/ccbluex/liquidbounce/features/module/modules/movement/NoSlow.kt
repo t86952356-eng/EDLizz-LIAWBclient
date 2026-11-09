@@ -19,6 +19,10 @@ import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils
 import net.ccbluex.liquidbounce.utils.inventory.SilentHotbar
 import net.ccbluex.liquidbounce.utils.movement.MovementUtils.hasMotion
 import net.ccbluex.liquidbounce.utils.timing.TickTimer
+import net.ccbluex.liquidbounce.features.module.modules.movement.noslowmodes.*
+import net.ccbluex.liquidbounce.event.EventState
+import net.ccbluex.liquidbounce.event.StrafeEvent
+import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.minecraft.block.*
 import net.minecraft.item.*
 import net.minecraft.network.PacketBuffer
@@ -41,7 +45,36 @@ import net.minecraft.util.Vec3
 
 object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false) {
 
-    val mode by choices("Mode", arrayOf("Custom"), "Custom")
+    val mode by choices(
+        "Mode",
+        arrayOf(
+            "Custom", "WatchdogNCP", "Intave", "Matrix",
+            "-Watchdog Prediction", "Grim", "Grim 1.9"
+        ),
+        "Custom"
+    )
+
+    /** 新模式集合（与 SpeedMode/FlyMode 同套路的分发模型）。 */
+    private val noslowModes = arrayOf(
+        WatchdogNoSlowMode, IntaveNoSlowMode, MatrixNoSlowMode,
+        WatchdogPredictionNoSlowMode, GrimNoSlowMode, Grim19NoSlowMode
+    )
+
+    private val noslowMode get() = noslowModes.firstOrNull { it.modeName == mode }
+
+    // ---- 新模式共享的四类物品开关（默认全关，与原实现一致） ----
+    val food by boolean("Food", false) { mode != "Custom" && noslowMode != null }
+    val potion by boolean("Potion", false) { mode != "Custom" && noslowMode != null }
+    val sword by boolean("Sword", false) { mode != "Custom" && noslowMode != null }
+    val bow by boolean("Bow", false) { mode != "Custom" && noslowMode != null }
+
+    // ---- WatchdogNCP（NoSlow） ----
+    private val wdSlowDownOnSlabs by boolean("Slow down on Slabs", true) { mode == "WatchdogNCP" }
+
+    // ---- -Watchdog Prediction（NoSlow） ----
+    private val wdMaxPingSpoof by int("Max Ping Spoof", 8, 0..30) { mode == "-Watchdog Prediction" }
+    private val wdWhenToFinishEating by int("When to finish eating", 30, 20..36) { mode == "-Watchdog Prediction" }
+    private val wdNonBlinkSpeedBypass by boolean("Non-Blink Speed Bypass", true) { mode == "-Watchdog Prediction" }
 
     private val swordMode by choices(
         "SwordMode",
@@ -115,6 +148,12 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false) {
     /** SilenceBW：特效系统窗口已被吞，松开右键时要补 closeScreen。 */
     private var silenceXinXin = false
 
+    override fun onEnable() {
+        super.onEnable()
+        syncExtraModeSettings()
+        noslowMode?.onEnable()
+    }
+
     override fun onDisable() {
         shouldSwap = false
         shouldBlink = true
@@ -127,10 +166,38 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false) {
         moonEat = true
         moonLastFoodAmount = 0
         moonFoodSpeed = 0.2f
+        noslowMode?.onDisable()
+        IntaveNoSlowMode.packetQueue.flush()
+    }
+
+    private fun syncExtraModeSettings() {
+        WatchdogNoSlowMode.slowDownOnSlabs = wdSlowDownOnSlabs
+        WatchdogPredictionNoSlowMode.maxPingSpoof = wdMaxPingSpoof
+        WatchdogPredictionNoSlowMode.whenToFinishEating = wdWhenToFinishEating
+        WatchdogPredictionNoSlowMode.nonBlinkSpeedBypass = wdNonBlinkSpeedBypass
+    }
+
+    val onUpdate = handler<UpdateEvent> {
+        syncExtraModeSettings()
+        noslowMode?.onUpdate()
+    }
+
+    val onStrafeEvent = handler<StrafeEvent> {
+        noslowMode?.onStrafe()
     }
 
     val onMotion = handler<MotionEvent> { event ->
         val player = mc.thePlayer ?: return@handler
+
+        // ---- 新模式分发：完全自包含，与原有 Custom 逻辑互斥 ----
+        val extra = noslowMode
+        if (extra != null) {
+            if (event.eventState == EventState.PRE) {
+                extra.onPreMotion(event)
+            }
+            return@handler
+        }
+
         val heldItem = player.heldItem ?: return@handler
         val isUsingItem = usingItemFunc()
 
@@ -421,6 +488,18 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false) {
         val packet = event.packet
         val player = mc.thePlayer ?: return@handler
 
+        // ---- 新模式分发 ----
+        if (noslowMode != null) {
+            if (event.eventType == EventState.SEND) {
+                // Intave：出站包队列拦截
+                if (IntaveNoSlowMode.packetQueue.onSend(packet) { event.cancelEvent() }) {
+                    return@handler
+                }
+            }
+            noslowMode!!.onPacket(event)
+            return@handler
+        }
+
         // ---- SilenceFix NoSlow（Grim 食物分支）----
         if (consumeMode == "SilenceSW" || consumeMode == "SilenceBW") {
             if (event.eventType == EventState.SEND) {
@@ -599,6 +678,13 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false) {
     }
 
     val onSlowDown = handler<SlowDownEvent> { event ->
+        // ---- 新模式分发（自带四类物品开关判断） ----
+        val extra = noslowMode
+        if (extra != null) {
+            extra.onSlowDown(event)
+            return@handler
+        }
+
         val heldItem = mc.thePlayer.heldItem?.item
 
         // MoonLight GrimAC：食物减速由 foodSpeed 门控（假吃期间全速，否则 0.2）

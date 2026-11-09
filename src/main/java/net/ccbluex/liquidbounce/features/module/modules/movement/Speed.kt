@@ -37,7 +37,8 @@ object Speed : Module("Speed", Category.MOVEMENT) {
         Boost, Frame, MiJump, OnGround, SlowHop, Legit, CustomSpeed,
         WatchdogProtection2, WatchdogProtection, FastLowHop,
         GrimACSpeed, Grim2Speed,   // Grim 模式
-        TargetBoost                // MoonLight EntityCollide 目标加速
+        TargetBoost,               // MoonLight EntityCollide 目标加速
+        MatrixSpeed, WatchdogNCPNewSpeed, PolarSpeed, OldNCPYPort // 新增模式
     )
 
     private val deprecatedMode = arrayOf(
@@ -139,6 +140,37 @@ object Speed : Module("Speed", Category.MOVEMENT) {
     val targetBoostExpand by boolean("TargetBoostExpand", false) { mode.get() == "TargetBoost" }
     val targetBoostStrength by float("TargetBoostStrength", 0.078f, 0.01f..0.2f) { mode.get() == "TargetBoost" }
 
+    // ---- WatchdogNCP-New（Speed）选项 ----
+    val wdNewType by choices("Type", arrayOf("Strafe", "Low Strafe", "NCP Strafe"), "Low Strafe") { mode.get() == "WatchdogNCP-New" }
+    private val wdNewAirStrafe by boolean("Air Strafe", true) { mode.get() == "WatchdogNCP-New" }
+    private val wdNewAlwaysGlide by boolean("Always Glide Strafe", true) { mode.get() == "WatchdogNCP-New" }
+    private val wdNewFrictionOverride by boolean("Friction Override", true) { mode.get() == "WatchdogNCP-New" }
+    private val wdNewFrictionFullDisabler by boolean("Friction Full Disabler", true) { mode.get() == "WatchdogNCP-New" }
+    private val wdNewDamageBoost by boolean("Damage Boost", false) { mode.get() == "WatchdogNCP-New" }
+    private val wdNewDamageStrafe by boolean("Damage Strafe (Hypixel Fly Disabler)", false) { mode.get() == "WatchdogNCP-New" }
+    private val wdNewUHCMode by boolean("UHC Mode", false) { mode.get() == "WatchdogNCP-New" }
+    private val wdNewAlternateMotion by boolean("Alternate Motion", false) { mode.get() == "WatchdogNCP-New" }
+
+    // ---- Matrix（Speed）选项 ----
+    private val matrixTimerBoostOnSneak by float("Timer Boost (on sneak)", 30f, 1f..100f) { mode.get() == "Matrix" }
+
+    // ---- Old NCP Y-port 选项 ----
+    val oldNCPYPortSmoothCamera by boolean("Smooth Camera", false) { mode.get() == "Old NCP Y-port" }
+
+    private fun syncNewSpeedModeSettings() {
+        WatchdogNCPNewSpeed.type = wdNewType
+        WatchdogNCPNewSpeed.airStrafe = wdNewAirStrafe
+        WatchdogNCPNewSpeed.alwaysGlideStrafe = wdNewAlwaysGlide
+        WatchdogNCPNewSpeed.frictionOverride = wdNewFrictionOverride
+        WatchdogNCPNewSpeed.frictionFullDisabler = wdNewFrictionFullDisabler
+        WatchdogNCPNewSpeed.damageBoost = wdNewDamageBoost
+        WatchdogNCPNewSpeed.damageStrafeHypixelFlyDisabler = wdNewDamageStrafe
+        WatchdogNCPNewSpeed.uHCMode = wdNewUHCMode
+        WatchdogNCPNewSpeed.alternateMotion = wdNewAlternateMotion
+        MatrixSpeed.timerBoostOnSneak = matrixTimerBoostOnSneak
+        OldNCPYPort.smoothCamera = oldNCPYPortSmoothCamera
+    }
+
     // 合法疾跑（TargetBoost/GrimAC/Grim2）：只有纯前进方向才疾跑，
     // 左右平移 / 后退移动时不疾跑（Grim 会检测斜向、后退疾跑）
     private val legalSprintModes = arrayOf("TargetBoost", "GrimAC", "Grim2")
@@ -203,6 +235,9 @@ object Speed : Module("Speed", Category.MOVEMENT) {
             FastLowHop.timerBoost = fastLowHopTimer
         }
 
+        // 同步新增模式参数
+        syncNewSpeedModeSettings()
+
         updateSilentAimTarget()
 
         modeModule.onUpdate()
@@ -221,6 +256,8 @@ object Speed : Module("Speed", Category.MOVEMENT) {
 
         // 调用无参的 onMotion
         modeModule.onMotion()
+        // 新增模式：带事件的 PRE 阶段
+        modeModule.onPreMotion(event)
     }
 
     val onPostMotion = handler<MotionEvent> { event ->
@@ -287,7 +324,7 @@ object Speed : Module("Speed", Category.MOVEMENT) {
         modeModule.onPlayerTick()
     }
 
-    val onStrafe = handler<StrafeEvent> {
+    val onStrafe = handler<StrafeEvent> { event ->
         if (mc.thePlayer?.isSneaking == true)
             return@handler
 
@@ -296,6 +333,9 @@ object Speed : Module("Speed", Category.MOVEMENT) {
 
         // 移动方向已确定时再纠正一次：斜走（W+A/D）不允许疾跑
         mc.thePlayer?.let { applySprint(it) }
+
+        // 新增模式：带事件的 strafe
+        modeModule.onStrafeEvent(event)
 
         modeModule.onStrafe()
     }

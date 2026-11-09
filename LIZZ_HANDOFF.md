@@ -15,12 +15,12 @@
 | البند | القيمة |
 |---|---|
 | اسم العميل | **Lizz** (داخل الكود: `CLIENT_NAME = "L"+"izz"`) — يعرف أيضاً بـ **LAWIB / LIAWB client** |
-| الإصدار الحالي | **b12.9** (`LiquidBounce.kt` → `clientVersionText` و`gradle.properties` → `mod_version`) |
+| الإصدار الحالي | **b12.10** (`LiquidBounce.kt` → `clientVersionText` و`gradle.properties` → `mod_version`) |
 | اللعبة | Minecraft **1.8.9** — Forge `11.15.1.2318` — mappings `stable_22` |
 | الأساس | **LiquidBounce Legacy** (فرع المجتمع النهائي، آخر إصدار رسمي منه b100) |
 | مود id | `Lizz` — الاسم الظاهر في mcmod.info: `LAWIB` |
 | المؤلفون (mcmod.info) | CCBlueX، PickBowen، bzym2، RainRuin، sunbox |
-| عنوان النافذة | `LIAWB client 1.8.9 b12.9 \| 免费注册加群：815061613` (عنوان مجتمع صيني — رقم مجموعة QQ) |
+| عنوان النافذة | `LIAWB client 1.8.9 b12.10 \| 免费注册加群：815061613` (عنوان مجتمع صيني — رقم مجموعة QQ) |
 | التوزيع الرسمي | عبر Discord العميل: **discord.gg/Y2U2gWyRUN** (فيديو «Lizz 7.0 (fork lb b100)») |
 | المستودع | `https://github.com/t86952356-eng/EDLizz-LIAWBclient` (عام، فرع `main`) |
 | سجل التسمية | الفورك بدأ بـ «LIAWB client (chat prefix rebrand)» من LiquidBounce Legacy، ثم أُضيف MusicPlayer، ثم ClickGUI بأسلوب Fatality في b12.7، ثم إصدار تخفيف الحجم في b12.8، ثم إعادة تسمية الموديولات والأوضاع (WatchdogNCP/UpdatedNCP/FastBridge/Verus/AimAssist/MoreKB) في b12.9 |
@@ -173,6 +173,44 @@ MixinEntity)، كل الكلاسات الجديدة موجودة (AimAssist/More
 WatchdogProtection*/VerusSpeed/FastBridge في Scaffold=11)، صفر كلاسات قديمة، و«Custom»
 و«ModifyMode» مؤكدتان في NoSlow/Disabler.
 
+### المهمة 4 — نوفمبر 2026 — «استخراج دفعة أوضاع من عميل 1.8.9 آخر» (b12.10)
+الهدف: استخراج الأوضاع المطلوبة من عميل 1.8.9 آخر (مرفوع من المستخدم كـ client.zip، مصدر مرابط جزئياً) — المطلوب 21 وضعاً ونُفّذ 20 (Polar velocity تخطّي، انظر أدناه)
+إلى Lizz بمنطق مطابق قدر الإمكان مع كل الإعدادات:
+- **NoSlow** (6): WatchdogNCP / Intave / Matrix / -Watchdog Prediction / Grim / Grim 1.9 — مع إعدادات
+  مشتركة Food/Potion/Sword/Bow (افتراضياً مغلقة كما في المصدر) وإعدادات خاصة لكل وضع.
+- **Velocity** (8): WatchdogNCP-New / Matrix / Intave / Vulcan-New / Grim-New / Grim 2 / -Watchdog Prediction / MMC
+  (+ إعداد On Swing مشترك لـ Intave/MMC). **Polar لم يُستخرج**: الوضع في المصدر مجرد إعادة تسمية
+  لوضع Legit نفسه، وLizz يملك Polar/Legit/Jump أصلاً.
+- **Speed** (4): Matrix / WatchdogNCP-New (بثلاثة أنواع فرعية Strafe/Low Strafe/NCP Strafe) / Polar / Old NCP Y-port.
+- **Fly** (3): WatchdogNCP-New (من Funcraft) / Matrix / Matrix Damage (بـ 11 إعداداً).
+
+**قرارات تسمية عند التصادم** (أسماء محجوزة مسبقاً في Lizz):
+- Velocity: اسم «WatchdogNCP» محجوز لوضع HypixelAir القديم (من b12.9) ← الوضع المستخرج باسم
+  **WatchdogNCP-New**؛ و«Vulcan»/«Grim» موجودان ← **Vulcan-New**/**Grim-New** — اتباعاً لاصطلاح
+  «-New» الذي استخدمه المستخدم نفسه في نفس الطلب لأوضاع Speed/Fly.
+
+| # | الدرس / الخلل | التفصيل | الحل المطبّق |
+|---|---|---|---|
+| 1 | **مصدر مشوّش جزئياً (obfuscated)** | حقول MC مُرقّعة بأسماء مشوشة: `tR` (ticks-of-item-use صاعد)، `cqL` (itemInUseCount هابط)، `ae` (ticksSinceVelocity)، `Zl` (ticksSinceTeleport)، `crI/crK` (السرعة المتوقعة من S12)، `pl/pp` (rotationYaw/prevRotationYaw)، `bjQ` (serverSprintState تقريباً)، `crd` (SafeWalk)، وحزم مشوشة: `play.client.l`=C09HeldItemChange، `play.server.a`=S00KeepAlive، `ad`=S1CMetadata، `aa`=S19EntityHeadLook، `z`=S18EntityTeleport | فك الدلالات من السياق + من ملفات Script API في المصدر (`PlayerAPI.getTicksSinceVelocity/getTicksSinceTeleport`، `EntityPositionPacket`، `ScriptPacketServerKeepAlive`) ثم إعادة تنفيذها مركزياً في `utils/movement/PortedUtils.kt` (PortedTrackers/PortedMove/PortedPacketQueue/PortedBlink) |
+| 2 | **تسميات decompiled المعقدة** | بنية `label1224/label1264` في WatchdogSpeed غامضة (أي بلوك يخص أي نوع فرعي؟) | عدّ الأقواس برمجياً (سكربت python على المصدر) حسم: بلوك A = NCP Strafe، بلوك B = Low Strafe، وبلوك C (الجليدي + Friction Full Disabler) يتبع كل الأنواع |
+| 3 | **فروقات API الأحداث** | Lizz: PacketEvent فيه `eventType` وليس eventState؛ StrafeEvent قابل للإلغاء فقط (لا setSpeed)؛ لا يوجد SprintEvent/RightClickEvent/PostStrafeEvent/KeyboardInputEvent | إعادة توجيه: Sprint→فرض isSprinting في UpdateEvent؛ RightClick→اعتراض C08 الصادر + قفز؛ PostStrafe→أول onPreMotion؛ setSpeed→إلغاء StrafeEvent + strafe(speed) (قطري ×0.98) |
+| 4 | **`handler<>` يتطلب Listenable** | `object PortedTrackers : MinecraftInstance` فقط — دوال handler<T> امتدادات على Listenable | إضافة Listenable للكائن (مثل MovementUtils) |
+| 5 | **خصائص الامتداد تحتاج استيراداً** | `packet.realMotionX/realX` خصائص امتداد في utils/client/PacketUtils.kt لا تُرى خارج حزمتها | استيراد realMotionX/Y/Z وrealX/Y/Z صراحةً |
+| 6 | **API دقائق** | `Entity.inWater` حقل محمي (البديل: `isInWater`)؛ `roundToLong` امتداد وليست دالة عادية؛ VIA: فرع 1.19 يرسل عبر `Protocol1_19To1_18_2` وليس `Protocol1_9To1_8` | تصحيحات مباشرة |
+| 7 | **الترجمة المحلية الجزئية ممكنة وفعالة** | محاولة compileKotlin بـ 1.8GB ماتت بصمت؛ بـ 1.4GB نجحت في ~2 دقيقة — تلتقط كل أخطاء Kotlin قبل Actions (رصدت 35 خطأ وأصلحتها في جولة واحدة) | شغّل `JAVA_HOME=$HOME/jdk8u512-b09 ./gradlew compileKotlin --no-daemon -Dorg.gradle.jvmargs="-Xmx1400m ..."` قبل كل دفعة؛ البناء الكامل يبقى على Actions (7GB) |
+| 8 | **دمج الأوضاع دون كسر القديمة** | NoSlow/Velocity ملفات ضخمة بمنطق Custom/القديم | نمط «مجلد أوضاع + فئة أساس + توزيع أعلى كل handler ثم return@handler» (نفس نمط speedmodes/flymodes): `movement/noslowmodes/` (6 ملفات)، `combat/velocitymodes/` (8)، وspeedmodes/flymodes في مجلداتها |
+
+**تبسيطات موثّقة** (فروقات مقصودة عن المصدر لعدم توفر مكافئ في Lizz): شرط Jesus-Dolphin
+(وضع غير موجود) اختُصر إلى `!Jesus.handleEvents()`؛ شروط Breaker.bedBroken و
+WatchdogBypass.inventoryClicking أُسقطت/قُرّبت؛ KeyboardInputEvent (منع تبديل الموديول بالمفتاح)
+لم يُنفذ لأن KeyEvent غير قابل للإلغاء في Lizz (pendingToggle يبقى يعمل من فرع GuChest)؛
+ألوان رسم صندوق الـbacktrack ثابتة بدل ألوان theme؛ WatchdogSpeed's Scaffold sameY وfastFall
+غير موجودة في Lizz فأسقطت شروطهما؛ `BlinkComponent.dispatch()` في Grim velocity = no-op
+(القناة لا تُفعّل من هذا الوضع في المصدر أصلاً) فحُذف.
+
+**النتيجة**: compileKotlin محلي = **BUILD SUCCESSFUL** (35 خطأ في الجولة الأولى أُصلحت كلها)،
+والنشر عبر GitHub Actions (النتيجة تُستكمل أدناه بعد اكتمال البناء).
+
 ## 5) سجل المهام
 
 | التاريخ | المهمة | الحالة |
@@ -180,3 +218,4 @@ WatchdogProtection*/VerusSpeed/FastBridge في Scaffold=11)، صفر كلاسا�
 | نوفمبر 2026 | المهمة 1: بناء السورس إلى مود JAR عبر GitHub Actions + نشر Release (source.zip + JAR) + إنشاء ملفي التوثيق | ✅ تمت — انتهت دون تنبيهات من المستخدم على أي مشكلة إضافية (حتى لحظة كتابة هذا الملف) |
 | نوفمبر 2026 | المهمة 2: تخفيف حجم العميل بشكل ممتاز (b12.8): حذف حشو ميت + ضغط أصول + optimizeJar + source.zip ضغط 9 + RELEASE_NOTES.md | ✅ تمت — انتهت دون تنبيهات من المستخدم على أي مشكلة (النتيجة: JAR أصغر بـ 43% وsource.zip أصغر بـ 52%) |
 | نوفمبر 2026 | المهمة 3: إعادة تسمية الموديولات والأوضاع (AimAssist/MoreKB/WatchdogNCP family/UpdatedNCP/FastBridge/Verus/Watchdog-Protection) + نظام Mode/Custom في NoSlow وDisabler مع tag + حد BoostDelay 10000 + حذف LiquidWalk/BedGodMode/GodMode (b12.9) | ✅ تمت — فشل بناء واحد بسبب خطأ استيراد في grim.kt (وثّق أعلاه وحُل فوراً)، ثم نجح النشر (run 42621643210) |
+| نوفمبر 2026 | المهمة 4 (b12.10): استخراج الأوضاع من عميل 1.8.9 آخر — NoSlow 6 + Velocity 7 من 8 (Polar لم يُستخرج: هو Legit مُعاد تسميته في المصدر) + Speed 4 + Fly 3 = 20 وضعاً + بنية PortedUtils مشتركة + ترقية b12.10 | ✅ تمت — compileKotlin محلي نجح (بعد إصلاح 35 خطأ) والنشر عبر Actions (يُستكمل بعد النشر) |

@@ -19,6 +19,9 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.watchd
 import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.other.MatrixTest
 import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.ncp.NCP
 import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.ncp.OldNCP
+import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.matrix.Matrix
+import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.matrix.MatrixDamage
+import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.watchdogncp.WatchdogNCPNew
 import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.other.*
 import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.spartan.BugSpartan
 import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.spartan.Spartan
@@ -74,7 +77,10 @@ object Fly : Module("Fly", Category.MOVEMENT) {
         MineSecure, HawkEye, HAC, WatchCat,
 
         // Other
-        Jetpack, KeepAlive, Collide, Jump, Flag, Fireball, MatrixTest
+        Jetpack, KeepAlive, Collide, Jump, Flag, Fireball, MatrixTest,
+
+        // 新增模式
+        WatchdogNCPNew, Matrix, MatrixDamage
     )
 
     /**
@@ -181,6 +187,39 @@ object Fly : Module("Fly", Category.MOVEMENT) {
     val matrixOnlyOnDamage by boolean("MatrixOnlyOnDamage", true) { mode == "MatrixTest" }
     val matrixUseStuck by boolean("MatrixUseStuck", true) { mode == "MatrixTest" }
 
+    // ---- WatchdogNCP-New（Fly，原 Funcraft 飞行）选项 ----
+    private val flyNewSpeed by float("Speed", 1.2f, 0.8f..2f) { mode == "WatchdogNCP-New" }
+    private val flyNewVanillaKickBypass by boolean("Vanilla Kick Bypass", true) { mode == "WatchdogNCP-New" }
+
+    // ---- Matrix Damage（Fly）选项 ----
+    private val matrixDamageTimerSpeed by float("Timer Speed", 30f, 1f..100f) { mode == "Matrix Damage" }
+    private val matrixDamageSpeed by float("MatrixDamage-Speed", 0.07f, 0f..1f) { mode == "Matrix Damage" }
+    private val matrixDamageNoSpeed by boolean("No Speed", false) { mode == "Matrix Damage" }
+    private val matrixDamageDetectDamage by boolean("Detect Damage", true) { mode == "Matrix Damage" }
+    private val matrixDamageAutoDisable by boolean("Auto Disable", true) { mode == "Matrix Damage" }
+    private val matrixDamageFlyTicks by int("Fly Ticks", 1000, 0..1600) { !matrixDamageDetectDamage && mode == "Matrix Damage" }
+    private val matrixDamageSelfDamage by boolean("Self Damage", true) { mode == "Matrix Damage" }
+    private val matrixDamageNewSelfDamage by boolean("New Self Damage", false) { mode == "Matrix Damage" }
+    private val matrixDamagePacket by boolean("Packet", true) { mode == "Matrix Damage" }
+    private val matrixDamageMotionY by choices("Motion Y", arrayOf("None", "Simple", "Multiply"), "None") { mode == "Matrix Damage" }
+    private val matrixDamageMotion by float("Motion", -0.01f, -0.3f..0.3f) { matrixDamageMotionY == "None" && mode == "Matrix Damage" }
+
+    private fun syncNewFlyModeSettings() {
+        WatchdogNCPNew.flySpeed = flyNewSpeed.toDouble()
+        WatchdogNCPNew.vanillaKickBypass = flyNewVanillaKickBypass
+        MatrixDamage.timerSpeed = matrixDamageTimerSpeed
+        MatrixDamage.flySpeed = matrixDamageSpeed.toDouble()
+        MatrixDamage.noSpeed = matrixDamageNoSpeed
+        MatrixDamage.detectDamage = matrixDamageDetectDamage
+        MatrixDamage.autoDisable = matrixDamageAutoDisable
+        MatrixDamage.flyTicks = matrixDamageFlyTicks
+        MatrixDamage.selfDamage = matrixDamageSelfDamage
+        MatrixDamage.newSelfDamage = matrixDamageNewSelfDamage
+        MatrixDamage.packet = matrixDamagePacket
+        MatrixDamage.motionYMode = matrixDamageMotionY
+        MatrixDamage.motion = matrixDamageMotion.toDouble()
+    }
+
 
     // Visuals
     private val mark by boolean("Mark", true).subjective()
@@ -228,6 +267,7 @@ object Fly : Module("Fly", Category.MOVEMENT) {
     }
 
     val onUpdate = handler<UpdateEvent> {
+        syncNewFlyModeSettings()
         modeModule.onUpdate()
     }
 
@@ -282,6 +322,14 @@ object Fly : Module("Fly", Category.MOVEMENT) {
 
     val onMove = handler<MoveEvent> { event ->
         modeModule.onMove(event)
+    }
+
+    val onMovementInput = handler<MovementInputEvent> { event ->
+        modeModule.onMoveInput(event)
+    }
+
+    val onStrafe = handler<StrafeEvent> { event ->
+        modeModule.onStrafe(event)
     }
 
     fun handleVanillaKickBypass() {

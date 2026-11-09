@@ -10,6 +10,7 @@ import de.florianmichael.vialoadingbase.ViaLoadingBase
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.modules.combat.velocitymodes.*
 import net.ccbluex.liquidbounce.features.module.modules.exploit.Disabler
 import net.ccbluex.liquidbounce.features.module.modules.movement.Speed
 import net.ccbluex.liquidbounce.utils.attack.EntityUtils.isLookingOnEntities
@@ -59,9 +60,51 @@ object Velocity : Module("Velocity", Category.COMBAT) {
             "GhostBlock", "Vulcan", "S32Packet", "MatrixReduce",
             "IntaveReduce", "Delay", "GrimC03", "Hypixel", "WatchdogNCP",
             "Click", "BlocksMC", "GrimCombat", "Polar", "Buffer", "Grim",
-            "NoSave"
+            "NoSave", "WatchdogNCP-New", "Matrix", "Intave", "Vulcan-New",
+            "Grim-New", "Grim 2", "-Watchdog Prediction", "MMC"
         ), "Simple"
     )
+
+    /** 新模式集合（分发模型与 SpeedMode/FlyMode 相同）。 */
+    private val velocityModes = arrayOf(
+        WatchdogNCPVelocityMode, MatrixVelocityMode, IntaveVelocityMode,
+        VulcanNewVelocityMode, GrimNewVelocityMode, Grim2VelocityMode,
+        WatchdogPredictionVelocityMode, MMCVelocityMode
+    )
+
+    private val velocityMode get() = velocityModes.firstOrNull { it.modeName == mode }
+
+    /** On Swing（Intave / MMC 共享，与原实现一致）。 */
+    val onSwing by boolean("On Swing", false) { mode == "Intave" || mode == "MMC" }
+
+    // ---- WatchdogNCP-New / Vulcan-New 共享 ----
+    private val velStack by boolean("Stack", true) { mode == "WatchdogNCP-New" || mode == "Vulcan-New" }
+    private val velPingSpoof by boolean("Ping Spoof", true) { mode == "WatchdogNCP-New" || mode == "Vulcan-New" }
+    private val velAlwaysCancelVertical by boolean("Always Cancel Vertical", false) { mode == "WatchdogNCP-New" || mode == "Vulcan-New" }
+    private val velDamageBoostSpeed by float("Damage Boost Speed", 1f, 1f..10f) { mode == "WatchdogNCP-New" || mode == "Vulcan-New" }
+
+    // ---- WatchdogNCP-New 专属 ----
+    private val velWatchdogBacktrack by boolean("Watchdog Backtrack", false) { mode == "WatchdogNCP-New" }
+    private val velDamageBoostNotForHypixel by boolean("Damage Boost (not for hypixel)", false) { mode == "WatchdogNCP-New" }
+
+    // ---- Vulcan-New 专属 ----
+    private val velBacktrack by boolean("Backtrack", false) { mode == "Vulcan-New" }
+    private val velDamageBoost by boolean("Damage Boost", false) { mode == "Vulcan-New" }
+
+    // ---- Grim-New ----
+    private val velGrimSmartCombat by boolean("Smart Combat (for High Ping)", false) { mode == "Grim-New" }
+    private val velGrimRotate by boolean("Rotate", true) { mode == "Grim-New" }
+
+    // ---- Grim 2 ----
+    private val velGrim2FullRotationFix by boolean("Full Rotation Fix", true) { mode == "Grim 2" }
+    private val velGrim2FakeS08 by boolean("Fake S08", true) { mode == "Grim 2" }
+    private val velGrim2CancelVelocity by boolean("Cancel Velocity", true) { mode == "Grim 2" }
+    private val velGrim2RotationNoise by float("Rotation Noise", 0.001f, 0f..0.1f) { mode == "Grim 2" }
+    private val velGrim2DebugLog by boolean("Debug Log", false) { mode == "Grim 2" }
+
+    // ---- -Watchdog Prediction ----
+    private val velWdPredictionLetThrough by float("Velocity to let through", 0.3f, 0f..0.6f) { mode == "-Watchdog Prediction" }
+    private val velWdPredictionPreventGhosting by boolean("Prevent Ghosting", true) { mode == "-Watchdog Prediction" }
 
     private val horizontal by float("Horizontal", 0F, -1F..1F) { mode in arrayOf("Simple", "AAC", "Legit") }
     private val vertical by float("Vertical", 0F, -1F..1F) { mode in arrayOf("Simple", "Legit") }
@@ -187,7 +230,14 @@ object Velocity : Module("Velocity", Category.COMBAT) {
             "$horizontalPercentage% $verticalPercentage%"
         } else mode
 
+    override fun onEnable() {
+        super.onEnable()
+        syncVelocityModeSettings()
+        velocityMode?.onEnable()
+    }
+
     override fun onDisable() {
+        velocityMode?.onDisable()
         pauseTicks = 0
         mc.thePlayer?.speedInAir = 0.02F
         timerTicks = 0
@@ -197,8 +247,44 @@ object Velocity : Module("Velocity", Category.COMBAT) {
         reset()
     }
 
+    private fun syncVelocityModeSettings() {
+        WatchdogNCPVelocityMode.stack = velStack
+        WatchdogNCPVelocityMode.pingSpoof = velPingSpoof
+        WatchdogNCPVelocityMode.alwaysCancelVertical = velAlwaysCancelVertical
+        WatchdogNCPVelocityMode.watchdogBacktrack = velWatchdogBacktrack
+        WatchdogNCPVelocityMode.damageBoostNotForHypixel = velDamageBoostNotForHypixel
+        WatchdogNCPVelocityMode.damageBoostSpeed = velDamageBoostSpeed.toDouble()
+
+        VulcanNewVelocityMode.stack = velStack
+        VulcanNewVelocityMode.pingSpoof = velPingSpoof
+        VulcanNewVelocityMode.alwaysCancelVertical = velAlwaysCancelVertical
+        VulcanNewVelocityMode.backtrack = velBacktrack
+        VulcanNewVelocityMode.damageBoost = velDamageBoost
+        VulcanNewVelocityMode.damageBoostSpeed = velDamageBoostSpeed.toDouble()
+
+        GrimNewVelocityMode.smartCombatForHighPing = velGrimSmartCombat
+        GrimNewVelocityMode.rotate = velGrimRotate
+
+        Grim2VelocityMode.fullRotationFix = velGrim2FullRotationFix
+        Grim2VelocityMode.fakeS08 = velGrim2FakeS08
+        Grim2VelocityMode.cancelVelocity = velGrim2CancelVelocity
+        Grim2VelocityMode.rotationNoise = velGrim2RotationNoise
+        Grim2VelocityMode.debugLog = velGrim2DebugLog
+
+        WatchdogPredictionVelocityMode.velocityToLetThrough = velWdPredictionLetThrough
+        WatchdogPredictionVelocityMode.preventGhosting = velWdPredictionPreventGhosting
+    }
+
     val onUpdate = handler<UpdateEvent> {
         val thePlayer = mc.thePlayer ?: return@handler
+
+        // ---- 新模式分发（自包含，与原有模式互斥） ----
+        val extraMode = velocityMode
+        if (extraMode != null) {
+            syncVelocityModeSettings()
+            extraMode.onUpdate()
+            return@handler
+        }
 
         if (thePlayer.isInLiquid || thePlayer.isInWeb || thePlayer.isDead)
             return@handler
@@ -452,6 +538,13 @@ object Velocity : Module("Velocity", Category.COMBAT) {
 
     val onAttack = handler<AttackEvent> { event ->
         val player = mc.thePlayer ?: return@handler
+
+        // ---- 新模式分发 ----
+        velocityMode?.let {
+            it.onAttack(event.targetEntity)
+            return@handler
+        }
+
         when (mode.lowercase()) {
             "intavereduce" -> {
                 if (player.hurtTime == hurtTime && System.currentTimeMillis() - lastAttackTime <= 8000) {
@@ -519,6 +612,20 @@ object Velocity : Module("Velocity", Category.COMBAT) {
         }
 
         if (event.isCancelled) return@handler
+
+        // ---- 新模式分发（含出站方向的 blink/包改写） ----
+        val extraVelocityMode = velocityMode
+        if (extraVelocityMode != null) {
+            if (event.eventType == EventState.SEND) {
+                when (extraVelocityMode.modeName) {
+                    "WatchdogNCP-New" -> if (WatchdogNCPVelocityMode.driveBlink(event)) return@handler
+                    "Vulcan-New" -> if (VulcanNewVelocityMode.driveBlink(event)) return@handler
+                    "Grim-New" -> GrimNewVelocityMode.onPacketSendSpoof(event)
+                }
+            }
+            extraVelocityMode.onPacket(event)
+            return@handler
+        }
 
         // ===== NoSave 模式：智能取消 / GrimCombat 处理 =====
         if (mode == "NoSave") {
@@ -690,6 +797,14 @@ object Velocity : Module("Velocity", Category.COMBAT) {
 
     val onTick = handler<GameTickEvent> {
         val player = mc.thePlayer ?: return@handler
+
+        // ---- 新模式分发（Grim-New 的冻结补包等） ----
+        velocityMode?.let {
+            syncVelocityModeSettings()
+            it.onTick()
+            return@handler
+        }
+
         if (mode == "GrimC03") {
             if (timerTicks > 0 && mc.timer.timerSpeed <= 1) {
                 val timerSpeed = 0.8f + (0.2f * (20 - timerTicks) / 20)
@@ -751,6 +866,13 @@ object Velocity : Module("Velocity", Category.COMBAT) {
 
     val onJump = handler<JumpEvent> { event ->
         val thePlayer = mc.thePlayer
+
+        // ---- 新模式分发 ----
+        velocityMode?.let {
+            it.onJump(event)
+            return@handler
+        }
+
         if (thePlayer == null || thePlayer.isInLiquid || thePlayer.isInWeb) return@handler
         when (mode.lowercase()) {
             "aacpush" -> {
@@ -763,6 +885,13 @@ object Velocity : Module("Velocity", Category.COMBAT) {
 
     val onStrafe = handler<StrafeEvent> {
         val player = mc.thePlayer ?: return@handler
+
+        // ---- 新模式分发 ----
+        velocityMode?.let {
+            it.onStrafe()
+            return@handler
+        }
+
         if (mode == "Jump" && hasReceivedVelocity) {
             if (!player.isJumping && nextInt(endExclusive = 100) < chance && shouldJump() && player.isSprinting && player.onGround && player.hurtTime == 9) {
                 player.tryJump()
@@ -787,6 +916,10 @@ object Velocity : Module("Velocity", Category.COMBAT) {
 
     val onBlockBB = handler<BlockBBEvent> { event ->
         val player = mc.thePlayer ?: return@handler
+
+        // 新模式不使用 BlockBB
+        if (velocityMode != null) return@handler
+
         if (mode == "GhostBlock" && hasReceivedVelocity) {
             if (player.hurtTime in hurtTimeRange) {
                 if (event.block is BlockAir && event.y == mc.thePlayer.posY.toInt() + 1) {
@@ -803,6 +936,24 @@ object Velocity : Module("Velocity", Category.COMBAT) {
         "ticks" -> limitUntilJump >= ticksUntilJump
         "receivedhits" -> limitUntilJump >= hitsUntilJump
         else -> false
+    }
+
+    // ---- 新模式：移动 / 输入 / 3D 渲染分发 ----
+    val onMoveEvent = handler<MoveEvent> { event ->
+        val extraMode = velocityMode ?: return@handler
+        if (extraMode is GrimNewVelocityMode) {
+            GrimNewVelocityMode.handleMove { event.cancelEvent() }
+        } else {
+            extraMode.onMove(event)
+        }
+    }
+
+    val onMovementInputEvent = handler<MovementInputEvent> { event ->
+        velocityMode?.onMoveInput(event)
+    }
+
+    val onRender3D = handler<Render3DEvent> {
+        velocityMode?.onRender3D()
     }
 
     private fun handleVelocity(event: PacketEvent) {
