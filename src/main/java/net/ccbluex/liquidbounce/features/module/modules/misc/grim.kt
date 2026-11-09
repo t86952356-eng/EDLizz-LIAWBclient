@@ -58,7 +58,6 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.Velocity
 import net.ccbluex.liquidbounce.features.module.modules.exploit.AbortBreaking
 import net.ccbluex.liquidbounce.features.module.modules.exploit.AntiExploit
 import net.ccbluex.liquidbounce.features.module.modules.exploit.AntiHunger
-import net.ccbluex.liquidbounce.features.module.modules.exploit.Blink
 import net.ccbluex.liquidbounce.features.module.modules.exploit.Clip
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ConsoleSpammer
 import net.ccbluex.liquidbounce.features.module.modules.exploit.Damage
@@ -126,7 +125,6 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.GhostMove
 import net.ccbluex.liquidbounce.features.module.modules.movement.HighJump
 import net.ccbluex.liquidbounce.features.module.modules.movement.IceSpeed
 import net.ccbluex.liquidbounce.features.module.modules.movement.InventoryMove
-import net.ccbluex.liquidbounce.features.module.modules.movement.Liquids
 import net.ccbluex.liquidbounce.features.module.modules.movement.LongJump
 import net.ccbluex.liquidbounce.features.module.modules.movement.MoveFix
 import net.ccbluex.liquidbounce.features.module.modules.movement.NCPSpeed
