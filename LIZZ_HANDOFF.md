@@ -15,12 +15,12 @@
 | البند | القيمة |
 |---|---|
 | اسم العميل | **Lizz** (داخل الكود: `CLIENT_NAME = "L"+"izz"`) — يعرف أيضاً بـ **LAWIB / LIAWB client** |
-| الإصدار الحالي | **b12.10** (`LiquidBounce.kt` → `clientVersionText` و`gradle.properties` → `mod_version`) |
+| الإصدار الحالي | **b12.11** (`LiquidBounce.kt` → `clientVersionText` و`gradle.properties` → `mod_version`) |
 | اللعبة | Minecraft **1.8.9** — Forge `11.15.1.2318` — mappings `stable_22` |
 | الأساس | **LiquidBounce Legacy** (فرع المجتمع النهائي، آخر إصدار رسمي منه b100) |
 | مود id | `Lizz` — الاسم الظاهر في mcmod.info: `LAWIB` |
 | المؤلفون (mcmod.info) | CCBlueX، PickBowen، bzym2، RainRuin، sunbox |
-| عنوان النافذة | `LIAWB client 1.8.9 b12.10 \| 免费注册加群：815061613` (عنوان مجتمع صيني — رقم مجموعة QQ) |
+| عنوان النافذة | `LIAWB client 1.8.9 b12.11 \| 免费注册加群：815061613` (عنوان مجتمع صيني — رقم مجموعة QQ) |
 | التوزيع الرسمي | عبر Discord العميل: **discord.gg/Y2U2gWyRUN** (فيديو «Lizz 7.0 (fork lb b100)») |
 | المستودع | `https://github.com/t86952356-eng/EDLizz-LIAWBclient` (عام، فرع `main`) |
 | سجل التسمية | الفورك بدأ بـ «LIAWB client (chat prefix rebrand)» من LiquidBounce Legacy، ثم أُضيف MusicPlayer، ثم ClickGUI بأسلوب Fatality في b12.7، ثم إصدار تخفيف الحجم في b12.8، ثم إعادة تسمية الموديولات والأوضاع (WatchdogNCP/UpdatedNCP/FastBridge/Verus/AimAssist/MoreKB) في b12.9 |
@@ -218,6 +218,37 @@ TweakClass/FMLCorePlugin)، mcmod.info = b12.10، SRG reobf مؤكد (47 اسم�
 WatchdogNCPNewSpeed + fly: WatchdogNCPNew/Matrix/MatrixDamage) + كلاسات PortedUtils الخمسة، وسلاسل
 الأوضاع والإعدادات الجديدة مؤكدة داخل Velocity.class وNoSlow.class.
 
+### المهمة 5 — نوفمبر 2026 — «إصلاحات b12.10 + الدفعة الثانية من الاستخراج» (b12.11)
+الهدف: (1) أربع إصلاحات طلبها المستخدم على b12.10: إعادة تسمية «-Watchdog Prediction» إلى
+**Watchdog-Protection** في NoSlow وVelocity، جعل سبرنت Speed/Polar **legit**، دعم **Sword NoSlow مع KillAura**
+في المودات المستخرجة الست (بتعلّم نظام Custom نفسه — usingItemFunc)، وإصلاح خيار **damageboost** الميت في
+Velocity/WatchdogNCP-New (وVulcan-New أيضاً — نفس الخلل). (2) الدفعة الثانية من الاستخراج: Criticals
+(WatchdogNCP/Vulcan/Verus) + LongJump (Watchdog Fire Ball/Grim/Vulcan) + Phase (WatchdogNCP-Blink/Vulcan/Grim)
++ Step (Vulcan/WatchdogNCP) + InventoryMove (نظام **Mode/Custom** كامل + WatchdogNCP/Grim) + AntiVoid
+(WatchdogNCP/Vulcan) = **15 وضعاً جديداً**.
+
+| # | الدرس / الخلل | التفصيل | الحل المطبّق |
+|---|---|---|---|
+| 1 | **خيارات ميتة في المصدر نفسه** | damageBoost في WatchdogVelocity/VulcanVelocity المصدر معرّف ولا يُستخدم (كذلك Boost في WatchdogFireBallLongJump) — نُقلت في b12.10 حرفياً فبقيت ميتة | للمودات المطلوبة نُفّذ سلوك الخيار فعلياً (تحويل قوة ال knockback الأفقية لتسريع باتجاه الحركة × Damage Boost Speed)؛ Boost الخاص بـ FireBall بقي كما في المصدر مع تعليق. **الدرس: عند نقل خيار، تحقق أنه مُستخدم فعلاً في منطق المصدر** |
+| 2 | **واجهة KillAura في المودات المنقولة** | فروع السيف في المودات المستخرجة تفحص `player.isUsingItem` فقط، وKillAura auto-block لا يضبطها | استبدال الفحص بـ `NoSlow.usingItemFunc()` في فروع السيف (نفس نظام Custom حرفياً — لا نظام جديد). **الدرس: أي فحص «استخدام عنصر» في وضع منقول يجب أن يمر بواجهة الموديول نفسها** |
+| 3 | **حقول مشوّشة جديدة غير قابلة للفك** | `csk` (WatchdogCriticals — استُخدمت كشرط استعادة مبكر للـ stepHeight)، `cuz` (VulcanStep — بوابة رفع stepHeight)، `adr` (WatchdogBypass NPC-check) — مرجع واحد فقط في المصدر كله لكل منها | csk→متابع محلي «ticksSinceCritAttack»؛ cuz→متابع محلي «ticksSinceFullStep»؛ adr→أسقط الشرط (موثّق). **الدرس: الحقل المشوش ذو المرجع الوحيد لا يمكن فكه — سوّد تقريباً موثقاً أو أسقطه إن كان هامشياً** |
+| 4 | **تعارض أسماء القيم بين المودات الجديدة والقديمة** | Criticals الجديدة تريد «Delay» (0..1000) والموديول فيه «Delay» (0..500)؛ AntiVoid الجديدة تريد «Distance» مرتين بقيمتين مختلفتين | أسماء مميزة: «WatchdogNCP Delay»/«Verus Delay» و«WatchdogNCP Distance»/«Vulcan Distance». **الدرس: افحص أسماء القيم الموجودة قبل تسمية إعدادات الوضع الجديد** |
+| 5 | **val تُقيّم مرة واحدة بدل get()** | InventoryMove.isIntave كان `private val isIntave = (mc.currentScreen ...) && intave` — يُقيّم عند تحميل الكلاس (currentScreen=null) فلا يعمل الإعداد Intave أبداً | تحويل إلى get() مع قيد Custom. **الدرس: أي شرط يعتمد على حالة لحظية (شاشة/موضع) يجب أن يكون getter لا val** |
+| 6 | **PacketQueueComponent.a(...) استدعاء ميت** | في WatchdogAntiVoid المصدر يستدعي تحديد أنواع الحزم لكن علم التفعيل cR لا يضبطه إلا MMCFlight/LegitNoSlow — الاستدعاء بلا أثر | أسقط الاستدعاء (موثّق). **الدرس: تتبّع أعلام التفعيل قبل نقل استدعاءات مكونات المصدر** |
+| 7 | **StrafeEvent.setSpeed/setForward غير موجودة في Lizz** | أوضاع Vulcan (Phase/Step/AntiVoid) تعدّل السرعة/الاتجاه داخل الحدث | setSpeed→إلغاء الحدث + PortedMove.strafe (كما b12.10)؛ setForward→إلغاء الحدث + إعادة تطبيق صيغة moveFlying الأصلية بـ forward مُعطّى (moveFlyingWithForward) |
+| 8 | **تحرير هيكلي بالـ MultiEdit يكسر الملف** | تعديل Phase.kt أدخل onUpdate ثانياً مفتوح الأقواس (الكشف بقص الأقواس برمجياً) | إصلاح + فحص توازن الأقواس لكل ملف معدّل قبل الدفع. **الدرس: بعد كل تعديل هيكلي كبير افحص `count('{')-count('}')` ومكررات الأسماء برمجياً** |
+
+**تبسيطات موثّقة**: RotationComponent.setRotations → حقن `RotationUtils.currentRotation` مباشرة (الـ Mixin يحملها للحزم ويصحح المدخلات — يكافئ MovementFix)؛ SmoothCameraComponent.cn → متابعة محلية 80ms تُصفّر cameraYaw/cameraPitch؛ SprintEvent → UpdateEvent + isSprinting=false؛ WatchdogBlinkPhase يطلق blink عند رسائل فتح الأقفاص بدل انتظار مهلة المصدر؛ PacketlessDamageComponent/«Watchdog Fire Ball 2»/Watchdog2LongJump.launched أسقطت (غير موجودة)؛ exclude شرط adr (غير قابل للفك).
+
+**النتيجة**: compileKotlin محلي = BUILD SUCCESSFUL من الجولة الثانية (خطأ واحد فقط: بقايا دالة محذوفة)،
+ثم نجح البناء على GitHub Actions (run **42756010821**) وإصدار
+[`vb12.11-mc1.8.9`](https://github.com/t86952356-eng/EDLizz-LIAWBclient/releases/tag/vb12.11-mc1.8.9)
+بمرفقات `lizz-b12.11.jar` (**25.3MB** — ضمن النطاق 20-26MB) و`lizz-b12.11-source.zip` (**28.5MB**)، والـ changelog
+بالإنجليزية من `RELEASE_NOTES.md` (كل الأوضاع مكتوبة كإضافات جديدة دون ذكر الاستخراج). التحقق بعد النشر:
+manifest سليم (MixinConfigs/FMLAT/TweakClass/FMLCorePluginContainsFMLMod)، mcmod.info = b12.11،
+SRG reobf مؤكد (47 اسماً في MixinEntity)، كل كلاسات الأوضاع الـ 15 موجودة، وقيم Mode في
+InventoryMove (Custom/WatchdogNCP/Grim) وأسماء Watchdog-Protection مؤكدة داخل الكلاسات المبنية.
+
 ## 5) سجل المهام
 
 | التاريخ | المهمة | الحالة |
@@ -226,3 +257,4 @@ WatchdogNCPNewSpeed + fly: WatchdogNCPNew/Matrix/MatrixDamage) + كلاسات Po
 | نوفمبر 2026 | المهمة 2: تخفيف حجم العميل بشكل ممتاز (b12.8): حذف حشو ميت + ضغط أصول + optimizeJar + source.zip ضغط 9 + RELEASE_NOTES.md | ✅ تمت — انتهت دون تنبيهات من المستخدم على أي مشكلة (النتيجة: JAR أصغر بـ 43% وsource.zip أصغر بـ 52%) |
 | نوفمبر 2026 | المهمة 3: إعادة تسمية الموديولات والأوضاع (AimAssist/MoreKB/WatchdogNCP family/UpdatedNCP/FastBridge/Verus/Watchdog-Protection) + نظام Mode/Custom في NoSlow وDisabler مع tag + حد BoostDelay 10000 + حذف LiquidWalk/BedGodMode/GodMode (b12.9) | ✅ تمت — فشل بناء واحد بسبب خطأ استيراد في grim.kt (وثّق أعلاه وحُل فوراً)، ثم نجح النشر (run 42621643210) |
 | نوفمبر 2026 | المهمة 4 (b12.10): استخراج الأوضاع من عميل 1.8.9 آخر — NoSlow 6 + Velocity 7 من 8 (Polar لم يُستخرج: هو Legit مُعاد تسميته في المصدر) + Speed 4 + Fly 3 = 20 وضعاً + بنية PortedUtils مشتركة + ترقية b12.10 | ✅ تمت — compileKotlin محلي نجح (بعد إصلاح 35 خطأ) ونجح النشر على Actions (run 42653938466) والإصدار vb12.10-mc1.8.9 |
+| نوفمبر 2026 | المهمة 5 (b12.11): إصلاحات b12.10 الأربعة (تسمية Watchdog-Protection + Polar legit sprint + Sword/KillAura عبر usingItemFunc + إصلاح damageBoost الميت) + الدفعة الثانية: Criticals 3 + LongJump 3 + Phase 3 + Step 2 + InventoryMove (نظام Mode/Custom + وضعان) + AntiVoid 2 = 15 وضعاً جديداً + ترقية b12.11 | ✅ تمت — compileKotlin محلي نجح (خطأ واحد أُصلح) ونجح النشر على Actions (run 42756010821) والإصدار vb12.11-mc1.8.9 |
