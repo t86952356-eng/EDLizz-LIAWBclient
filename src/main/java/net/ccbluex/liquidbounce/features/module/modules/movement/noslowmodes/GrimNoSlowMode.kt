@@ -17,6 +17,7 @@ import net.minecraft.network.play.client.C09PacketHeldItemChange
 
 /**
  * NoSlow「Grim」模式：PRE 阶段对四类物品发送「切槽再切回」的假动作。
+ * 剑分支使用 NoSlow.usingItemFunc()（与 Custom 模式一致）→ 支持 KillAura 自动格挡。
  */
 object GrimNoSlowMode : NoSlowMode("Grim") {
 
@@ -33,7 +34,8 @@ object GrimNoSlowMode : NoSlowMode("Grim") {
             sendSlotSwap()
         }
 
-        if (NoSlow.sword && player.isUsingItem && item is ItemSword) {
+        // 剑：usingItemFunc() 支持 KillAura 自动格挡（blockStatus）与 UpdatedNCP 手动格挡
+        if (NoSlow.sword && NoSlow.usingItemFunc() && item is ItemSword) {
             sendSlotSwap()
         }
 
@@ -56,7 +58,7 @@ object GrimNoSlowMode : NoSlowMode("Grim") {
             event.forward = 1f
         }
 
-        if (NoSlow.sword && player.isUsingItem && item is ItemSword) {
+        if (NoSlow.sword && NoSlow.usingItemFunc() && item is ItemSword) {
             event.strafe = 1f
             event.forward = 1f
         }

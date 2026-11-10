@@ -49,7 +49,7 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false) {
         "Mode",
         arrayOf(
             "Custom", "WatchdogNCP", "Intave", "Matrix",
-            "-Watchdog Prediction", "Grim", "Grim 1.9"
+            "Watchdog-Protection", "Grim", "Grim 1.9"
         ),
         "Custom"
     )
@@ -71,10 +71,10 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false) {
     // ---- WatchdogNCP（NoSlow） ----
     private val wdSlowDownOnSlabs by boolean("Slow down on Slabs", true) { mode == "WatchdogNCP" }
 
-    // ---- -Watchdog Prediction（NoSlow） ----
-    private val wdMaxPingSpoof by int("Max Ping Spoof", 8, 0..30) { mode == "-Watchdog Prediction" }
-    private val wdWhenToFinishEating by int("When to finish eating", 30, 20..36) { mode == "-Watchdog Prediction" }
-    private val wdNonBlinkSpeedBypass by boolean("Non-Blink Speed Bypass", true) { mode == "-Watchdog Prediction" }
+    // ---- Watchdog-Protection（NoSlow） ----
+    private val wdMaxPingSpoof by int("Max Ping Spoof", 8, 0..30) { mode == "Watchdog-Protection" }
+    private val wdWhenToFinishEating by int("When to finish eating", 30, 20..36) { mode == "Watchdog-Protection" }
+    private val wdNonBlinkSpeedBypass by boolean("Non-Blink Speed Bypass", true) { mode == "Watchdog-Protection" }
 
     private val swordMode by choices(
         "SwordMode",

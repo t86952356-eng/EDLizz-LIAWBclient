@@ -134,7 +134,17 @@ object VulcanNewVelocityMode : VelocityMode("Vulcan-New") {
         if (!releasing && !longJumpEnabled && !flyEnabled && !speedEnabled) {
             when (packet) {
                 is S12PacketEntityVelocity -> {
-                    if (packet.entityID == player.entityId && !PortedMove.isInsideBlock() &&
+                    // ---- Damage Boost：击退水平分量直接转为移动方向加速 ----
+                    // （原选项此前只有定义没有实现；本分支在 Speed 模块未启用时独立完成加速）
+                    if (damageBoost && packet.entityID == player.entityId &&
+                        !scaffoldEnabled && !player.isInWater && !PortedMove.isInsideBlock() &&
+                        PortedMove.isMoving() &&
+                        hypot(packet.motionX / 8000.0, packet.motionZ / 8000.0) > 0.08
+                    ) {
+                        PortedMove.strafe(hypot(packet.motionX / 8000.0, packet.motionZ / 8000.0) * damageBoostSpeed)
+                        player.motionY = packet.motionY / 8000.0
+                        event.cancelEvent()
+                    } else if (packet.entityID == player.entityId && !PortedMove.isInsideBlock() &&
                         (
                             player.itemInUseCount <= 0 ||
                                 !alwaysCancelVertical ||

@@ -21,11 +21,11 @@ import kotlin.math.atan2
 import kotlin.math.hypot
 
 /**
- * Velocity「-Watchdog Prediction」模式：
+ * Velocity「Watchdog-Protection」模式：
  * 击退包全量持包（含保活），直到玩家朝向与击退方向一致（±15°）才释放；
  * 释放前保持 shouldJump 输入欺骗。
  */
-object WatchdogPredictionVelocityMode : VelocityMode("-Watchdog Prediction") {
+object WatchdogPredictionVelocityMode : VelocityMode("Watchdog-Protection") {
 
     /** Velocity to let through（默认 0.3，0..0.6）。 */
     var velocityToLetThrough = 0.3f

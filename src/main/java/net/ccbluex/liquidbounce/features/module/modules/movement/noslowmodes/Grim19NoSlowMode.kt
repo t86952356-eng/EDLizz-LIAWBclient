@@ -29,6 +29,7 @@ import net.minecraft.item.ItemSword
 /**
  * NoSlow「Grim 1.9」模式：跨版本（1.9+）时每个移动 tick 通过 Via 管线
  * 补发一个 Use Item 包，利用 1.9+ 协议的减速判定分支绕过。
+ * 使用判定用 NoSlow.usingItemFunc()（与 Custom 模式一致）→ 支持 KillAura 自动格挡。
  */
 object Grim19NoSlowMode : NoSlowMode("Grim 1.9") {
 
@@ -47,14 +48,15 @@ object Grim19NoSlowMode : NoSlowMode("Grim 1.9") {
         if (event.eventState != EventState.PRE) return
         val player = mc.thePlayer ?: return
 
-        if (player.isUsingItem && ViaUseItem.isCrossVersionTo9Plus()) {
+        // usingItemFunc()：剑 + KillAura.blockStatus（自动格挡）时也视为使用中（与 Custom 一致）
+        if (NoSlow.usingItemFunc() && ViaUseItem.isCrossVersionTo9Plus()) {
             if (ViaLoadingBase.getInstance().targetVersion.newerThanOrEqualTo(ProtocolVersion.v1_19)) {
                 sendUseItem19()
             } else {
                 ViaUseItem.sendUseItem()
             }
             useTicks++
-        } else if (player.isUsingItem && player.ticksExisted % 5 == 0) {
+        } else if (NoSlow.usingItemFunc() && player.ticksExisted % 5 == 0) {
             chat("use 1.9+ for this bypass")
         } else {
             useTicks = 0
@@ -90,7 +92,8 @@ object Grim19NoSlowMode : NoSlowMode("Grim 1.9") {
             event.forward = 1f
         }
 
-        if (NoSlow.sword && player.isUsingItem && item is ItemSword) {
+        // 剑：usingItemFunc() 支持 KillAura 自动格挡（blockStatus）与 UpdatedNCP 手动格挡
+        if (NoSlow.sword && NoSlow.usingItemFunc() && item is ItemSword) {
             event.strafe = 1f
             event.forward = 1f
         }

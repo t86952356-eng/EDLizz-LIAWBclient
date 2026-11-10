@@ -8,6 +8,8 @@ package net.ccbluex.liquidbounce.features.module.modules.movement
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.modules.movement.inventorymovemodes.GrimInventoryMove
+import net.ccbluex.liquidbounce.features.module.modules.movement.inventorymovemodes.WatchdogNCPInventoryMove
 import net.ccbluex.liquidbounce.ui.client.clickgui.ClickGui
 import net.ccbluex.liquidbounce.ui.client.hud.designer.GuiHudDesigner
 import net.ccbluex.liquidbounce.utils.client.PacketUtils
@@ -29,17 +31,27 @@ import org.lwjgl.input.Mouse
 
 object InventoryMove : Module("InventoryMove", Category.MOVEMENT, gameDetecting = false) {
 
-    private val notInChests by boolean("NotInChests", false)
-    val aacAdditionPro by boolean("AACAdditionPro", false)
-    private val intave by boolean("Intave", false)
-    private val saveC0E by boolean("SaveC0E", false)
-    private val onlyChest by boolean("Onlychest", false) { saveC0E }
-    private val noSprintWhenClosed by boolean("NoSprintWhenClosed", false) { saveC0E }
+    /** Mode：Custom = 原有全部设置与逻辑；新模式（同源客户端移植）自包含。 */
+    val mode by choices("Mode", arrayOf("Custom", "WatchdogNCP", "Grim"), "Custom")
+
+    /** 新模式集合（与 NoSlowMode/CriticalsMode 同套路的分发模型）。 */
+    private val invMoveModes = arrayOf(WatchdogNCPInventoryMove, GrimInventoryMove)
+
+    private val invMoveMode get() = invMoveModes.firstOrNull { it.modeName == mode }
+
+    private val notInChests by boolean("NotInChests", false) { mode == "Custom" }
+    val aacAdditionPro by boolean("AACAdditionPro", false) { mode == "Custom" }
+    private val intave by boolean("Intave", false) { mode == "Custom" }
+    private val saveC0E by boolean("SaveC0E", false) { mode == "Custom" }
+    private val onlyChest by boolean("Onlychest", false) { saveC0E && mode == "Custom" }
+    private val noSprintWhenClosed by boolean("NoSprintWhenClosed", false) { saveC0E && mode == "Custom" }
 
     // 新增：允许在 GUI 中自由转动视角（默认开启）
-    private val freeLook by boolean("FreeLook", true)
+    private val freeLook by boolean("FreeLook", true) { mode == "Custom" }
 
-    private val isIntave = (mc.currentScreen is GuiInventory || mc.currentScreen is GuiChest) && intave
+    // Intave 判定原来是一次性 val（对象初始化时求值，永远为 false）——改为逐次求值
+    private val isIntave
+        get() = mode == "Custom" && (mc.currentScreen is GuiInventory || mc.currentScreen is GuiChest) && intave
     private val clickWindowList = ArrayDeque<C0EPacketClickWindow>()
 
     private val noMove by +InventoryManager.noMoveValue
@@ -50,14 +62,19 @@ object InventoryMove : Module("InventoryMove", Category.MOVEMENT, gameDetecting 
     private val silentlyCloseAndReopen by boolean(
         "SilentlyCloseAndReopen",
         false
-    ) { noMove && (noMoveAir || noMoveGround) }
+    ) { mode == "Custom" && noMove && (noMoveAir || noMoveGround) }
 
     private val reopenOnClick by boolean(
         "ReopenOnClick",
         false
-    ) { silentlyCloseAndReopen && noMove && (noMoveAir || noMoveGround) }
+    ) { mode == "Custom" && silentlyCloseAndReopen && noMove && (noMoveAir || noMoveGround) }
 
-    private val inventoryMotion by float("InventoryMotion", 1F, 0F..2F)
+    private val inventoryMotion by float("InventoryMotion", 1F, 0F..2F) { mode == "Custom" }
+
+    // ---- WatchdogNCP（InventoryMove）选项 ----
+    private val wdInvPredictionMode by boolean("Prediction Mode", false) { mode == "WatchdogNCP" }
+    private val wdInvTicks by int("Ticks", 1, 1..20) { mode == "WatchdogNCP" }
+    private val wdInvMeasureChestOpen by boolean("Measure Chest Open", true) { mode == "WatchdogNCP" }
 
     private val affectedBindings = arrayOf(
         mc.gameSettings.keyBindForward,
@@ -71,7 +88,58 @@ object InventoryMove : Module("InventoryMove", Category.MOVEMENT, gameDetecting 
     // 标记是否正处于 FreeLook 捕获状态，用于在模块关闭时正确释放
     private var freeLookActive = false
 
+    private fun syncNewModeSettings() {
+        WatchdogNCPInventoryMove.predictionMode = wdInvPredictionMode
+        WatchdogNCPInventoryMove.ticks = wdInvTicks
+        WatchdogNCPInventoryMove.measureChestOpen = wdInvMeasureChestOpen
+    }
+
+    val onNewModeMotion = handler<MotionEvent> { event ->
+        if (event.eventState != EventState.PRE) return@handler
+        syncNewModeSettings()
+        val extra = invMoveMode ?: return@handler
+        extra.onPreMotion(event)
+        if (extra is WatchdogNCPInventoryMove) {
+            extra.onPreMotionMedium(event)
+        }
+    }
+
+    val onNewModePacket = handler<PacketEvent> { event ->
+        syncNewModeSettings()
+        invMoveMode?.onPacketSend(event)
+    }
+
+    val onNewModeMoveInput = handler<MovementInputEvent> { event ->
+        invMoveMode?.onMoveInput(event)
+    }
+
+    val onNewModeMove = handler<MoveEvent> { event ->
+        invMoveMode?.onMove(event)
+    }
+
+    override fun onEnable() {
+        invMoveMode?.onEnable()
+    }
+
+    override fun onDisable() {
+        invMoveMode?.onDisable()
+        for (affectedBinding in affectedBindings) affectedBinding.pressed = isButtonPressed(affectedBinding)
+        // 确保模块关闭时释放鼠标（如果处于捕获状态）
+        if (freeLookActive) {
+            Mouse.setGrabbed(false)
+            mc.inGameHasFocus = false
+            freeLookActive = false
+        }
+    }
+
     val onUpdate = handler<UpdateEvent>(priority = -1) {
+        // ---- 新模式分发：自包含（自带按键回填/限速逻辑）----
+        invMoveMode?.let {
+            syncNewModeSettings()
+            it.onUpdate()
+            return@handler
+        }
+
         val player = mc.thePlayer ?: return@handler
         val screen = mc.currentScreen
 
@@ -130,16 +198,17 @@ object InventoryMove : Module("InventoryMove", Category.MOVEMENT, gameDetecting 
     }
 
     val onStrafe = handler<StrafeEvent> {
-        if (isIntave) {
+        if (mode == "Custom" && isIntave) {
             mc.gameSettings.keyBindSneak.pressed = true
         }
     }
 
     val onJump = handler<JumpEvent> { event ->
-        if (isIntave) event.cancelEvent()
+        if (mode == "Custom" && isIntave) event.cancelEvent()
     }
 
     val onClick = handler<ClickWindowEvent> { event ->
+        if (mode != "Custom") return@handler
         if (!canClickInventory()) event.cancelEvent()
         else if (reopenOnClick) {
             hasScheduledInLastLoop = false
@@ -148,6 +217,7 @@ object InventoryMove : Module("InventoryMove", Category.MOVEMENT, gameDetecting 
     }
 
     val onPacket = handler<PacketEvent> { event ->
+        if (mode != "Custom") return@handler
         val packet = event.packet
         val player = mc.thePlayer ?: return@handler
 
@@ -184,16 +254,6 @@ object InventoryMove : Module("InventoryMove", Category.MOVEMENT, gameDetecting 
         }
     }
 
-    override fun onDisable() {
-        for (affectedBinding in affectedBindings) affectedBinding.pressed = isButtonPressed(affectedBinding)
-        // 确保模块关闭时释放鼠标（如果处于捕获状态）
-        if (freeLookActive) {
-            Mouse.setGrabbed(false)
-            mc.inGameHasFocus = false
-            freeLookActive = false
-        }
-    }
-
     private fun isButtonPressed(keyBinding: KeyBinding): Boolean {
         return if (keyBinding.keyCode < 0) {
             Mouse.isButtonDown(keyBinding.keyCode + 100)
@@ -210,6 +270,7 @@ object InventoryMove : Module("InventoryMove", Category.MOVEMENT, gameDetecting 
 
     override val tag
         get() = when {
+            mode != "Custom" -> mode
             aacAdditionPro -> "AACAdditionPro"
             inventoryMotion != 1F -> inventoryMotion.toString()
             else -> null

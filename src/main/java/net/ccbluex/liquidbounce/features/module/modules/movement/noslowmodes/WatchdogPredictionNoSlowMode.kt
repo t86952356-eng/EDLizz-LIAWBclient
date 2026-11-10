@@ -37,11 +37,12 @@ import net.minecraft.util.BlockPos
 import net.minecraft.util.EnumFacing
 
 /**
- * NoSlow「-Watchdog Prediction」模式：
+ * NoSlow「Watchdog-Protection」模式：
  * 进食超过 Max Ping Spoof 后全量持包（blink）模拟高延迟；
  * 达到 When to finish eating 时自动松开使用键；进食时朝向偏移 45°。
+ * 剑分支使用 NoSlow.usingItemFunc()（与 Custom 模式一致）→ 支持 KillAura 自动格挡。
  */
-object WatchdogPredictionNoSlowMode : NoSlowMode("-Watchdog Prediction") {
+object WatchdogPredictionNoSlowMode : NoSlowMode("Watchdog-Protection") {
 
     /** Max Ping Spoof（默认 8）。 */
     var maxPingSpoof = 8
@@ -186,7 +187,8 @@ object WatchdogPredictionNoSlowMode : NoSlowMode("-Watchdog Prediction") {
             event.forward = 1f
         }
 
-        if (NoSlow.sword && player.isUsingItem && item is ItemSword) {
+        // 剑：usingItemFunc() 支持 KillAura 自动格挡（blockStatus）与 UpdatedNCP 手动格挡
+        if (NoSlow.sword && NoSlow.usingItemFunc() && item is ItemSword) {
             mc.netHandler.addToSendQueue(
                 C07PacketPlayerDigging(C07PacketPlayerDigging.Action.RELEASE_USE_ITEM, BlockPos.ORIGIN, EnumFacing.DOWN)
             )

@@ -11,6 +11,8 @@ import net.ccbluex.liquidbounce.event.async.waitTicks
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.exploit.Phase
+import net.ccbluex.liquidbounce.features.module.modules.movement.stepmodes.VulcanStep
+import net.ccbluex.liquidbounce.features.module.modules.movement.stepmodes.WatchdogNCPStep
 import net.ccbluex.liquidbounce.utils.block.BlockUtils
 import net.ccbluex.liquidbounce.utils.client.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.client.PacketUtils.sendPackets
@@ -39,13 +41,19 @@ object Step : Module("Step", Category.MOVEMENT, gameDetecting = false) {
         arrayOf(
             "Vanilla", "Jump", "NCP", "MotionNCP",
             "OldNCP", "AAC", "LAAC", "AAC3.3.4",
-            "Spartan", "Rewinside", "BlocksMCTimer"
+            "Spartan", "Rewinside", "BlocksMCTimer",
+            "Vulcan", "WatchdogNCP"
         ),
         "NCP"
     )
 
+    /** 新模式集合（与 NoSlowMode/CriticalsMode 同套路的分发模型）。 */
+    private val stepModes = arrayOf(VulcanStep, WatchdogNCPStep)
+
+    private val stepMode get() = stepModes.firstOrNull { it.modeName == mode }
+
     private val height by float("Height", 1F, 0.6F..10F)
-    { mode !in arrayOf("Jump", "MotionNCP", "LAAC", "AAC3.3.4", "BlocksMCTimer") }
+    { mode !in arrayOf("Jump", "MotionNCP", "LAAC", "AAC3.3.4", "BlocksMCTimer", "Vulcan", "WatchdogNCP") }
     private val jumpHeight by float("JumpHeight", 0.42F, 0.37F..0.42F)
     { mode == "Jump" }
 
@@ -66,11 +74,26 @@ object Step : Module("Step", Category.MOVEMENT, gameDetecting = false) {
 
     private val timer = MSTimer()
 
+    override fun onEnable() {
+        stepMode?.onEnable()
+    }
+
     override fun onDisable() {
+        stepMode?.onDisable()
+
         val thePlayer = mc.thePlayer ?: return
 
         // Change step height back to default (0.6 is default)
         thePlayer.stepHeight = 0.6F
+    }
+
+    val onNewModeMotion = handler<MotionEvent> { event ->
+        if (event.eventState != EventState.PRE) return@handler
+        stepMode?.onPreMotion(event)
+    }
+
+    val onNewModeTick = handler<GameTickEvent> {
+        stepMode?.onTick()
     }
 
     val onUpdate = loopSequence {
@@ -200,6 +223,12 @@ object Step : Module("Step", Category.MOVEMENT, gameDetecting = false) {
             && thePlayer.inventory.getCurrentItem() == null
         ) {
             event.stepHeight = 0F
+            return@handler
+        }
+
+        // ---- 新模式分发：自包含（自行管理步高/台阶包）----
+        stepMode?.let {
+            it.onStep(event)
             return@handler
         }
 

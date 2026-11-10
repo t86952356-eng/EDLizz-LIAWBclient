@@ -22,6 +22,7 @@ import net.minecraft.util.EnumFacing
 /**
  * NoSlow「Intave」模式：使用物品期间暂存全部出站包，
  * 每 5 tick 用「松开使用 + 重新使用」的组合包刷新服务端状态。
+ * 使用判定用 NoSlow.usingItemFunc()（与 Custom 模式一致）→ 支持 KillAura 自动格挡。
  */
 object IntaveNoSlowMode : NoSlowMode("Intave") {
 
@@ -47,7 +48,8 @@ object IntaveNoSlowMode : NoSlowMode("Intave") {
         val held = player.heldItem ?: return
         val item = held.item
 
-        if (player.isUsingItem) {
+        // usingItemFunc()：剑 + KillAura.blockStatus（自动格挡）时也视为使用中（与 Custom 一致）
+        if (NoSlow.usingItemFunc()) {
             if (item is ItemSword && NoSlow.sword) {
                 packetQueue.activate()
                 if (player.ticksExisted % 5 == 0) {
@@ -81,7 +83,7 @@ object IntaveNoSlowMode : NoSlowMode("Intave") {
             event.forward = 1f
         }
 
-        if (NoSlow.sword && player.isUsingItem && item is ItemSword) {
+        if (NoSlow.sword && NoSlow.usingItemFunc() && item is ItemSword) {
             event.strafe = 1f
             event.forward = 1f
         }

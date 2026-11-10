@@ -25,6 +25,7 @@ import kotlin.math.roundToLong
 /**
  * NoSlow「WatchdogNCP」模式：
  * 台阶感知 + 空中进食 + 切槽格挡绕过，逻辑按原版 1.8.9 实现等价移植。
+ * 剑分支使用 NoSlow.usingItemFunc()（与 Custom 模式一致）→ 支持 KillAura 自动格挡。
  */
 object WatchdogNoSlowMode : NoSlowMode("WatchdogNCP") {
 
@@ -123,7 +124,8 @@ object WatchdogNoSlowMode : NoSlowMode("WatchdogNCP") {
             }
         }
 
-        if (NoSlow.sword && player.isUsingItem && item is ItemSword) {
+        // 剑：usingItemFunc() 支持 KillAura 自动格挡（blockStatus）与 UpdatedNCP 手动格挡
+        if (NoSlow.sword && NoSlow.usingItemFunc() && item is ItemSword) {
             val slot = player.inventory.currentItem
             mc.netHandler.addToSendQueue(C09PacketHeldItemChange(slot % 7 + (Math.random() * 2.0).toInt() + 1))
             mc.netHandler.addToSendQueue(C09PacketHeldItemChange(slot))

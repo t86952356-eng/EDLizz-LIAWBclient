@@ -61,7 +61,7 @@ object Velocity : Module("Velocity", Category.COMBAT) {
             "IntaveReduce", "Delay", "GrimC03", "Hypixel", "WatchdogNCP",
             "Click", "BlocksMC", "GrimCombat", "Polar", "Buffer", "Grim",
             "NoSave", "WatchdogNCP-New", "Matrix", "Intave", "Vulcan-New",
-            "Grim-New", "Grim 2", "-Watchdog Prediction", "MMC"
+            "Grim-New", "Grim 2", "Watchdog-Protection", "MMC"
         ), "Simple"
     )
 
@@ -102,9 +102,9 @@ object Velocity : Module("Velocity", Category.COMBAT) {
     private val velGrim2RotationNoise by float("Rotation Noise", 0.001f, 0f..0.1f) { mode == "Grim 2" }
     private val velGrim2DebugLog by boolean("Debug Log", false) { mode == "Grim 2" }
 
-    // ---- -Watchdog Prediction ----
-    private val velWdPredictionLetThrough by float("Velocity to let through", 0.3f, 0f..0.6f) { mode == "-Watchdog Prediction" }
-    private val velWdPredictionPreventGhosting by boolean("Prevent Ghosting", true) { mode == "-Watchdog Prediction" }
+    // ---- Watchdog-Protection ----
+    private val velWdPredictionLetThrough by float("Velocity to let through", 0.3f, 0f..0.6f) { mode == "Watchdog-Protection" }
+    private val velWdPredictionPreventGhosting by boolean("Prevent Ghosting", true) { mode == "Watchdog-Protection" }
 
     private val horizontal by float("Horizontal", 0F, -1F..1F) { mode in arrayOf("Simple", "AAC", "Legit") }
     private val vertical by float("Vertical", 0F, -1F..1F) { mode in arrayOf("Simple", "Legit") }

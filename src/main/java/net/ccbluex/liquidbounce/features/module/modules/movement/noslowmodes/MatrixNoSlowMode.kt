@@ -16,6 +16,7 @@ import net.minecraft.item.ItemSword
 
 /**
  * NoSlow「Matrix」模式：进食期间按剩余使用 tick 分段控制水平速度。
+ * 剑分支使用 NoSlow.usingItemFunc()（与 Custom 模式一致）→ 支持 KillAura 自动格挡。
  */
 object MatrixNoSlowMode : NoSlowMode("Matrix") {
 
@@ -33,7 +34,8 @@ object MatrixNoSlowMode : NoSlowMode("Matrix") {
             event.forward = 1f
         }
 
-        if (NoSlow.sword && player.isUsingItem && item is ItemSword) {
+        // 剑：usingItemFunc() 支持 KillAura 自动格挡（blockStatus）与 UpdatedNCP 手动格挡
+        if (NoSlow.sword && NoSlow.usingItemFunc() && item is ItemSword) {
             event.strafe = 1f
             event.forward = 1f
         }
@@ -69,7 +71,8 @@ object MatrixNoSlowMode : NoSlowMode("Matrix") {
             matrixMotion()
         }
 
-        if (NoSlow.sword && player.isUsingItem && item is ItemSword) {
+        // 剑：usingItemFunc() 支持 KillAura 自动格挡（blockStatus）与 UpdatedNCP 手动格挡
+        if (NoSlow.sword && NoSlow.usingItemFunc() && item is ItemSword) {
             matrixMotion()
         }
 

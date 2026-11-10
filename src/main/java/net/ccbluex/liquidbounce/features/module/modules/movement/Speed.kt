@@ -174,17 +174,21 @@ object Speed : Module("Speed", Category.MOVEMENT) {
     // 合法疾跑（TargetBoost/GrimAC/Grim2）：只有纯前进方向才疾跑，
     // 左右平移 / 后退移动时不疾跑（Grim 会检测斜向、后退疾跑）
     private val legalSprintModes = arrayOf("TargetBoost", "GrimAC", "Grim2")
+
+    // Polar 模式：始终使用合法疾跑（用户要求 sprint legit）
+    private val alwaysLegalSprintModes = arrayOf("Polar")
+
     val legalSprint by boolean("LegalSprint", false) { mode.get() in legalSprintModes }
 
     /**
      * 合法疾跑逻辑：
-     *  - LegalSprint 开启且当前模式支持 → 只有按住前进（W）且无 A/D/S 输入时疾跑，其余方向强制取消疾跑
+     *  - LegalSprint 开启且当前模式支持（或模式为 Polar）→ 只有按住前进（W）且无 A/D/S 输入时疾跑，其余方向强制取消疾跑
      *  - 否则保持原逻辑：移动就疾跑
      */
     private fun applySprint(thePlayer: net.minecraft.client.entity.EntityPlayerSP) {
         if (sprintManually) return
 
-        if (legalSprint && mode.get() in legalSprintModes) {
+        if ((legalSprint && mode.get() in legalSprintModes) || mode.get() in alwaysLegalSprintModes) {
             val input = thePlayer.movementInput
             val forwardOnly = input.moveForward > 0f && input.moveStrafe == 0f
             thePlayer.isSprinting = thePlayer.isMoving && forwardOnly

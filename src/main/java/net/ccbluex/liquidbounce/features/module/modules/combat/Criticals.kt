@@ -6,10 +6,17 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.event.AttackEvent
+import net.ccbluex.liquidbounce.event.EventState
+import net.ccbluex.liquidbounce.event.JumpEvent
+import net.ccbluex.liquidbounce.event.MotionEvent
+import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.modules.combat.criticalsmodes.VerusCriticalsMode
+import net.ccbluex.liquidbounce.features.module.modules.combat.criticalsmodes.VulcanCriticalsMode
+import net.ccbluex.liquidbounce.features.module.modules.combat.criticalsmodes.WatchdogNCPCriticalsMode
 import net.ccbluex.liquidbounce.features.module.modules.movement.Fly
 import net.ccbluex.liquidbounce.utils.client.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.client.PacketUtils.sendPackets
@@ -37,10 +44,20 @@ object Criticals : Module("Criticals", Category.COMBAT) {
             "LowJump",
             "CustomMotion",
             "Visual",
-            "DownInAttack"
+            "DownInAttack",
+            "WatchdogNCP",
+            "Vulcan",
+            "Verus"
         ),
         "Packet"
     )
+
+    /** 新模式集合（与 NoSlowMode/VelocityMode 同套路的分发模型）。 */
+    private val criticalsModes = arrayOf(
+        WatchdogNCPCriticalsMode, VulcanCriticalsMode, VerusCriticalsMode
+    )
+
+    private val criticalsMode get() = criticalsModes.firstOrNull { it.modeName == mode }
 
     val delay by int("Delay", 0, 0..500)
     private val hurtTime by int("HurtTime", 10, 0..10)
@@ -50,15 +67,53 @@ object Criticals : Module("Criticals", Category.COMBAT) {
     // DownInAttack 专用偏移量（微调越高越易暴击，越低越隐蔽）
     private val downOffset by float("DownOffset", 0.0625f, 0.0001f..0.42f) { mode == "DownInAttack" }
 
+    // ---- WatchdogNCP（Criticals）选项 ----（名字与旧 Delay 区分，避免同名值冲突）
+    private val wdCritDelay by int("WatchdogNCP Delay", 500, 0..1000) { mode == "WatchdogNCP" }
+
+    // ---- Verus（Criticals）选项 ----
+    private val verusCritDelay by int("Verus Delay", 500, 0..1000) { mode == "Verus" }
+
     val msTimer = MSTimer()
     private var processing = false   // 防止递归
 
     override fun onEnable() {
         if (mode == "NoGround")
             mc.thePlayer.tryJump()
+        criticalsMode?.onEnable()
+    }
+
+    override fun onDisable() {
+        criticalsMode?.onDisable()
+    }
+
+    private fun syncNewModeSettings() {
+        WatchdogNCPCriticalsMode.delay = wdCritDelay.toLong()
+        VerusCriticalsMode.delay = verusCritDelay.toLong()
+    }
+
+    val onMotion = handler<MotionEvent> { event ->
+        if (event.eventState != EventState.PRE) return@handler
+        syncNewModeSettings()
+        criticalsMode?.onPreMotion(event)
+    }
+
+    val onJump = handler<JumpEvent> { event ->
+        criticalsMode?.onJump(event)
+    }
+
+    val onMove = handler<MoveEvent> { event ->
+        criticalsMode?.onMove(event)
     }
 
     val onAttack = handler<AttackEvent> { event ->
+        // ---- 新模式分发：完全自包含，与原有内联模式互斥 ----
+        val extra = criticalsMode
+        if (extra != null) {
+            syncNewModeSettings()
+            extra.onAttack(event)
+            return@handler
+        }
+
         if (event.targetEntity is EntityLivingBase) {
             val thePlayer = mc.thePlayer ?: return@handler
             val entity = event.targetEntity as EntityLivingBase

@@ -133,7 +133,17 @@ object WatchdogNCPVelocityMode : VelocityMode("WatchdogNCP-New") {
         if (!releasing && !longJumpEnabled && !flyEnabled) {
             when (packet) {
                 is S12PacketEntityVelocity -> {
-                    if (packet.entityID == player.entityId && !PortedMove.isInsideBlock() &&
+                    // ---- Damage Boost (not for hypixel)：击退水平分量直接转为移动方向加速 ----
+                    // （原选项此前只有定义没有实现；Speed 模块未启用时由本模式独立完成加速）
+                    if (damageBoostNotForHypixel && packet.entityID == player.entityId &&
+                        !speedEnabled && !scaffoldEnabled && !player.isInWater && !PortedMove.isInsideBlock() &&
+                        PortedMove.isMoving() &&
+                        hypot(packet.motionX / 8000.0, packet.motionZ / 8000.0) > 0.08
+                    ) {
+                        PortedMove.strafe(hypot(packet.motionX / 8000.0, packet.motionZ / 8000.0) * damageBoostSpeed)
+                        player.motionY = packet.motionY / 8000.0
+                        event.cancelEvent()
+                    } else if (packet.entityID == player.entityId && !PortedMove.isInsideBlock() &&
                         (
                             player.itemInUseCount <= 0 ||
                                 !alwaysCancelVertical ||

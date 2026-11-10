@@ -5,8 +5,12 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
+import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.JumpEvent
+import net.ccbluex.liquidbounce.event.MotionEvent
 import net.ccbluex.liquidbounce.event.MoveEvent
+import net.ccbluex.liquidbounce.event.PacketEvent
+import net.ccbluex.liquidbounce.event.StrafeEvent
 import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
@@ -16,10 +20,13 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.longjumpmodes.a
 import net.ccbluex.liquidbounce.features.module.modules.movement.longjumpmodes.aac.AACv3
 import net.ccbluex.liquidbounce.features.module.modules.movement.longjumpmodes.ncp.NCP
 import net.ccbluex.liquidbounce.features.module.modules.movement.longjumpmodes.other.Buzz
+import net.ccbluex.liquidbounce.features.module.modules.movement.longjumpmodes.other.GrimLongJump
 import net.ccbluex.liquidbounce.features.module.modules.movement.longjumpmodes.other.Hycraft
 import net.ccbluex.liquidbounce.features.module.modules.movement.longjumpmodes.other.Redesky
+import net.ccbluex.liquidbounce.features.module.modules.movement.longjumpmodes.other.VulcanLongJump
 import net.ccbluex.liquidbounce.features.module.modules.movement.longjumpmodes.other.VerusDamage
 import net.ccbluex.liquidbounce.features.module.modules.movement.longjumpmodes.other.VerusDamage.damaged
+import net.ccbluex.liquidbounce.features.module.modules.movement.longjumpmodes.other.WatchdogFireBallLongJump
 import net.ccbluex.liquidbounce.utils.extensions.isMoving
 import net.ccbluex.liquidbounce.utils.extensions.tryJump
 
@@ -33,7 +40,8 @@ object LongJump : Module("LongJump", Category.MOVEMENT) {
         AACv1, AACv2, AACv3,
 
         // Other
-        Redesky, Hycraft, Buzz, VerusDamage
+        Redesky, Hycraft, Buzz, VerusDamage,
+        WatchdogFireBallLongJump, GrimLongJump, VulcanLongJump
     )
 
     private val modes = longJumpModes.map { it.modeName }.toTypedArray()
@@ -43,13 +51,53 @@ object LongJump : Module("LongJump", Category.MOVEMENT) {
 
     private val autoJump by boolean("AutoJump.kt", true)
 
-    val autoDisable by boolean("AutoDisable", true) { mode == "VerusDamage" }
+    /** 新模式集合（自包含：自带起跳/时序，不走 autoJump/jumped 机制）。 */
+    private val newLongJumpModes = arrayOf(WatchdogFireBallLongJump, GrimLongJump, VulcanLongJump)
+
+    private val newMode get() = newLongJumpModes.firstOrNull { it.modeName == mode }
+
+    val autoDisable by boolean("AutoDisable", true) { mode == "VerusDamage" || newMode != null }
 
     var jumped = false
     var canBoost = false
     var teleported = false
 
+    /** 原模块级 Auto Disable 的滞空状态（新模式适用）。 */
+    private var wasInAir = false
+
+    val onMotion = handler<MotionEvent> { event ->
+        if (event.eventState != EventState.PRE) return@handler
+        val player = mc.thePlayer ?: return@handler
+
+        // ---- 原模块级 Auto Disable：滞空后落地即关闭（新模式适用；
+        //      源实现同样排除自带关闭逻辑的 Watchdog/Watchdog 2，三者均不适用）----
+        val extra = newMode
+        if (extra != null) {
+            if (autoDisable && wasInAir && player.onGround) {
+                wasInAir = false
+                toggle()
+                return@handler
+            }
+            wasInAir = !player.onGround
+            extra.onPreMotion(event)
+        }
+    }
+
+    val onStrafe = handler<StrafeEvent> {
+        newMode?.onStrafe()
+    }
+
+    val onPacket = handler<PacketEvent> { event ->
+        newMode?.onPacket(event)
+    }
+
     val onUpdate = handler<UpdateEvent> {
+        // ---- 新模式分发：自包含 ----
+        newMode?.let {
+            it.onUpdate()
+            return@handler
+        }
+
         if (jumped) {
             val mode = mode
 
@@ -80,10 +128,14 @@ object LongJump : Module("LongJump", Category.MOVEMENT) {
     }
 
     override fun onEnable() {
+        wasInAir = false
         modeModule.onEnable()
     }
 
     override fun onDisable() {
+        // 原模块级 onDisable：重置计时器（所有模式受益）
+        mc.timer.timerSpeed = 1f
+        wasInAir = false
         modeModule.onDisable()
     }
 

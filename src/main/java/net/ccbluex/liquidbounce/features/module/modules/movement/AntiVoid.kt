@@ -8,6 +8,8 @@ package net.ccbluex.liquidbounce.features.module.modules.movement
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.modules.movement.antivoidmodes.VulcanAntiVoid
+import net.ccbluex.liquidbounce.features.module.modules.movement.antivoidmodes.WatchdogNCPAntiVoid
 import net.ccbluex.liquidbounce.features.module.modules.player.Blink
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffolds.Scaffold
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffolds.Tower
@@ -43,15 +45,29 @@ object AntiVoid : Module("AntiVoid", Category.MOVEMENT) {
 
     private val mode by choices(
         "Mode",
-        arrayOf("Blink", "TeleportBack", "FlyFlag", "OnGroundSpoof", "MotionTeleport-Flag", "GhostBlock"),
+        arrayOf(
+            "Blink", "TeleportBack", "FlyFlag", "OnGroundSpoof", "MotionTeleport-Flag", "GhostBlock",
+            "WatchdogNCP", "Vulcan"
+        ),
         "FlyFlag"
     )
+
+    /** 新模式集合（与 NoSlowMode/CriticalsMode 同套路的分发模型）。 */
+    private val antiVoidModes = arrayOf(WatchdogNCPAntiVoid, VulcanAntiVoid)
+
+    private val antiVoidMode get() = antiVoidModes.firstOrNull { it.modeName == mode }
     private val maxFallDistance by int("MaxFallDistance", 10, 2..255)
     private val maxDistanceWithoutGround by float("MaxDistanceToSetback", 2.5f, 1f..30f) { mode != "Blink" }
     private val blinkDelay by int("BlinkDelay", 10, 1..20) { mode == "Blink" }
     private val onScaffold by boolean("OnScaffold", false) { mode == "Blink" }
     private val ticksToDelay by int("TicksDelay", 5, 1..20) { mode == "Blink" && !onScaffold }
     private val indicator by boolean("Indicator", true).subjective()
+
+    // ---- WatchdogNCP（AntiVoid）选项 ----（名字与旧设置区分，避免同名值冲突）
+    private val wdVoidDistance by float("WatchdogNCP Distance", 3f, 0f..10f) { mode == "WatchdogNCP" }
+
+    // ---- Vulcan（AntiVoid）选项 ----
+    private val vulcanVoidDistance by float("Vulcan Distance", 2.6f, 0f..10f) { mode == "Vulcan" }
 
     private var detectedLocation: BlockPos? = null
     private var lastFound = 0F
@@ -63,6 +79,8 @@ object AntiVoid : Module("AntiVoid", Category.MOVEMENT) {
     private var pauseTicks = 0
 
     override fun onDisable() {
+        antiVoidMode?.onDisable()
+
         prevX = 0.0
         prevY = 0.0
         prevZ = 0.0
@@ -72,6 +90,37 @@ object AntiVoid : Module("AntiVoid", Category.MOVEMENT) {
 
         shouldBlink = false
         BlinkUtils.unblink()
+    }
+
+    override fun onEnable() {
+        antiVoidMode?.onEnable()
+    }
+
+    private fun syncNewModeSettings() {
+        WatchdogNCPAntiVoid.distance = wdVoidDistance.toDouble()
+        VulcanAntiVoid.distance = vulcanVoidDistance.toDouble()
+    }
+
+    val onNewModeMotion = handler<MotionEvent> { event ->
+        if (event.eventState != EventState.PRE) return@handler
+        syncNewModeSettings()
+        antiVoidMode?.onPreMotion(event)
+    }
+
+    val onNewModeMove = handler<MoveEvent> { event ->
+        antiVoidMode?.onMove(event)
+    }
+
+    val onNewModeStrafe = handler<StrafeEvent> { event ->
+        antiVoidMode?.onStrafe(event)
+    }
+
+    val onNewModeJump = handler<JumpEvent> { event ->
+        antiVoidMode?.onJump(event)
+    }
+
+    val onNewModeWorld = handler<WorldEvent> {
+        antiVoidMode?.onWorldChange()
     }
 
     val onUpdate = handler<UpdateEvent> {
@@ -150,6 +199,12 @@ object AntiVoid : Module("AntiVoid", Category.MOVEMENT) {
     }
 
     val onBlockBB = handler<BlockBBEvent> { event ->
+        // ---- 新模式分发 ----
+        if (antiVoidMode != null) {
+            antiVoidMode!!.onBlockBB(event)
+            return@handler
+        }
+
         if (mode == "GhostBlock" && shouldSimulateBlock) {
             if (event.y < mc.thePlayer.posY.toInt()) {
                 event.boundingBox = AxisAlignedBB(
@@ -167,6 +222,13 @@ object AntiVoid : Module("AntiVoid", Category.MOVEMENT) {
     val onPacket = handler<PacketEvent> { event ->
         val player = mc.thePlayer ?: return@handler
         val packet = event.packet
+
+        // ---- 新模式分发 ----
+        val extra = antiVoidMode
+        if (extra != null) {
+            extra.onPacket(event)
+            return@handler
+        }
 
         // Stop considering non colliding blocks as collidable ones on setback.
         if (packet is S08PacketPlayerPosLook) {
