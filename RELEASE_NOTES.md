@@ -1,51 +1,70 @@
-# Lizz b12.11 — Changelog (Mode Expansion II + Fixes)
+# Lizz b12.12 — Changelog (Feature Wave III: 3 upgrades + 21 new modes)
 
-## Fixes
+## Fly — WatchdogNCP-New upgrades
 
-- **NoSlow / Velocity**: the `-Watchdog Prediction` mode was renamed to **`Watchdog-Protection`** in both modules, matching the naming of the Watchdog-Protection family in Speed.
-- **Speed / Polar**: sprinting is now **legit** — the mode only sprints with pure forward input (no diagonal / backward sprinting), like the legal-sprint logic used by the Grim family modes.
-- **NoSlow — Sword + KillAura**: all new NoSlow modes (`WatchdogNCP`, `Intave`, `Matrix`, `Watchdog-Protection`, `Grim`, `Grim 1.9`) now properly detect "using a sword" while **KillAura auto-blocks** (and while manually blocking in the UpdatedNCP style) by re-using the module's own using-item logic — the sword bypass now runs while fighting with KillAura.
-- **Velocity — Damage Boost**: the `Damage Boost (not for hypixel)` option of `WatchdogNCP-New` (and the `Damage Boost` option of `Vulcan-New`) now actually works — when knocked back while moving, the horizontal knockback is redirected into your movement direction (scaled by `Damage Boost Speed`) and the incoming packet is cancelled.
+- **OnlyDamage** (new option, default off): the fly only takes effect **after you take damage** — until then you hover in place waiting for the hit.
+- **AutoDamage** (new option, default off): enabling the module now **automatically triggers self-damage** (the classic NCP glitch packet sequence) on toggle, so `OnlyDamage` flights start instantly.
 
-## Criticals — new modes
+## AntiVoid — arraylist tag
 
-- **WatchdogNCP** — ground-hugging crit sequence: attacking on the ground (after `WatchdogNCP Delay`, 0–1000 ms) marks a pending crit, then the mode holds a micro-fall (position +0.001, reported onGround=false) with step height 0.1 and SafeWalk for a few ticks, cancels jumps while using an item during the window and then restores step height / SafeWalk.
-- **Vulcan** — fake-fall crits: for 18 ticks after receiving knockback, while the tracked fall distance is below 1.8, every PRE motion packet is reported as airborne (onGround=false).
-- **Verus** — classic offset crits (`Verus Delay`, 0–1000 ms): while using an item with more than 2 ticks left and still hurt, two 0.0625 / 0.0 position packets make the next hit a critical.
+- AntiVoid now shows the **current mode as a tag** in the arraylist (same style as NoSlow / Disabler / Velocity), e.g. `AntiVoid WatchdogNCP`.
 
-## LongJump — new modes
+## ClickGUI — Classic layout StyleSettings (Normal / Best)
 
-- **Watchdog Fire Ball** — full fireball longjump: automatically switches to the fire charge slot while looking straight down (89°), places the fireball, holds the incoming velocity + transactions + keep-alives, replays them on the 13th item-use tick to launch, keeps a +45° yaw spoof while airborne and auto-disables after the boost (landing auto-disable applies to all new LongJump modes via `AutoDisable`).
-- **Grim** — 2x timer longjump with a per-frame pitch jitter: jumps on the first strafe tick, bursts 20 silent flying packets, then freezes in place (canceling one flying packet per cycle) until either a lagback (S08) is absorbed, a downward velocity arrives or 20 cycles time out.
-- **Vulcan** — scripted tick-sequence longjump: jump on tick 1, 1.3x / 1.05x motion boosts, vertical pulls (motionY 2.0 / +0.04 / -0.098) and a forced grounded re-jump at tick 62 and in the -1.53 motion window.
+- New `StyleSettings` option (Classic layout, LiquidBounce / Fatality styles):
+  - **Normal** (default): the current look, completely unchanged — module settings still open as a floating panel to the right of the module row.
+  - **Best**: module settings now expand as a **drawer directly below the module** — the modules below automatically shift down (nothing is covered or overlapped) and the settings width stays inside the category panel boundaries (e.g. Combat). Clicking inside the drawer only affects the setting controls, not the module.
 
-## Phase — new modes
+## KillAura — new AutoBlock modes
 
-- **WatchdogNCP-Blink** — SkyWars cage phase: on the countdown chat message ("The game starts in 3 seconds!" and variants) it starts a 4-second full outgoing blink and removes the collision boxes of glass / barrier blocks; when the cages open ("Cages opened! FIGHT!") everything is released.
-- **Vulcan** — solid-block phase: on enable it shifts you one block down, removes block collision while inside (leaving a floor plate below), fixes the camera bob, holds a 0.306 strafe (speed-potion aware) inside blocks, alternates forward input every other tick, auto-jumps after a setback (S08) and disables itself when you end up outside a block.
-- **Grim** — packet-hold phase: while inside a block every C03 flying packet is held back and `Semi Packets` (1–15) silent C06 packets are sent from your position; when you leave the block the mode releases with a `Release Mode` sequence (Simple / Double / Desync / None) and flushes all held packets.
+- **Matrix** — packet-blocks with the blocking packet (optional `InteractPacket` sends two INTERACT_AT packets first); never sends a stop-block packet. While blocking, every attack is intercepted: release → resend the attack → instantly re-block.
+- **Verus** — starts blocking with the same blocking packet; when the target is lost it "stops blocking" by swapping the hotbar slot and swapping back.
+- **HoldKey** — physically holds the use-item key down the whole time the target is in range (real client-side blocking), releases it when the target is gone.
+- All three modes keep the **NoSlow link**: while auto-blocking, the sword NoSlow bypasses run exactly like with the Packet mode.
 
-## Step — new modes
+## Disabler — new Mode system + 3 modes
 
-- **Vulcan** — step height rises to 1.0 twelve ticks after the last full-block step; every full-block step halves the timer and sends a +0.5 position packet to compensate.
-- **WatchdogNCP** — full-block step bypass: step height 1.0 on the ground (not in liquid, not while jumping, not while scaffolding), the step itself strafes at the allowed speed, sends the 0.42 / 0.75 / 1.0 stair packet sequence with a 0.25 timer and temporarily disables the Speed module for 300 ms around the step.
+The Disabler now has its own `Mode` selection (like NoSlow) — `Custom` keeps every existing option and behavior.
 
-## InventoryMove — new Mode system
+- **WatchdogNCP** (Hypixel movement disabler): waits `WatchDogMovement-ActivationDelay(seconds)` after world load, jumps up, freezes your motion mid-air and offsets every other motion packet (+0.075) for `WatchDogMovement-Ticks` ticks with a live progress bar on screen; resets and retries with a 2s delay if you get rubber-banded, then prints "disabler enabled" once it sticks. Only activates on Hypixel games (lobby / replay / spectator aware) and locks your movement input while running.
+- **MatrixFlag** (tx-timing + anti-setback): remembers your motion on every server setback and restores it when your next position packet leaves; on top of that a full **tx-burst engine** — `AutoBurst` windows (`BurstWindow` ms, at least 200 ms apart), `TxDelay` holds C0F transactions for `TxHoldMin`–`TxHoldMax` ms (max 3 queued, oldest is flushed), optional `KaDelay` for keep-alives, a `TimerBurst` cycle (`TimerSpeed` × hold/cool), `GroundSpoof` (reports onGround when a block is within `GroundTol` below you), and `AntiSetback` setback handling with `SetbackMode` (Recovery / Y-Partial / Rot-Keep / Full-Cancel) + `SetbackCool`. `Version` (Auto / Matrix6 / Matrix7) auto-detects 7.x after two flags. Reports "tx stable" / "auto: 7.x detected" in chat.
+- **GrimAC** (aim + post): swallows position packets whose rotation exactly repeats the last reported one (resending position-only), and smooths every other rotating packet into the client rotation state; optional `GrimPost` delays a whitelist of server packets (velocity, transactions, teleports, block updates, … — critical login / chunk / chat packets always pass) while you're alive, and flushes them the moment the delay deactivates (with `GrimPost-NoScaffold` to pause while scaffolding).
 
-The module now has a **`Mode`** option:
+## Phase — new mode
 
-- **Custom** — the complete original behavior with all previous settings (NotInChests, AACAdditionPro, Intave, SaveC0E, Onlychest, NoSprintWhenClosed, FreeLook, NoMove family, SilentlyCloseAndReopen, ReopenOnClick, InventoryMotion).
-- **WatchdogNCP** — full watchdog chest/inventory bypass: refills movement keys from real key states, cancels sprinting in GUIs, limits speed in the inventory/chest (speed-potion aware strafe values), silently closes the survival inventory when no bad packets were sent since the last flying packet, measures the chest-open latency (`Measure Chest Open`) via outgoing chest-opens / NPC interactions and suppresses movement input until the chest is confirmed open (± `Ticks`), with an alternative `Prediction Mode` that stops sprinting instead. Options: `Prediction Mode`, `Ticks`, `Measure Chest Open`.
-- **Grim** — Grim-friendly inventory move: refills movement keys from real key states in any GUI except chat / ClickGUI and cancels sprinting inside inventory / chest screens.
+- **Intave** — hold attack while aiming at your feet (or pitch ≥ 70°) to spam STOP_DESTROY_BLOCK at the block below, sink 0.0052/tick and micro-shift 0.005/tick while sneaking to phase through.
 
-Also fixed in this module: the `Intave` setting never actually applied because its GUI check was evaluated only once at startup — it is now evaluated live.
+## Fly — new modes
 
-## AntiVoid — new modes
+- **TimerGlide** — damage-glide flight with a full settings panel: `TimerGlide-TimerSpeed` (up to 100x) kicks in the moment you're hurt (boost length = 20 × speed ticks), `TimerGlide-TimerBeforeBoost` slows time while waiting, `TimerGlide-Speed` / `NoSpeed` control the glide, `SmartHurt` auto-disables after `TimerGlide-FlyTicks` (or after the boost when `SmartTicks`), `JumpDamage` self-damages with `JumpCounts` × `JumpTimer` jumps, `AutoAirDamage` prepares the fall with `SpoofMode` (Edit / Packet / 1.8), `DamageDistance` and `NoMove`, `CustomMotionY` (None / Stable / Multiply / Optimal) shapes the vertical motion, and `TimerGlide-AutoToggle` turns the module off when done.
+- **Intave** — 10x timer + noClip + constant onGround + a 0.0085 fly-speed capability spoof; after the first setback it buffers all transactions / velocities, flushing them on disable.
+- **Matrix** (the former MatrixTest slot, rebuilt): eats S08 teleports into a buffer, cancels **all** outgoing position packets and instead re-sends your position `Matrix-Packets` times per tick (C06 with your current rotation or plain C04 — `Matrix-PacketMode`) at `Matrix-Timer` speed with `Matrix-Speed` horizontal motion and noClip.
+- The previous Matrix fly was renamed to **OldMatrix** (unchanged behavior).
 
-- **WatchdogNCP** — predictive void protection: tracks your last safe position, simulates your horizontal trajectory (up to `WatchdogNCP Distance` × 40 steps) and when every predicted position hangs over air it starts a full outgoing blink; after the tracked fall distance exceeds the distance it silently teleports you back to the safe position (+0.098) and releases.
-- **Vulcan** — void-floor protection: falling more than `Vulcan Distance` with no ground within 10 blocks enables a fake air floor below you, locks movement to 0.1 speed, zeroes jump motion, disables Speed while falling and restores it on landing / setback.
+## Velocity — new modes
 
-## Technical notes
+- **MatrixBoost** (the Matrix velocity family, new generation): cancels your velocity packets and applies the vertical knockback directly when falling / on ground; when standing still you get an instant 11% of the knockback speed, and `Matrix-Boost` (with `Matrix-BoostSpeed`) accelerates you mid-air instead. `Matrix-HurtStrafe` re-applies your horizontal speed during `StrafeHurtTime-Min`–`Max` hurt ticks, `Matrix-OnlyCombat` limits everything to fights (1.6 s after your last attack).
+- **IntaveNew** — velocity-state flight for Intave: tracks positive knockback, `HurtTime-Min`–`Max` windows, `OnlyOnce` and `Intave-OnlySprint` gates; when you attack while knocked back it drops sprint and cuts your motion to 60%, and `IntaveMoveFixMode` (None / GameSettings / Strafe) steers your movement keys toward the knockback direction or the client rotation.
 
-- All new mode families follow the same dispatch model as b12.10 (mode objects + module-level routing), re-using the shared packet trackers, blink queues and movement helpers.
-- New mode-specific infra: fall-distance tracking for crits / antivoid, a `movementKeys` refill helper, equivalent reimplementations of vanilla `moveFlying` with overridden forward for the StrafeEvent-based step/phase/antivoid modes and local `RotationUtils.currentRotation` injection for the rotation spoofing modes.
+## Speed — new modes
+
+- **MatrixNew** (the Matrix speed family, new generation): ground-jump + strafe cycle, optional `Strafe` top-up when your speed drops below 0.2 mid-air, −0.0033 vertical drag while unhurt, and your sprint-jump boost is redirected along your movement direction.
+- **MatrixHighSpeed2** — ladder-flight speed: jumps into a boost, and whenever you fall past `DownMotion` with a block underneath it fakes onGround, re-jumps and strafes at `H` speed — repeat until you're moving. `Inf` keeps the cycle alive outside the boost window.
+
+## NoSlow — new modes
+
+- **MatrixNew** (the Matrix NoSlow family, new generation): while blocking a sword (`Sword`) or eating / drinking (`Food` / `Potion`), grounded ticks get a ±0.0002–0.0006 Y offset with onGround spoofed off, and airborne ticks get progressive motion damping (0.85/0.9 then 0.95). The sword branch runs through the module's own using-item logic, so it works **with KillAura auto-block**.
+- **MatrixSemi** (food only): an eating-tick ballet — re-jumps on the ground, +45° silent yaw rotation while airborne without strafe keys, micro-speed pulses (2e-4 / 1e-4, cross-version aware), cancels the right-click packet on odd airborne ticks and fully cancels the slowdown on the landing tick / even airborne ticks / odd grounded ticks.
+- **GrimSemi** (food only): alternates every tick — odd ticks of item use are full speed, even ticks use the configurable `GrimSemi-Forward` / `GrimSemi-Strafe` multipliers (default 0.2 = vanilla).
+
+## Scaffold — Tower new mode
+
+- **MatrixNew** (the Matrix tower, new generation): waits until `MatrixNew-WaitBlocks` blocks have been placed, then runs a leave-ground → touch-ground state machine that fake-jumps with motionY 0.42 and, whenever you fall below 0.19, spoofs onGround and pushes 0.42 again — a smooth hovering tower.
+
+## Module renames (name slots reused)
+
+- Fly: the old `Matrix` mode is now **`OldMatrix`** (same behavior); the new `Matrix` mode is the rebuilt MatrixTest-style fly described above.
+
+---
+
+**Full list of additions this release**: 3 feature upgrades (Fly OnlyDamage/AutoDamage, AntiVoid arraylist tag, ClickGUI StyleSettings drawer), 21 new modes across 8 modules (KillAura 3, Disabler 3, Phase 1, Fly 3, Velocity 2, Speed 2, NoSlow 3, Scaffold Tower 1) and 1 rename (Fly Matrix → OldMatrix).

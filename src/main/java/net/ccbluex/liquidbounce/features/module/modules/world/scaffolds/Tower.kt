@@ -49,7 +49,8 @@ object Tower : Configurable("Tower"), MinecraftInstance, Listenable {
             "Pulldown",
             "Prediction",
             "BlocksMC",
-            "NCP"
+            "NCP",
+            "MatrixNew"
         ),
         "None"
     )
@@ -99,10 +100,19 @@ object Tower : Configurable("Tower"), MinecraftInstance, Listenable {
     val predictionExtraBlock = boolean("PredictionExtraBlock", false) { towerModeValues.get() == "Prediction" }
     val predictionExtraDelay = int("PredictionExtraDelay", 0, 0..10) { towerModeValues.get() == "Prediction" && predictionExtraBlock.get() }
 
+    // MatrixNew（原 Matrix，改名避让其它模块的 Matrix 模式）
+    private val matrixNewWaitBlocks by int("MatrixNew-WaitBlocks", 1, 0..10) { towerModeValues.get() == "MatrixNew" }
+
     var isTowering = false
     private var predictionTicks = 0
     private var placeExtraBlock = false
     private var extraBlockDelay = 0
+
+    // MatrixNew 状态机：0 = 等离地，1 = 等落地，2 = 循环贴地起跳
+    private var matrixTowerState = 0
+
+    // 源 curPlaceBlocks：MatrixNew 起跳前需要已放置的方块数
+    private var matrixPlacedBlocks = 0
 
     // Mode stuff
     private val tickTimer = TickTimer()
@@ -135,6 +145,11 @@ object Tower : Configurable("Tower"), MinecraftInstance, Listenable {
 
         isTowering = true
 
+        // ---- MatrixNew：源 MatrixTower 状态机（PRE/POST 都跑，与源一致不过滤） ----
+        if (towerModeValues.get() == "MatrixNew") {
+            handleMatrixTower(event)
+        }
+
         if (eventState == EventState.POST) {
             tickTimer.update()
 
@@ -145,7 +160,45 @@ object Tower : Configurable("Tower"), MinecraftInstance, Listenable {
             val blockPos = BlockPos(player).down()
 
             if (blockPos.block == air) {
-                Scaffold.search(blockPos, !shouldGoDown, searchMode == "Area")
+                // 记录成功放置（MatrixNew 的 WaitBlocks 门控用）
+                if (Scaffold.search(blockPos, !shouldGoDown, searchMode == "Area")) {
+                    matrixPlacedBlocks++
+                }
+            }
+        }
+    }
+
+    /**
+     * MatrixNew（源 MatrixTower）：起跳前先等 WaitBlocks 个方块放置完成，
+     * 然后离地 → 落地 → 循环（地面假跳 + motionY 0.42；下落低于 0.19 时
+     * 伪装 onGround 再推 0.42 —— 阶梯式滞空上升）。
+     */
+    private fun handleMatrixTower(event: MotionEvent) {
+        val player = mc.thePlayer ?: return
+
+        if (!isTowering) {
+            matrixTowerState = 0
+        } else if (matrixPlacedBlocks < matrixNewWaitBlocks) {
+            matrixTowerState = 0
+        } else {
+            when (matrixTowerState) {
+                0 -> if (!player.onGround) {
+                    matrixTowerState = 1
+                }
+
+                1 -> if (player.onGround) {
+                    matrixTowerState = 2
+                }
+
+                2 -> {
+                    if (player.onGround) {
+                        fakeJump()
+                        player.motionY = 0.42
+                    } else if (player.motionY < 0.19) {
+                        event.onGround = true
+                        player.motionY = 0.42
+                    }
+                }
             }
         }
     }

@@ -21,8 +21,10 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.ncp.NC
 import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.ncp.OldNCP
 import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.matrix.Matrix
 import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.matrix.MatrixDamage
+import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.matrix.OldMatrix
 import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.watchdogncp.WatchdogNCPNew
 import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.other.*
+import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.intave.Intave
 import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.spartan.BugSpartan
 import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.spartan.Spartan
 import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.spartan.Spartan2
@@ -80,7 +82,11 @@ object Fly : Module("Fly", Category.MOVEMENT) {
         Jetpack, KeepAlive, Collide, Jump, Flag, Fireball, MatrixTest,
 
         // 新增模式
-        WatchdogNCPNew, Matrix, MatrixDamage
+        WatchdogNCPNew, OldMatrix, MatrixDamage,
+
+        // 第三批新增：TimerGlide / Intave / Matrix（原 MatrixTest，改名 Matrix；
+        // 旧 Matrix 改名 OldMatrix）
+        TimerGlide, Intave, Matrix
     )
 
     /**
@@ -190,6 +196,8 @@ object Fly : Module("Fly", Category.MOVEMENT) {
     // ---- WatchdogNCP-New（Fly，原 Funcraft 飞行）选项 ----
     private val flyNewSpeed by float("Speed", 1.2f, 0.8f..2f) { mode == "WatchdogNCP-New" }
     private val flyNewVanillaKickBypass by boolean("Vanilla Kick Bypass", true) { mode == "WatchdogNCP-New" }
+    private val flyNewOnlyDamage by boolean("OnlyDamage", false) { mode == "WatchdogNCP-New" }
+    private val flyNewAutoDamage by boolean("AutoDamage", false) { mode == "WatchdogNCP-New" }
 
     // ---- Matrix Damage（Fly）选项 ----
     private val matrixDamageTimerSpeed by float("Timer Speed", 30f, 1f..100f) { mode == "Matrix Damage" }
@@ -204,9 +212,75 @@ object Fly : Module("Fly", Category.MOVEMENT) {
     private val matrixDamageMotionY by choices("Motion Y", arrayOf("None", "Simple", "Multiply"), "None") { mode == "Matrix Damage" }
     private val matrixDamageMotion by float("Motion", -0.01f, -0.3f..0.3f) { matrixDamageMotionY == "None" && mode == "Matrix Damage" }
 
+    // ---- Matrix（Fly，原 MatrixTest，改名 Matrix）选项 ----
+    private val matrixFlyTimer by float("Matrix-Timer", 1f, 1f..10f) { mode == "Matrix" }
+    private val matrixFlySpeed by float("Matrix-Speed", 0.16f, 0.1f..0.7f) { mode == "Matrix" }
+    private val matrixFlyPackets by int("Matrix-Packets", 4, 1..10) { mode == "Matrix" }
+    private val matrixFlyPacketMode by choices(
+        "Matrix-PacketMode", arrayOf("C06", "C04"), "C06"
+    ) { mode == "Matrix" }
+
+    // ---- TimerGlide（Fly）选项 ----
+    private val timerGlideTimerSpeed by float("TimerGlide-TimerSpeed", 20f, 1f..100f) { mode == "TimerGlide" }
+    private val timerGlideSpeed by float("TimerGlide-Speed", 0.02f, 0f..1f) { mode == "TimerGlide" }
+    private val timerGlideNoSpeed by boolean("TimerGlide-NoSpeed", false) { mode == "TimerGlide" }
+    private val timerGlideSmartHurt by boolean("TimerGlide-SmartHurt", false) { mode == "TimerGlide" }
+    private val timerGlideSmartTicks by boolean("TimerGlide-SmartTicks", false) { mode == "TimerGlide" && timerGlideSmartHurt }
+    private val timerGlideFlyTicks by int("TimerGlide-FlyTicks", 900, 0..1600) { mode == "TimerGlide" && timerGlideSmartHurt }
+    private val timerGlideJumpDamage by boolean("TimerGlide-JumpDamage", false) { mode == "TimerGlide" }
+    private val timerGlideJumpCounts by int(
+        "TimerGlide-JumpCounts", 4, 3..8
+    ) { mode == "TimerGlide" && timerGlideJumpDamage }
+    private val timerGlideJumpTimer by float(
+        "TimerGlide-JumpTimer", 1f, 0.1f..5f
+    ) { mode == "TimerGlide" && timerGlideJumpDamage }
+    private val timerGlideCustomMotionY by choices(
+        "TimerGlide-CustomMotionY", arrayOf("None", "Stable", "Multiply", "Optimal"), "None"
+    ) { mode == "TimerGlide" }
+    private val timerGlideMotionY by float(
+        "TimerGlide-MotionY", -0.01f, -0.3f..0.3f
+    ) { mode == "TimerGlide" && timerGlideCustomMotionY != "None" }
+    private val timerGlideAutoToggle by boolean("TimerGlide-AutoToggle", false) { mode == "TimerGlide" }
+    private val timerGlideAutoAirDamage by boolean("TimerGlide-AutoAirDamage", false) { mode == "TimerGlide" }
+    private val timerGlideSpoofMode by choices(
+        "TimerGlide-SpoofMode", arrayOf("Edit", "Packet", "1.8"), "Edit"
+    ) { mode == "TimerGlide" }
+    private val timerGlideDamageDistance by float(
+        "TimerGlide-DamageDistance", 3.3f, 1f..5f
+    ) { mode == "TimerGlide" && timerGlideAutoAirDamage }
+    private val timerGlideTimerBeforeBoost by float(
+        "TimerGlide-TimerBeforeBoost", 1f, 0.05f..1f
+    ) { mode == "TimerGlide" }
+    private val timerGlideNoMove by boolean(
+        "TimerGlide-NoMove", false
+    ) { mode == "TimerGlide" && timerGlideAutoAirDamage }
+
     private fun syncNewFlyModeSettings() {
         WatchdogNCPNew.flySpeed = flyNewSpeed.toDouble()
         WatchdogNCPNew.vanillaKickBypass = flyNewVanillaKickBypass
+        WatchdogNCPNew.onlyDamage = flyNewOnlyDamage
+        WatchdogNCPNew.autoDamage = flyNewAutoDamage
+        Matrix.timerSpeed = matrixFlyTimer
+        Matrix.matrixSpeed = matrixFlySpeed.toDouble()
+        Matrix.packets = matrixFlyPackets
+        Matrix.packetMode = matrixFlyPacketMode
+        TimerGlide.timerSpeed = timerGlideTimerSpeed
+        TimerGlide.glideSpeed = timerGlideSpeed.toDouble()
+        TimerGlide.noSpeed = timerGlideNoSpeed
+        TimerGlide.smartHurt = timerGlideSmartHurt
+        TimerGlide.smartTicks = timerGlideSmartTicks
+        TimerGlide.flyTicks = timerGlideFlyTicks
+        TimerGlide.jumpDamage = timerGlideJumpDamage
+        TimerGlide.jumpCounts = timerGlideJumpCounts
+        TimerGlide.jumpTimer = timerGlideJumpTimer
+        TimerGlide.customMotionY = timerGlideCustomMotionY
+        TimerGlide.motionSpeed = timerGlideMotionY
+        TimerGlide.autoToggle = timerGlideAutoToggle
+        TimerGlide.autoAirDamage = timerGlideAutoAirDamage
+        TimerGlide.spoofMode = timerGlideSpoofMode
+        TimerGlide.damageDistance = timerGlideDamageDistance
+        TimerGlide.timerBeforeBoost = timerGlideTimerBeforeBoost
+        TimerGlide.stopMovement = timerGlideNoMove
         MatrixDamage.timerSpeed = matrixDamageTimerSpeed
         MatrixDamage.flySpeed = matrixDamageSpeed.toDouble()
         MatrixDamage.noSpeed = matrixDamageNoSpeed

@@ -61,7 +61,8 @@ object Velocity : Module("Velocity", Category.COMBAT) {
             "IntaveReduce", "Delay", "GrimC03", "Hypixel", "WatchdogNCP",
             "Click", "BlocksMC", "GrimCombat", "Polar", "Buffer", "Grim",
             "NoSave", "WatchdogNCP-New", "Matrix", "Intave", "Vulcan-New",
-            "Grim-New", "Grim 2", "Watchdog-Protection", "MMC"
+            "Grim-New", "Grim 2", "Watchdog-Protection", "MMC",
+            "MatrixBoost", "IntaveNew"
         ), "Simple"
     )
 
@@ -69,7 +70,8 @@ object Velocity : Module("Velocity", Category.COMBAT) {
     private val velocityModes = arrayOf(
         WatchdogNCPVelocityMode, MatrixVelocityMode, IntaveVelocityMode,
         VulcanNewVelocityMode, GrimNewVelocityMode, Grim2VelocityMode,
-        WatchdogPredictionVelocityMode, MMCVelocityMode
+        WatchdogPredictionVelocityMode, MMCVelocityMode,
+        MatrixBoostVelocityMode, IntaveNewVelocityMode
     )
 
     private val velocityMode get() = velocityModes.firstOrNull { it.modeName == mode }
@@ -105,6 +107,23 @@ object Velocity : Module("Velocity", Category.COMBAT) {
     // ---- Watchdog-Protection ----
     private val velWdPredictionLetThrough by float("Velocity to let through", 0.3f, 0f..0.6f) { mode == "Watchdog-Protection" }
     private val velWdPredictionPreventGhosting by boolean("Prevent Ghosting", true) { mode == "Watchdog-Protection" }
+
+    // ---- MatrixBoost（原 Matrix，改名避让已有 Matrix）选项 ----
+    private val velMatrixBoostStrafe by boolean("Matrix-HurtStrafe", false) { mode == "MatrixBoost" }
+    private val velMatrixBoostStrafeMin by int("StrafeHurtTime-Min", 6, 1..10) { mode == "MatrixBoost" && velMatrixBoostStrafe }
+    private val velMatrixBoostStrafeMax by int("StrafeHurtTime-Max", 10, 1..10) { mode == "MatrixBoost" && velMatrixBoostStrafe }
+    private val velMatrixBoostBoost by boolean("Matrix-Boost", false) { mode == "MatrixBoost" }
+    private val velMatrixBoostSpeed by float("Matrix-BoostSpeed", 0f, 0.1f..0.7f) { mode == "MatrixBoost" && velMatrixBoostBoost }
+    private val velMatrixBoostOnlyCombat by boolean("Matrix-OnlyCombat", false) { mode == "MatrixBoost" }
+
+    // ---- IntaveNew（原 Intave，改名避让已有 Intave）选项 ----
+    private val velIntaveNewOnlyOnce by boolean("OnlyOnce", false) { mode == "IntaveNew" }
+    private val velIntaveNewHurtMin by int("HurtTime-Min", 3, 1..10) { mode == "IntaveNew" }
+    private val velIntaveNewHurtMax by int("HurtTime-Max", 10, 1..10) { mode == "IntaveNew" }
+    private val velIntaveNewOnlySprint by boolean("Intave-OnlySprint", false) { mode == "IntaveNew" }
+    private val velIntaveNewMoveFix by choices(
+        "IntaveMoveFixMode", arrayOf("None", "GameSettings", "Strafe"), "None"
+    ) { mode == "IntaveNew" }
 
     private val horizontal by float("Horizontal", 0F, -1F..1F) { mode in arrayOf("Simple", "AAC", "Legit") }
     private val vertical by float("Vertical", 0F, -1F..1F) { mode in arrayOf("Simple", "Legit") }
@@ -273,6 +292,19 @@ object Velocity : Module("Velocity", Category.COMBAT) {
 
         WatchdogPredictionVelocityMode.velocityToLetThrough = velWdPredictionLetThrough
         WatchdogPredictionVelocityMode.preventGhosting = velWdPredictionPreventGhosting
+
+        MatrixBoostVelocityMode.hurtStrafe = velMatrixBoostStrafe
+        MatrixBoostVelocityMode.strafeHurtTimeMin = velMatrixBoostStrafeMin
+        MatrixBoostVelocityMode.strafeHurtTimeMax = velMatrixBoostStrafeMax
+        MatrixBoostVelocityMode.boost = velMatrixBoostBoost
+        MatrixBoostVelocityMode.boostSpeed = velMatrixBoostSpeed.toDouble()
+        MatrixBoostVelocityMode.onlyCombat = velMatrixBoostOnlyCombat
+
+        IntaveNewVelocityMode.onlyOnce = velIntaveNewOnlyOnce
+        IntaveNewVelocityMode.hurtTimeMin = velIntaveNewHurtMin
+        IntaveNewVelocityMode.hurtTimeMax = velIntaveNewHurtMax
+        IntaveNewVelocityMode.onlySprint = velIntaveNewOnlySprint
+        IntaveNewVelocityMode.intaveMoveFixMode = velIntaveNewMoveFix
     }
 
     val onUpdate = handler<UpdateEvent> {

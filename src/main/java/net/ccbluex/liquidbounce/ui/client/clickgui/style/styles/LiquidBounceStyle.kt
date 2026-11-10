@@ -47,6 +47,9 @@ import kotlin.math.roundToInt
 
 @SideOnly(Side.CLIENT)
 object LiquidBounceStyle : Style() {
+
+    override val supportsSettingsBelow: Boolean
+        get() = true
     /** 面板 / 子面板整块的模糊与阴影；阴影按圆角裁切，只留边缘。 */
     /** IRC 面板关闭按钮的包围盒（本帧绘制时更新，供 ClickGui 做点击判定） */
     var ircCloseBounds: FloatArray? = null
@@ -546,7 +549,8 @@ object LiquidBounceStyle : Style() {
             val rowTop = moduleElement.y.toFloat()
             val rowRight = (moduleElement.x + moduleElement.width).toFloat()
             // 行高 +1：元素间距本来就是 height + 1，补上这 1px 相邻模块的色块就能拼成一片
-            val rowBottom = (moduleElement.y + moduleElement.height + 1).toFloat()
+            // （用固定行高：drawerStyle 时 element.height 已被抽屉撑开，色块只需盖住模块行本身）
+            val rowBottom = (moduleElement.y + ModuleElement.ROW_HEIGHT + 1).toFloat()
 
             if (ClickGUI.lbModuleBlur) {
                 GlowUtils.drawGlow(
@@ -572,12 +576,13 @@ object LiquidBounceStyle : Style() {
         val moduleValues = moduleElement.module.values.filter { it.shouldRender() }
         if (moduleValues.isNotEmpty()) {
             if (moduleElement.showSettings) {
-                // settingsBelow：设置面板画在行下方（新布局的右列），否则画在行右侧（经典布局）
-                val below = moduleElement.settingsBelow
-                val settingsTop = if (below) {
-                    moduleElement.y + moduleElement.height + 3
-                } else {
-                    moduleElement.y + 4
+                // settingsBelow：设置面板画在行下方（新布局的右列 / Classic 的 Best 抽屉），否则画在行右侧（经典布局）
+                val below = moduleElement.settingsBelow || moduleElement.drawerStyle
+                val settingsTop = when {
+                    // drawerStyle：抽屉画在模块行正下方（行高固定，element.height 已含抽屉区域）
+                    moduleElement.drawerStyle -> moduleElement.y + ModuleElement.ROW_HEIGHT + 3
+                    below -> moduleElement.y + moduleElement.height + 3
+                    else -> moduleElement.y + 4
                 }
 
                 var yPos = settingsTop

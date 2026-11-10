@@ -15,10 +15,12 @@ import net.ccbluex.liquidbounce.utils.client.MinecraftInstance
  */
 open class NoSlowMode(val modeName: String) : MinecraftInstance {
     open fun onPreMotion(event: MotionEvent) {}
+    open fun onPostMotion(event: MotionEvent) {}
     open fun onSlowDown(event: SlowDownEvent) {}
     open fun onStrafe() {}
     open fun onUpdate() {}
     open fun onPacket(event: PacketEvent) {}
+    open fun onAttack(target: net.minecraft.entity.Entity?) {}
     open fun onEnable() {}
     open fun onDisable() {}
 }

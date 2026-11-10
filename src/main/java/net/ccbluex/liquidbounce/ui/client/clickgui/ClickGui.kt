@@ -327,6 +327,19 @@ object ClickGui : GuiScreen() {
         val s = scale.toDouble()
         glScaled(s, s, s)
 
+        // StyleSettings=Best（Classic 布局）：设置面板以「抽屉」形式画在模块行正下方，
+        // 下方的模块自动下移；设置宽度被限制在分类面板边界内。
+        // Normal（默认）：现有外观完全不变（设置面板画在行右侧）。
+        val drawerBest = ClickGUI.styleSettings == "Best" && style.supportsSettingsBelow
+        for (panel in panels) {
+            for (element in panel.elements) {
+                if (element is ModuleElement) {
+                    element.drawerStyle = drawerBest
+                    element.settingsBelow = drawerBest
+                }
+            }
+        }
+
         for (panel in panels) {
             panel.updateFade(deltaTime)
             // IRC 打开时模块列表同步收起（fade 同时驱动面板高度和内容高度）

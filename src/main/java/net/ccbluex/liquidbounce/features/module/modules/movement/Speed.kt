@@ -38,7 +38,8 @@ object Speed : Module("Speed", Category.MOVEMENT) {
         WatchdogProtection2, WatchdogProtection, FastLowHop,
         GrimACSpeed, Grim2Speed,   // Grim 模式
         TargetBoost,               // MoonLight EntityCollide 目标加速
-        MatrixSpeed, WatchdogNCPNewSpeed, PolarSpeed, OldNCPYPort // 新增模式
+        MatrixSpeed, WatchdogNCPNewSpeed, PolarSpeed, OldNCPYPort, // 新增模式
+        MatrixNewSpeed, MatrixHighSpeed2 // 第三批新增：MatrixNew（原 Matrix）/ MatrixHighSpeed2
     )
 
     private val deprecatedMode = arrayOf(
@@ -157,6 +158,14 @@ object Speed : Module("Speed", Category.MOVEMENT) {
     // ---- Old NCP Y-port 选项 ----
     val oldNCPYPortSmoothCamera by boolean("Smooth Camera", false) { mode.get() == "Old NCP Y-port" }
 
+    // ---- MatrixNew（原 Matrix，改名避让已有 Matrix）选项 ----
+    private val matrixNewStrafe by boolean("Strafe", false) { mode.get() == "MatrixNew" }
+
+    // ---- MatrixHighSpeed2 选项 ----
+    private val matrixHighH by float("H", 0.2f, 0f..0.5f) { mode.get() == "MatrixHighSpeed2" }
+    private val matrixHighDownMotion by float("DownMotion", 0.3f, -0.5f..0.5f) { mode.get() == "MatrixHighSpeed2" }
+    private val matrixHighInf by boolean("Inf", false) { mode.get() == "MatrixHighSpeed2" }
+
     private fun syncNewSpeedModeSettings() {
         WatchdogNCPNewSpeed.type = wdNewType
         WatchdogNCPNewSpeed.airStrafe = wdNewAirStrafe
@@ -169,6 +178,10 @@ object Speed : Module("Speed", Category.MOVEMENT) {
         WatchdogNCPNewSpeed.alternateMotion = wdNewAlternateMotion
         MatrixSpeed.timerBoostOnSneak = matrixTimerBoostOnSneak
         OldNCPYPort.smoothCamera = oldNCPYPortSmoothCamera
+        MatrixNewSpeed.strafe = matrixNewStrafe
+        MatrixHighSpeed2.h = matrixHighH.toDouble()
+        MatrixHighSpeed2.downMotion = matrixHighDownMotion.toDouble()
+        MatrixHighSpeed2.inf = matrixHighInf
     }
 
     // 合法疾跑（TargetBoost/GrimAC/Grim2）：只有纯前进方向才疾跑，

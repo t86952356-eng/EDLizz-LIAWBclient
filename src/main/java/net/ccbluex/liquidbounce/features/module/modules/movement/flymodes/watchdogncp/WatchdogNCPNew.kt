@@ -12,6 +12,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.FlyMod
 import net.ccbluex.liquidbounce.utils.client.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.extensions.isMoving
 import net.ccbluex.liquidbounce.utils.movement.PortedMove
+import net.minecraft.client.entity.EntityPlayerSP
 import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
 import kotlin.math.max
 
@@ -26,15 +27,40 @@ object WatchdogNCPNew : FlyMode("WatchdogNCP-New") {
     /** Vanilla Kick Bypass（默认开）。 */
     var vanillaKickBypass = true
 
+    /** OnlyDamage（默认关）：只有玩家受到伤害后，飞行才生效。 */
+    var onlyDamage = false
+
+    /** AutoDamage（默认关）：开启模块时自动触发「damage」自伤行为。 */
+    var autoDamage = false
+
     private var moveSpeed = 0.0
     private var stage = 0
     private var ticks = 0
+
+    /** OnlyDamage：已受到伤害（受到伤害后飞行才启动）。 */
+    private var damaged = false
 
     override fun onEnable() {
         val player = mc.thePlayer ?: return
         moveSpeed = 0.0
         stage = if (player.onGround) 0 else -1
         ticks = 0
+        damaged = false
+
+        // AutoDamage：开启模块时自动触发自伤（NCP Glitch 包序列）
+        if (autoDamage) triggerSelfDamage(player)
+    }
+
+    /** 与 Damage 模块 NCP「Glitch」相同的自伤包序列。 */
+    private fun triggerSelfDamage(player: EntityPlayerSP) {
+        val x = player.posX
+        val y = player.posY
+        val z = player.posZ
+        repeat(65) {
+            sendPacket(C04PacketPlayerPosition(x, y + 0.049, z, false), triggerEvent = false)
+            sendPacket(C04PacketPlayerPosition(x, y, z, false), triggerEvent = false)
+        }
+        sendPacket(C04PacketPlayerPosition(x, y, z, true), triggerEvent = false)
     }
 
     override fun onMotion(event: MotionEvent) {
@@ -44,6 +70,16 @@ object WatchdogNCPNew : FlyMode("WatchdogNCP-New") {
 
     override fun onMove(event: MoveEvent) {
         val player = mc.thePlayer ?: return
+
+        // OnlyDamage：受到伤害前不飞行（悬停等待伤害）
+        if (onlyDamage) {
+            if (player.hurtTime > 0) damaged = true
+            if (!damaged) {
+                player.motionY = 0.0
+                event.y = -1.0E-5
+                return
+            }
+        }
 
         if (!player.isMoving || player.isCollidedHorizontally) {
             stage = -1

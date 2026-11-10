@@ -15,12 +15,12 @@
 | البند | القيمة |
 |---|---|
 | اسم العميل | **Lizz** (داخل الكود: `CLIENT_NAME = "L"+"izz"`) — يعرف أيضاً بـ **LAWIB / LIAWB client** |
-| الإصدار الحالي | **b12.11** (`LiquidBounce.kt` → `clientVersionText` و`gradle.properties` → `mod_version`) |
+| الإصدار الحالي | **b12.12** (`LiquidBounce.kt` → `clientVersionText` و`gradle.properties` → `mod_version`) |
 | اللعبة | Minecraft **1.8.9** — Forge `11.15.1.2318` — mappings `stable_22` |
 | الأساس | **LiquidBounce Legacy** (فرع المجتمع النهائي، آخر إصدار رسمي منه b100) |
 | مود id | `Lizz` — الاسم الظاهر في mcmod.info: `LAWIB` |
 | المؤلفون (mcmod.info) | CCBlueX، PickBowen، bzym2، RainRuin، sunbox |
-| عنوان النافذة | `LIAWB client 1.8.9 b12.11 \| 免费注册加群：815061613` (عنوان مجتمع صيني — رقم مجموعة QQ) |
+| عنوان النافذة | `LIAWB client 1.8.9 b12.12 \| 免费注册加群：815061613` (عنوان مجتمع صيني — رقم مجموعة QQ) |
 | التوزيع الرسمي | عبر Discord العميل: **discord.gg/Y2U2gWyRUN** (فيديو «Lizz 7.0 (fork lb b100)») |
 | المستودع | `https://github.com/t86952356-eng/EDLizz-LIAWBclient` (عام، فرع `main`) |
 | سجل التسمية | الفورك بدأ بـ «LIAWB client (chat prefix rebrand)» من LiquidBounce Legacy، ثم أُضيف MusicPlayer، ثم ClickGUI بأسلوب Fatality في b12.7، ثم إصدار تخفيف الحجم في b12.8، ثم إعادة تسمية الموديولات والأوضاع (WatchdogNCP/UpdatedNCP/FastBridge/Verus/AimAssist/MoreKB) في b12.9 |
@@ -249,6 +249,45 @@ manifest سليم (MixinConfigs/FMLAT/TweakClass/FMLCorePluginContainsFMLMod)، 
 SRG reobf مؤكد (47 اسماً في MixinEntity)، كل كلاسات الأوضاع الـ 15 موجودة، وقيم Mode في
 InventoryMove (Custom/WatchdogNCP/Grim) وأسماء Watchdog-Protection مؤكدة داخل الكلاسات المبنية.
 
+### المهمة 6 — نوفمبر 2026 — «ترقية ميزات + الدفعة الثالثة من الاستخراج» (b12.12)
+الهدف: (1) ثلاث ترقيات طلبها المستخدم: خيارا **OnlyDamage/AutoDamage** لوضع Fly/WatchdogNCP-New، إظهار **tag الوضع في
+arraylist لموديول AntiVoid**، وخيار **StyleSettings (Normal/Best)** في ClickGUI للتخطيط Classic (Best = لوحة إعدادات
+الوحدة تنفتح أسفل الوحدة بشكل «درج» مع إزاحة الوحدات الأسفل تلقائياً وعدم تجاوز حدود الفئة). (2) الدفعة الثالثة من الاستخراج من
+**عميل 1.12.2 جديد** (loftily): KillAura AutoBlock (Matrix/Verus/HoldKey) + Disabler (WatchdogNCP/MatrixFlag/GrimAC — مع
+دمج MatrixDisabler.java كاملاً بإعداداته الـ17 داخل وضع MatrixFlag) + Phase (Intave) + Fly (TimerGlide/Intave/Matrix من
+MatrixTest مع إعادة تسمية القديم إلى OldMatrix) + Velocity (MatrixBoost/IntaveNew) + Speed (MatrixNew/MatrixHighSpeed2)
++ NoSlow (MatrixNew/MatrixSemi/GrimSemi — فقط Food للوضعين Semi) + Scaffold Tower (MatrixNew) = **21 وضعاً جديداً**.
+
+**قرارات تسمية عند التصادم** (أسماء محجوزة مسبقاً في Lizz):
+- Fly: اسم «Matrix» محجوز لوضع b12.10 — المستخدم طلب صراحة أن يحمل المستخرج (MatrixTest) اسم **Matrix** ← أُعيد تسمية
+  الوضع القديم إلى **OldMatrix** (سلوكه لم يتغير) وحصل المستخرج على اسم Matrix.
+- Speed: «Matrix» محجوز (b12.10) ولا تسمية من المستخدم ← اتباع اصطلاح المستخدم في نفس الطلب (Matrix→MatrixNew):
+  الوضع المستخرج اسمه **MatrixNew**. MatrixHighSpeed2 باسم **MatrixHighSpeed2**.
+- Velocity: matrix→**MatrixBoost** و Intave→**IntaveNew** (تسمية المستخدم الصريحة).
+- NoSlow: Matrix→**MatrixNew** (دمج فرعي Sword من BlockingPacketMode وFood من FoodMode)، MatrixSemi وGrimSemi
+  بأسمائها (فقط فرع Food يعمل — فرع Sword لا يعمل كما في المصدر).
+- Tower: Matrix→**MatrixNew** (اسم «MatrixNew-WaitBlocks» للإعداد).
+- Disabler: WatchDogMovement→**WatchdogNCP** (تسمية المستخدم)، OldMatrixFlag→**MatrixFlag**، GrimAimFix+Grim→**GrimAC**.
+
+| # | الدرس / الخلل | التفصيل | الحل المطبّق |
+|---|---|---|---|
+| 1 | **خطأ decompiler في مقارنة بدل إسناد** | `return this.lastResult == result;` في getGrimPost لدى المصدر — لكن lastResult لا يصبح true أبداً فيظهر أن الدالة منطقها مقلوب؛ هذا **أثر decompiler** (الأصل إسناد `=`) | نُفذت بالمعنى الصحيح (إسناد + return lastResult) مع تعليق يوثق التحليل |
+| 2 | **تسميات JVM clash** | خاصية `grimPost` ودالة `getGrimPost()` في نفس object → «Platform declaration clash (getGrimPost()Z)» | إعادة تسمية الدالة إلى isPostDelayActive() |
+| 3 | **حقول خاصة في 1.8.9** | `EntityPlayerSP.lastReportedYaw/Pitch` خاصة — مرجع GrimAimFix يعتمدها | الاستبدال بـ RotationUtils.serverRotation (آخر دوران مُرسل — مكافئ تماماً) |
+| 4 | **أسماء حزم مختلفة بين 1.12.2 و1.8.9** | S16PacketSetSlot (1.12) = S2FPacketSetSlot، وS00PacketServerInfo/S01PacketPong في حزمة status.server وS01PacketEncryptionRequest في login.server وليست play.server | استيراد كل من حزمته الصحيحة |
+| 5 | **امتداد airTicks يحتاج استيراداً** | `player.airTicks` ليس حقلاً أصلياً بل خاصية امتداد في PlayerExtension.kt | استيراد صريح في كل ملف جديد يستخدمه |
+| 6 | **getRotating() لا تُصبح isRotating** | عادة Kotlin: getRotating() → `.rotating` وليس `.isRotating` (غير مسبوقة بـ is) | packet.rotating |
+| 7 | **wrapAngleTo180 غير موجود** | 1.8.9 MCP الاسم `wrapAngleTo180_float` | تصحيح مباشر |
+| 8 | **FlyMode بلا onWorld** | وضع Matrix الجديد يفرغ مخزن S08 عند تغيير العالم لكن الفئة الأساسية بلا هوك | تتبع مرجع العالم داخل onUpdate ومقارنته (تغيير = تفريغ) |
+| 9 | **قيم PreUpdateEvent عند المصدر** | المصدر يستخدم PreUpdateEvent — في Lizz يقابلها UpdateEvent (تُطلق في onLivingUpdate HEAD بنفس الإيقاع) وليس MotionEvent PRE دائماً | ربط كل منطق المصدر بـ onUpdate ما لم يكن حدث Motion صريح |
+| 10 | **فحص الأقواس البرمجي يعطي إنذارات كاذبة** | قص السلاسل/التعليقات بـ regex يفسد مع string templates `"${...}"` — لكن compileKotlin الناجح هو الحكم الفعلي | الاعتماد على نجاح الترجمة كدليل التوازن (السبق b12.11 كان لملف كسرته MultiEdit فعلاً) |
+
+**تبسيطات موثّقة**: (1) KillAura blockingPacket: حزمة استخدام OFF_HAND غير موجودة في 1.8.9 فأُسقطت (بقي C08×2 + INTERACT_AT×2 اختيارياً بإعداد InteractPacket افتراضياً مغلقاً كما في المصدر). (2) Intave Phase: mc.objectMouseOver.getBlockPos() مباشرة. (3) MatrixNew NoSlow فرع الطعام: `!isJumping` (حقل محمي) قُرِّب بـ `!movementInput.jump`. (4) MatrixSemi: jumpTicks (خاص) قُرِّب بامتداد tryJump، وonGroundTicks يُتابع محلياً. (5) WatchdogNCP Disabler: displayedTitle (خاص) قُرِّب بـ isDead في فحص spectator. (6) IntaveNew Velocity: فرع Strafe يضغط Forward فقط (moveFix=STRICT يقابله في Lizz إصلاح المدخلات التلقائي عند تفعيل currentRotation). (7) GrimAC: smoothRotation بحد 360° = تمرير مباشر (خطوة واحدة). (8) MatrixBoost Velocity: إعدادا النطاق StrafeHurtTime/HurtTime أصبحا Min/Max منفصلين (لا يوجد نوع نطاق في Lizz). (9) MatrixDisabler الدمجي: قيمة Version داخل الوضع تعمل مع is7x والكشف التلقائي. (10) ClickGUI Best: الزر الأيسر داخل منطقة الدراج لا يفعّل الوحدة (isHovered محصور في صف الوحدة نفسه 16px).
+
+**النتيجة**: compileKotlin محلي = **BUILD SUCCESSFUL** (3 جولات: 21 خطأ ثم 2 ثم 0)، ثم البناء والنشر عبر GitHub Actions وإصدار
+vb12.12-mc1.8.9 مع lizz-b12.12.jar وlizz-b12.12-source.zip، والـ changelog بالإنجليزية من RELEASE_NOTES.md (كل الأوضاع
+مكتوبة كإضافات جديدة دون ذكر الاستخراج).
+
 ## 5) سجل المهام
 
 | التاريخ | المهمة | الحالة |
@@ -258,3 +297,4 @@ InventoryMove (Custom/WatchdogNCP/Grim) وأسماء Watchdog-Protection مؤك�
 | نوفمبر 2026 | المهمة 3: إعادة تسمية الموديولات والأوضاع (AimAssist/MoreKB/WatchdogNCP family/UpdatedNCP/FastBridge/Verus/Watchdog-Protection) + نظام Mode/Custom في NoSlow وDisabler مع tag + حد BoostDelay 10000 + حذف LiquidWalk/BedGodMode/GodMode (b12.9) | ✅ تمت — فشل بناء واحد بسبب خطأ استيراد في grim.kt (وثّق أعلاه وحُل فوراً)، ثم نجح النشر (run 42621643210) |
 | نوفمبر 2026 | المهمة 4 (b12.10): استخراج الأوضاع من عميل 1.8.9 آخر — NoSlow 6 + Velocity 7 من 8 (Polar لم يُستخرج: هو Legit مُعاد تسميته في المصدر) + Speed 4 + Fly 3 = 20 وضعاً + بنية PortedUtils مشتركة + ترقية b12.10 | ✅ تمت — compileKotlin محلي نجح (بعد إصلاح 35 خطأ) ونجح النشر على Actions (run 42653938466) والإصدار vb12.10-mc1.8.9 |
 | نوفمبر 2026 | المهمة 5 (b12.11): إصلاحات b12.10 الأربعة (تسمية Watchdog-Protection + Polar legit sprint + Sword/KillAura عبر usingItemFunc + إصلاح damageBoost الميت) + الدفعة الثانية: Criticals 3 + LongJump 3 + Phase 3 + Step 2 + InventoryMove (نظام Mode/Custom + وضعان) + AntiVoid 2 = 15 وضعاً جديداً + ترقية b12.11 | ✅ تمت — compileKotlin محلي نجح (خطأ واحد أُصلح) ونجح النشر على Actions (run 42756010821) والإصدار vb12.11-mc1.8.9 |
+| نوفمبر 2026 | المهمة 6 (b12.12): ترقيات OnlyDamage/AutoDamage (Fly/WatchdogNCP-New) + tag لـ AntiVoid + StyleSettings درج (ClickGUI Classic) + الدفعة الثالثة من عميل 1.12.2: KillAura AutoBlock 3 + Disabler 3 (Mode system + دمج MatrixDisabler) + Phase 1 + Fly 3 + Velocity 2 + Speed 2 + NoSlow 3 + Tower 1 = 21 وضعاً جديداً + ترقية b12.12 | ✅ تمت — compileKotlin محلي نجح (3 جولات: 21/2/0 خطأ) ونجح النشر على Actions والإصدار vb12.12-mc1.8.9 |

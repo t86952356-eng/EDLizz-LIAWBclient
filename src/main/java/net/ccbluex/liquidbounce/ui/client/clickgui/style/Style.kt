@@ -34,6 +34,13 @@ abstract class Style : MinecraftInstance {
     open val wantsPopAnimation: Boolean
         get() = false
 
+    /**
+     * 该风格是否支持「设置面板画在模块行下方」（settingsBelow / 抽屉式设置）。
+     * Classic 布局的 StyleSettings=Best 只对支持的风格生效。
+     */
+    open val supportsSettingsBelow: Boolean
+        get() = false
+
     protected var sliderValueHeld: Value<*>? = null
         get() {
             if (!Mouse.isButtonDown(0)) field = null

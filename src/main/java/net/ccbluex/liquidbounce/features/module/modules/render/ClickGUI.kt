@@ -23,6 +23,18 @@ object ClickGUI : Module("ClickGUI", Category.RENDER, Keyboard.KEY_RSHIFT, canBe
      */
     val layout by choices("Layout", arrayOf("Classic", "Zenith"), "Classic")
 
+    /**
+     * Classic 布局下模块设置面板的呈现方式：
+     * - Normal：现有外观，完全不变（设置面板画在模块行右侧）
+     * - Best  ：设置面板以「抽屉」形式展开在模块正下方，下方模块自动下移，
+     *           设置宽度不超出分类（如 Combat）面板边界
+     */
+    val styleSettings by choices(
+        "StyleSettings",
+        arrayOf("Normal", "Best"),
+        "Normal"
+    ) { layout == "Classic" && style in arrayOf("LiquidBounce", "Fatality") }
+
     private val style by choices(
         "Style",
         arrayOf("LiquidBounce", "Fatality", "Null", "Slowly", "Black"),

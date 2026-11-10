@@ -81,7 +81,7 @@ object LiquidBounce {
     const val CLIENT_GITHUB = "https://github.com/CCBlueX/LiquidBounce"
     const val MINECRAFT_VERSION = "1.8.9"
 
-    val clientVersionText = "b12.10"
+    val clientVersionText = "b12.12"
     val clientVersionNumber = clientVersionText.substring(1).toIntOrNull() ?: 0
     val clientCommit = gitInfo["git.commit.id.abbrev"]?.let { "git-$it" } ?: "unknown"
     val clientBranch = gitInfo["git.branch"]?.toString() ?: "unknown"

@@ -49,7 +49,8 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false) {
         "Mode",
         arrayOf(
             "Custom", "WatchdogNCP", "Intave", "Matrix",
-            "Watchdog-Protection", "Grim", "Grim 1.9"
+            "Watchdog-Protection", "Grim", "Grim 1.9",
+            "MatrixNew", "MatrixSemi", "GrimSemi"
         ),
         "Custom"
     )
@@ -57,7 +58,8 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false) {
     /** 新模式集合（与 SpeedMode/FlyMode 同套路的分发模型）。 */
     private val noslowModes = arrayOf(
         WatchdogNoSlowMode, IntaveNoSlowMode, MatrixNoSlowMode,
-        WatchdogPredictionNoSlowMode, GrimNoSlowMode, Grim19NoSlowMode
+        WatchdogPredictionNoSlowMode, GrimNoSlowMode, Grim19NoSlowMode,
+        MatrixNewNoSlowMode, MatrixSemiNoSlowMode, GrimSemiNoSlowMode
     )
 
     private val noslowMode get() = noslowModes.firstOrNull { it.modeName == mode }
@@ -75,6 +77,10 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false) {
     private val wdMaxPingSpoof by int("Max Ping Spoof", 8, 0..30) { mode == "Watchdog-Protection" }
     private val wdWhenToFinishEating by int("When to finish eating", 30, 20..36) { mode == "Watchdog-Protection" }
     private val wdNonBlinkSpeedBypass by boolean("Non-Blink Speed Bypass", true) { mode == "Watchdog-Protection" }
+
+    // ---- GrimSemi（NoSlow，仅 Food 分支）选项 ----
+    private val grimSemiForward by float("GrimSemi-Forward", 0.2f, 0f..1f) { mode == "GrimSemi" }
+    private val grimSemiStrafe by float("GrimSemi-Strafe", 0.2f, 0f..1f) { mode == "GrimSemi" }
 
     private val swordMode by choices(
         "SwordMode",
@@ -175,11 +181,18 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false) {
         WatchdogPredictionNoSlowMode.maxPingSpoof = wdMaxPingSpoof
         WatchdogPredictionNoSlowMode.whenToFinishEating = wdWhenToFinishEating
         WatchdogPredictionNoSlowMode.nonBlinkSpeedBypass = wdNonBlinkSpeedBypass
+        GrimSemiNoSlowMode.forwardMultiplier = grimSemiForward
+        GrimSemiNoSlowMode.strafeMultiplier = grimSemiStrafe
     }
 
     val onUpdate = handler<UpdateEvent> {
         syncExtraModeSettings()
         noslowMode?.onUpdate()
+    }
+
+    // ---- 新模式：攻击事件（MatrixNew 的 CombatHandler.inCombat 等价追踪） ----
+    val onAttack = handler<AttackEvent> { event ->
+        noslowMode?.onAttack(event.targetEntity)
     }
 
     val onStrafeEvent = handler<StrafeEvent> {
@@ -190,10 +203,13 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false) {
         val player = mc.thePlayer ?: return@handler
 
         // ---- 新模式分发：完全自包含，与原有 Custom 逻辑互斥 ----
+        // （MatrixNew 等需要 PRE 与 POST 两个阶段，全部转发给模式）
         val extra = noslowMode
         if (extra != null) {
             if (event.eventState == EventState.PRE) {
                 extra.onPreMotion(event)
+            } else {
+                extra.onPostMotion(event)
             }
             return@handler
         }

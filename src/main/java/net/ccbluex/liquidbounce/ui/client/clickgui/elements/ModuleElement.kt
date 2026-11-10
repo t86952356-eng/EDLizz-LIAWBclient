@@ -15,6 +15,11 @@ import net.minecraftforge.fml.relauncher.SideOnly
 class ModuleElement(val module: Module) : ButtonElement(module.name, buttonAction = {
     // This module element handles the click action itself.
 }) {
+    companion object {
+        /** 模块行的固定高度（ButtonElement 原本的 16）：drawerStyle 撑开行高时仍用它定位行/色块 */
+        const val ROW_HEIGHT = 16
+    }
+
     override val displayName
         get() = module.getName(spacedModules)
 
@@ -38,6 +43,25 @@ class ModuleElement(val module: Module) : ButtonElement(module.name, buttonActio
 
     /** 设置面板画在模块行「下方」（宽度对齐行宽），而不是右侧 —— 新布局的右列用 */
     var settingsBelow = false
+
+    /**
+     * Classic 布局 StyleSettings=Best：设置面板以「抽屉」形式展开在模块行正下方，
+     * 展开时把行高撑开，下方的模块自动下移（不会被遮住/重叠）。
+     * 设置内容宽度限制在分类面板边界内（minX..maxX 由样式的 below 分支负责）。
+     */
+    var drawerStyle = false
+
+    /** drawerStyle 展开时的总行高：模块行 16 + 抽屉内容 + 底部间隙 */
+    override val height: Int
+        get() = if (drawerStyle && showSettings && settingsHeight > 0) {
+            ROW_HEIGHT + settingsHeight + 6
+        } else {
+            ROW_HEIGHT
+        }
+
+    /** drawerStyle 时悬停/点击只针对模块行本身（抽屉区域交给设置控件） */
+    override fun isHovered(mouseX: Int, mouseY: Int) =
+        isVisible && mouseX in x..x + width && mouseY in y..y + ROW_HEIGHT
 
     fun forceSettingsWidth(width: Int) {
         forcedSettingsWidth = width.coerceAtLeast(0)

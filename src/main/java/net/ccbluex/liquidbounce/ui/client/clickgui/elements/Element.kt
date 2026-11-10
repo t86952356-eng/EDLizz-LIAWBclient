@@ -25,5 +25,6 @@ abstract class Element : MinecraftInstance {
 
     open fun mouseReleased(mouseX: Int, mouseY: Int, button: Int) = isHovered(mouseX, mouseY)
 
-    fun isHovered(mouseX: Int, mouseY: Int) = isVisible && mouseX in x..x + width && mouseY in y..y + height
+    /** open：ModuleElement 在 drawerStyle（Best 抽屉）下行高被撑开，但「悬停/点击」只针对模块行本身 */
+    open fun isHovered(mouseX: Int, mouseY: Int) = isVisible && mouseX in x..x + width && mouseY in y..y + height
 }

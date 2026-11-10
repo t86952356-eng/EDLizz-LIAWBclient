@@ -58,7 +58,10 @@ class Panel(
         if (open)
             for (element in elements) {
                 if (element.isVisible) {
-                    if (element is ModuleElement && element.showSettings && element.settingsHeight != 0) {
+                    // drawerStyle 时 element.height 已包含抽屉高度，这里不再重复叠加
+                    if (element is ModuleElement && !element.drawerStyle &&
+                        element.showSettings && element.settingsHeight != 0
+                    ) {
                         val relativeSettingsHeight = yPos + element.settingsHeight
                         if (relativeSettingsHeight > panelHeight) panelHeight = relativeSettingsHeight
                     }

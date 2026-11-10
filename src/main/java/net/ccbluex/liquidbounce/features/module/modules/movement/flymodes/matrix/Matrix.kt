@@ -5,111 +5,135 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.matrix
 
-import com.viaversion.viarewind.protocol.v1_9to1_8.Protocol1_9To1_8
-import com.viaversion.viaversion.api.Via
-import com.viaversion.viaversion.api.connection.UserConnection
-import com.viaversion.viaversion.api.protocol.packet.PacketWrapper
-import com.viaversion.viaversion.api.protocol.version.ProtocolVersion
-import com.viaversion.viaversion.api.type.Type
-import com.viaversion.viaversion.api.type.Types
-import com.viaversion.viaversion.protocols.v1_8to1_9.packet.ServerboundPackets1_9
-import de.florianmichael.vialoadingbase.ViaLoadingBase
 import net.ccbluex.liquidbounce.event.EventState
-import net.ccbluex.liquidbounce.event.MovementInputEvent
 import net.ccbluex.liquidbounce.event.PacketEvent
-import net.ccbluex.liquidbounce.event.StrafeEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.Fly
 import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.FlyMode
 import net.ccbluex.liquidbounce.utils.client.PacketUtils.sendPacket
-import net.ccbluex.liquidbounce.utils.client.ViaUseItem
-import net.ccbluex.liquidbounce.utils.movement.PortedMove
-import net.ccbluex.liquidbounce.utils.movement.PortedTrackers
+import net.ccbluex.liquidbounce.utils.rotation.RotationUtils
+import net.minecraft.network.Packet
+import net.minecraft.network.play.client.C03PacketPlayer
+import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
 import net.minecraft.network.play.client.C03PacketPlayer.C06PacketPlayerPosLook
 import net.minecraft.network.play.server.S08PacketPlayerPosLook
+import java.util.LinkedList
+import java.util.Queue
 
 /**
- * Fly「Matrix」模式：吃掉 S08 传送并自行落位/起跳，
- * 二次传送时自动关闭；配合阶段性的速度爆发。
+ * Fly「Matrix」模式（原 MatrixTest，改名 Matrix）：
+ * 吃掉 S08 传送并缓冲；吞掉全部 C03 出站包，每 tick 以 N 倍计时器
+ * 用 C06/C04 重发当前位置，配合 noClip + 固定速度。
  */
 object Matrix : FlyMode("Matrix") {
 
-    private var teleported = false
+    /** Matrix-Timer（默认 1，1..10）。 */
+    var timerSpeed = 1f
 
-    override fun onEnable() {
-        teleported = false
-    }
+    /** Matrix-Speed（默认 0.16，0.1..0.7）。 */
+    var matrixSpeed = 0.16
+
+    /** Matrix-Packets（默认 4，1..10）。 */
+    var packets = 4
+
+    /** Matrix-PacketMode（C06/C04，默认 C06）。 */
+    var packetMode = "C06"
+
+    val serverBuffer: Queue<Packet<*>> = LinkedList()
 
     override fun onDisable() {
-        teleported = false
+        for (packet in serverBuffer) {
+            try {
+                @Suppress("UNCHECKED_CAST")
+                (packet as net.minecraft.network.Packet<net.minecraft.network.play.INetHandlerPlayClient?>)
+                    .processPacket(mc.netHandler)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+        serverBuffer.clear()
+        mc.timer?.timerSpeed = 1f
     }
 
     override fun onPacket(event: PacketEvent) {
-        if (event.eventType != EventState.RECEIVE) return
-        val player = mc.thePlayer ?: return
-        val packet = event.packet
-
-        if (packet is S08PacketPlayerPosLook) {
-            event.cancelEvent()
-            val x = packet.x
-            val y = packet.y
-            val z = packet.z
-            val yaw = player.rotationYaw
-            val pitch = player.rotationPitch
-
-            // 1.9+ 跨版本时向服务器确认传送（1.8 管线无传送 ID，此分支仅在跨版本时有意义）
-            if (ViaUseItem.isCrossVersionTo9Plus() &&
-                ViaLoadingBase.getInstance().targetVersion.newerThanOrEqualTo(ProtocolVersion.v1_9)
-            ) {
-                try {
-                    val connections: Collection<UserConnection> = Via.getManager().connectionManager.connections
-                    if (connections.isNotEmpty()) {
-                        val user = connections.iterator().next()
-                        val wrapper = PacketWrapper.create(ServerboundPackets1_9.ACCEPT_TELEPORTATION, user)
-                        // 原实现读取的是被 Via 转换前的传送 ID；1.8 管线拿不到，用 0 兜底
-                        wrapper.write(Types.VAR_INT as Type<Int>, 0)
-                        wrapper.sendToServer(Protocol1_9To1_8::class.java)
-                    }
-                } catch (_: Throwable) {
-                }
+        if (event.eventType == EventState.RECEIVE) {
+            val packet = event.packet
+            if (packet is S08PacketPlayerPosLook) {
+                event.cancelEvent()
+                serverBuffer.add(packet)
             }
+            return
+        }
 
-            sendPacket(C06PacketPlayerPosLook(x, y, z, yaw, pitch, false), triggerEvent = false)
-            player.setPosition(x, y, z)
-            player.jump()
-            if (teleported) {
-                Fly.state = false
+        if (event.eventType == EventState.SEND) {
+            if (mc.thePlayer != null && mc.theWorld != null && event.packet is C03PacketPlayer) {
+                event.cancelEvent()
             }
-            teleported = true
         }
     }
 
-    override fun onMoveInput(event: MovementInputEvent) {
+    private var lastWorld: Any? = null
+
+    override fun onUpdate() {
         val player = mc.thePlayer ?: return
-        val useTicks = PortedTrackers.itemUseTicks
-        if (useTicks > 15 && useTicks < 19) {
-            event.originalInput.moveForward = 0f
+        val world = mc.theWorld ?: return
+
+        // 源 onWorld：世界切换时清空 S08 缓冲（FlyMode 无 onWorld 钩子，这里追踪世界对象）
+        if (lastWorld !== world) {
+            lastWorld = world
+            serverBuffer.clear()
+        }
+
+        mc.timer?.timerSpeed = timerSpeed
+        player.noClip = true
+
+        // stop(true)：水平 + 垂直全停
+        player.motionX = 0.0
+        player.motionY = 0.0
+        player.motionZ = 0.0
+
+        // setSpeed(speed, true)：沿移动方向设置固定速度
+        if (isMovingInput()) {
+            val dir = direction()
+            player.motionX = -Math.sin(dir) * matrixSpeed
+            player.motionZ = Math.cos(dir) * matrixSpeed
+        }
+
+        val rotation = RotationUtils.currentRotation
+        val yaw = rotation?.yaw ?: player.rotationYaw
+        val pitch = rotation?.pitch ?: player.rotationPitch
+
+        when (packetMode) {
+            "C06" -> repeat(packets) {
+                sendPacket(
+                    C06PacketPlayerPosLook(player.posX, player.posY, player.posZ, yaw, pitch, player.onGround),
+                    triggerEvent = false
+                )
+            }
+
+            "C04" -> repeat(packets) {
+                sendPacket(
+                    C04PacketPlayerPosition(player.posX, player.posY, player.posZ, player.onGround),
+                    triggerEvent = false
+                )
+            }
         }
     }
 
-    override fun onStrafe(event: StrafeEvent) {
-        val player = mc.thePlayer ?: return
+    private fun isMovingInput(): Boolean {
+        val p = mc.thePlayer ?: return false
+        return p.movementInput.moveForward != 0f || p.movementInput.moveStrafe != 0f
+    }
 
-        if (PortedTrackers.ticksSinceVelocity > 1) {
-            player.motionY += 0.00348
+    private fun direction(): Double {
+        val p = mc.thePlayer ?: return 0.0
+        val input = p.movementInput
+        val moveForward = input.moveForward.toDouble()
+        val moveStrafe = input.moveStrafe.toDouble()
+        var yaw = p.rotationYaw
+        if (moveForward == 0.0 && moveStrafe == 0.0) {
+            return Math.toRadians(yaw.toDouble())
         }
-
-        if (player.onGround) {
-            player.jump()
-        }
-
-        if (player.fallDistance > 0.1 && !teleported) {
-            player.motionY = 0.42
-            PortedMove.strafe(1.97)
-        }
-
-        if (teleported && PortedTrackers.itemUseTicks == 20) {
-            player.motionY = 0.42
-            PortedMove.strafe(9.3)
-        }
+        val angle = Math.atan2(-moveStrafe, moveForward)
+        return angle + Math.toRadians(yaw.toDouble())
     }
 }

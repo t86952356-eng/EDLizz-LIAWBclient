@@ -43,6 +43,10 @@ import kotlin.math.max
 
 object AntiVoid : Module("AntiVoid", Category.MOVEMENT) {
 
+    /** 在 arraylist 中显示当前模式 tag（与 NoSlow/Disabler 相同）。 */
+    override val tag
+        get() = mode
+
     private val mode by choices(
         "Mode",
         arrayOf(

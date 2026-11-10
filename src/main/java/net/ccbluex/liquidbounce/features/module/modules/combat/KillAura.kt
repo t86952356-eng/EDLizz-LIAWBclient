@@ -72,7 +72,9 @@ import net.minecraft.network.play.client.C09PacketHeldItemChange
 import net.minecraft.network.play.client.C0APacketAnimation
 import net.minecraft.potion.Potion
 import net.minecraft.util.*
+import net.minecraft.client.entity.EntityPlayerSP
 import org.lwjgl.input.Keyboard
+import org.lwjgl.input.Mouse
 import java.awt.Color
 import net.ccbluex.liquidbounce.utils.extras.sendOffHandUseItem.sendOffHandUseItem
 import org.lwjgl.opengl.GL11
@@ -148,24 +150,35 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R) {
     private val tpAuraHeight by float("TpAuraHeight", 1.5f, 0.5f..3f) { tpAura }
 
     // AutoBlock
-    val autoBlock by choices("AutoBlock", arrayOf("Off", "Packet", "Fake", "BlocksMC","QuickMarco"), "Packet")
+    val autoBlock by choices(
+        "AutoBlock", arrayOf("Off", "Packet", "Fake", "BlocksMC", "QuickMarco", "Matrix", "Verus", "HoldKey"), "Packet"
+    )
+
+    // ---- 三种新 AutoBlock（Matrix/Verus/HoldKey）：自包含逻辑，与原有结构互斥 ----
+    private val extractedAutoBlocks = arrayOf("Matrix", "Verus", "HoldKey")
+
+    /** InteractPacket（默认关，与源一致）：起手格挡前先发 C02 INTERACT_AT×2 */
+    private val interactExtractedBlock by boolean("InteractPacket", false) { autoBlock in extractedAutoBlocks }
+
     private val blockMaxRange by float("BlockMaxRange", 3f, 0f..8f) { autoBlock == "Packet" || autoBlock == "QuickMarco" }
     private val unblockMode by choices(
         "UnblockMode", arrayOf("Stop", "Switch", "Empty"), "Stop"
     ) { autoBlock == "Packet" || autoBlock == "QuickMarco" }
-    private val releaseAutoBlock by boolean("ReleaseAutoBlock", true) { autoBlock !in arrayOf("Off", "Fake", "BlocksMC") }
+    private val releaseAutoBlock by boolean(
+        "ReleaseAutoBlock", true
+    ) { autoBlock !in arrayOf("Off", "Fake", "BlocksMC", "Matrix", "Verus", "HoldKey") }
     val forceBlockRender by boolean("ForceBlockRender", true) {
         autoBlock !in arrayOf(
-            "Off", "Fake", "BlocksMC"
+            "Off", "Fake", "BlocksMC", "Matrix", "Verus", "HoldKey"
         ) && releaseAutoBlock
     }
     private val ignoreTickRule by boolean("IgnoreTickRule", false) {
         autoBlock !in arrayOf(
-            "Off", "Fake", "BlocksMC"
+            "Off", "Fake", "BlocksMC", "Matrix", "Verus", "HoldKey"
         ) && releaseAutoBlock
     }
     private val blockRate by int("BlockRate", 100, 1..100) {
-        autoBlock !in arrayOf("Off", "Fake", "BlocksMC") && releaseAutoBlock
+        autoBlock !in arrayOf("Off", "Fake", "BlocksMC", "Matrix", "Verus", "HoldKey") && releaseAutoBlock
     }
 
     private val uncpAutoBlock by boolean("UpdatedNCPAutoBlock", false) {
@@ -174,15 +187,21 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R) {
         ) && !releaseAutoBlock
     }
 
-    private val switchStartBlock by boolean("SwitchStartBlock", false) { autoBlock !in arrayOf("Off", "Fake", "BlocksMC") }
+    private val switchStartBlock by boolean(
+        "SwitchStartBlock", false
+    ) { autoBlock !in arrayOf("Off", "Fake", "BlocksMC", "Matrix", "Verus", "HoldKey") }
 
-    private val interactAutoBlock by boolean("InteractAutoBlock", true) { autoBlock !in arrayOf("Off", "Fake", "BlocksMC") }
+    private val interactAutoBlock by boolean(
+        "InteractAutoBlock", true
+    ) { autoBlock !in arrayOf("Off", "Fake", "BlocksMC", "Matrix", "Verus", "HoldKey") }
 
-    val blinkAutoBlock by boolean("BlinkAutoBlock", false) { autoBlock !in arrayOf("Off", "Fake", "BlocksMC") }
+    val blinkAutoBlock by boolean(
+        "BlinkAutoBlock", false
+    ) { autoBlock !in arrayOf("Off", "Fake", "BlocksMC", "Matrix", "Verus", "HoldKey") }
 
     private val blinkBlockTicks by int("BlinkBlockTicks", 3, 2..5) {
         autoBlock !in arrayOf(
-            "Off", "Fake", "BlocksMC"
+            "Off", "Fake", "BlocksMC", "Matrix", "Verus", "HoldKey"
         ) && blinkAutoBlock
     }
 
@@ -394,6 +413,10 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R) {
             sendPacket(C09PacketHeldItemChange((mc.thePlayer.inventory.currentItem + 2) % 8))
             sendPacket(C09PacketHeldItemChange(mc.thePlayer.inventory.currentItem))
         }
+        // 三种新 AutoBlock 收尾（HoldKey 松键 / Verus 切槽；与源一致 Matrix 不停格挡）
+        if (autoBlock in extractedAutoBlocks) {
+            mc.thePlayer?.let { releaseExtractedAutoBlock(it) }
+        }
         // Reset all mode-specific states
         asw = 0
         blockTick = 0
@@ -488,7 +511,13 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R) {
         if (blockStatus && player.heldItem?.item !is ItemSword) {
             blockStatus = false
             renderBlocking = false
+            if (autoBlock in extractedAutoBlocks) releaseExtractedAutoBlock(player)
             return@handler
+        }
+
+        // ---- 三种新 AutoBlock（Matrix/Verus/HoldKey）：自包含格挡状态机，攻击流程照常走下面 ----
+        if (autoBlock in extractedAutoBlocks) {
+            handleExtractedAutoBlock()
         }
 
         if (shouldPrioritize()) {
@@ -511,7 +540,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R) {
         if (cancelRun) {
             target = null
             hittable = false
-            stopBlocking()
+            if (autoBlock !in extractedAutoBlocks) stopBlocking()
             return@handler
         }
 
@@ -528,7 +557,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R) {
 
         if (target == null && !blockStopInDead) {
             blockStopInDead = true
-            stopBlocking()
+            if (autoBlock !in extractedAutoBlocks) stopBlocking()
             return@handler
         }
 
@@ -564,11 +593,11 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R) {
         }
 
         if (target != null) {
-            if (player.getDistanceToEntityBox(target!!) > blockMaxRange && blockStatus) {
+            if (player.getDistanceToEntityBox(target!!) > blockMaxRange && blockStatus && autoBlock !in extractedAutoBlocks) {
                 stopBlocking(true)
                 return@handler
             } else {
-                if (autoBlock != "Off" && !releaseAutoBlock) {
+                if (autoBlock != "Off" && !releaseAutoBlock && autoBlock !in extractedAutoBlocks) {
                     renderBlocking = true
                 }
             }
@@ -1037,7 +1066,9 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R) {
         }
 
         // Start blocking after attack
-        if (autoBlock != "Off" && (thePlayer.isBlocking || canBlock) && (!blinkAutoBlock && (isLastClick || autoBlock == "QuickMarco" ) || blinkAutoBlock && (!blinked || !BlinkUtils.isBlinking))) {
+        if (autoBlock != "Off" && autoBlock !in extractedAutoBlocks &&
+            (thePlayer.isBlocking || canBlock) &&
+            (!blinkAutoBlock && (isLastClick || autoBlock == "QuickMarco" ) || blinkAutoBlock && (!blinked || !BlinkUtils.isBlinking))) {
             startBlocking(entity, interactAutoBlock, autoBlock == "Fake")
         }
 
@@ -1345,6 +1376,19 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R) {
     val onPacket = handler<PacketEvent> { event ->
         val player = mc.thePlayer ?: return@handler
         val packet = event.packet
+
+        // ---- Matrix AutoBlock：拦截攻击包 —— RELEASE → 重发攻击 → 重新起手格挡 ----
+        if (autoBlock == "Matrix" && event.eventType == EventState.SEND &&
+            packet is C02PacketUseEntity && packet.action == C02PacketUseEntity.Action.ATTACK &&
+            extractedBlockingTick && blockStatus && player.heldItem?.item is ItemSword
+        ) {
+            event.cancelEvent()
+            sendPacket(C07PacketPlayerDigging(RELEASE_USE_ITEM, BlockPos.ORIGIN, EnumFacing.DOWN))
+            sendPacket(packet, triggerEvent = false)
+            target?.let { sendExtractedBlockPacket(it) }
+            return@handler
+        }
+
         //here down
         val isClientPacket = packet.javaClass.name.startsWith("net.minecraft.network.play.client.")
         if (blinking && target != null && isClientPacket){
@@ -1431,6 +1475,96 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R) {
             sendPacket(C02PacketUseEntity(entity, INTERACT))
         }
         resetLastAttackedTicks()
+    }
+
+    /**
+     * 三种新 AutoBlock（Matrix/Verus/HoldKey）的格挡状态机（每 tick 由 onTick 驱动）：
+     * - HoldKey：整个目标期间按住使用键（客户端真实格挡）
+     * - Verus  ：起手发格挡包（C08×2），结束时切槽「停止格挡」
+     * - Matrix ：起手发格挡包，从不主动停（攻击时先 RELEASE 再重新起手，见 onPacket）
+     * blockStatus=true 时 NoSlow 联动（usingItemFunc）与 Packet 模式一致。
+     */
+    private var extractedBlockingTick = false
+
+    private fun handleExtractedAutoBlock() {
+        val player = mc.thePlayer ?: return
+        val currentTarget = target
+        val canBlock = player.heldItem?.item is ItemSword
+        val inRange = currentTarget != null && player.getDistanceToEntityBox(currentTarget!!) <= range
+
+        if (currentTarget == null || !canBlock || !inRange) {
+            // 目标丢失 / 没剑 / 超出攻击范围：走各自的停格挡逻辑
+            if (autoBlock == "HoldKey") {
+                mc.gameSettings.keyBindUseItem.pressed = Mouse.isButtonDown(1)
+                extractedBlockingTick = false
+            } else if (autoBlock == "Verus" && extractedBlockingTick) {
+                // Verus 停格挡：切槽再切回
+                val slot = player.inventory.currentItem
+                sendPacket(C09PacketHeldItemChange(slot % 8 + 1))
+                sendPacket(C09PacketHeldItemChange(slot))
+                extractedBlockingTick = false
+            }
+            // Matrix：不发停格挡包，保持服务端格挡状态
+            blockStatus = false
+            renderBlocking = false
+            return
+        }
+
+        renderBlocking = true
+        when (autoBlock) {
+            "HoldKey" -> {
+                mc.gameSettings.keyBindUseItem.pressed = true
+                extractedBlockingTick = true
+                blockStatus = true
+            }
+
+            "Verus", "Matrix" -> {
+                if (!extractedBlockingTick) {
+                    sendExtractedBlockPacket(currentTarget!!)
+                    extractedBlockingTick = true
+                }
+                blockStatus = true
+            }
+        }
+    }
+
+    /** 换剑/关模块时的收尾：HoldKey 松键、Verus 切槽复位（Matrix 与源一致不停格挡） */
+    private fun releaseExtractedAutoBlock(player: EntityPlayerSP) {
+        if (autoBlock == "HoldKey") {
+            mc.gameSettings.keyBindUseItem.pressed = Mouse.isButtonDown(1)
+        } else if (autoBlock == "Verus" && extractedBlockingTick) {
+            val slot = player.inventory.currentItem
+            sendPacket(C09PacketHeldItemChange(slot % 8 + 1))
+            sendPacket(C09PacketHeldItemChange(slot))
+        }
+        extractedBlockingTick = false
+    }
+
+    /**
+     * 起手格挡包（与源 blockingPacket 一致）：
+     * InteractPacket 开启时先发 C02 INTERACT_AT×2，再发 C08 使用物品×2。
+     * （1.8.9 无副手，源里的 OFF_HAND 使用包无法移植，已省略）
+     */
+    private fun sendExtractedBlockPacket(target: Entity) {
+        val player = mc.thePlayer ?: return
+
+        if (interactExtractedBlock) {
+            val positionEye = player.eyes
+            val boundingBox = target.hitBox
+            val (yaw, pitch) = currentRotation ?: player.rotation
+            val vec = getVectorForRotation(Rotation(yaw, pitch))
+            val lookAt = positionEye.add(vec * maxRange.toDouble())
+            val movingObject = boundingBox.calculateIntercept(positionEye, lookAt)
+            if (movingObject != null) {
+                val hitVec = movingObject.hitVec
+                val offset = hitVec - target.positionVector
+                sendPacket(C02PacketUseEntity(target, offset))
+                sendPacket(C02PacketUseEntity(target, offset))
+            }
+        }
+
+        sendPacket(C08PacketPlayerBlockPlacement(player.heldItem))
+        sendPacket(C08PacketPlayerBlockPlacement(player.heldItem))
     }
     private fun releaseBlinkedPackets() {
         if (blinkedPackets.isNotEmpty()) {
