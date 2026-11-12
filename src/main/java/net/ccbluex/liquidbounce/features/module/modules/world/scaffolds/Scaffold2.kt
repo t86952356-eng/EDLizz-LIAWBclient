@@ -1134,13 +1134,17 @@ object Scaffold2 : Module("Scaffold2", Category.WORLD) {
         }).fixedSensitivity()
 
         // If the current rotation already looks at the target block and side, then return right here
-        performBlockRaytrace(currRotation, maxReach)?.let { raytrace ->
-            if (raytrace.blockPos == offsetPos && (!raycast || raytrace.sideHit == side.opposite)) {
-                return PlaceRotation(
-                    PlaceInfo(
-                        raytrace.blockPos, side.opposite, modifyVec(raytrace.hitVec, side, Vec3(offsetPos), !raycast)
-                    ), currRotation
-                )
+        // （Backward 跳过该捷径：当前朝向命中目标时直接沿用 currRotation 会让
+        //   发送出去的 rotation 一直朝前 —— Backward 每次都走下方计算路径保证 yaw+180 朝后）
+        if (options.rotationMode != "Backward") {
+            performBlockRaytrace(currRotation, maxReach)?.let { raytrace ->
+                if (raytrace.blockPos == offsetPos && (!raycast || raytrace.sideHit == side.opposite)) {
+                    return PlaceRotation(
+                        PlaceInfo(
+                            raytrace.blockPos, side.opposite, modifyVec(raytrace.hitVec, side, Vec3(offsetPos), !raycast)
+                        ), currRotation
+                    )
+                }
             }
         }
 

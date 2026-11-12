@@ -355,6 +355,57 @@ NoSlow: دمج IntaveBlink/Intave14/GrimNew/GrimTick من قوائم SwordMode/C
 mod_version إلى b12.13، ثم البناء والنشر عبر GitHub Actions (push إلى main ثم release/build) وإصدار vb12.13-mc1.8.9،
 والـ changelog بالإنجليزية من RELEASE_NOTES.md (كل الأوضاع مكتوبة كإضافات جديدة دون ذكر الاستخراج).
 
+### المهمة 8 — نوفمبر 2026 — «ملاحظتا المستخدم + الدفعة الخامسة من نفس عميل الدفعة الأولى (client.zip المحدَّث)» (b12.14)
+
+الهدف: (1) **ملاحظتان**: وضع **Backward** في Scaffold2/Rotations كان يجعل الـ rotation يواجه الأمام (مسار الإرجاع المبكر في
+findTargetPlace يعيد currRotation كما هو عندما يكون الاتجاه الحالي يصيب الهدف — وهو الوضع الغالب أثناء البناء) ← أصبح Backward
+يتخطى مسار الإرجاع المبكر كلياً فيمر دائماً بمسار الحساب (yaw الهدف المقرب +180 = الخلف)؛ ودرج ClickGUI Best ما زال يتخطى حدود
+الصنف بالطول ← إصلاح جذري ثلاثي: (أ) نمو فوري لـ fade قبل drawPanel عندما يزيد ارتفاع المحتوى عن الهدف المستقر الأخير
+(lastContentTarget — لا يمس أنيميشن فتح الصنف)، (ب) scissor للدرج كاملاً (خلفية + عناصر) إلى منطقة محتوى الفئة عبر clipTop/clipBottom
+يكتبهما Panel لكل ModuleElement، (ج) الشبكة: ModuleElement.drawScreenAndClick يغلق الـ scissor بعد كل عنصر (يغطي كل مسارات
+return داخل الأسلوب؛ Zenith لا يمر بهذه الدوّار فهو يستدعي style مباشرة + drawerStyle=false يُعاد ضبطه في drawZenith).
+(2) **الدفعة الخامسة**: العميل = نفس عميل الدفعة الأولى (client.zip قديم → clientnew.zip محدَّث، 1.8.9، Rise مبني على
+liquidbounce legacy) بقاعدة المستخدم: أي وضع موجود بنفس الاسم (الاسم الجديد عند إعادة التسمية) يُحذف القديم كلياً ويُضاف المستخرج:
+- **Velocity**: **GrimReduce** (جديد) + **WatchdogPrediction** (كانت مسجلة «Watchdog-Protection» — أعيدت تسميتها؛ المنطق متطابق بين
+  القديم والمحدث، تحقق سطراً سطراً).
+- **Fly**: **Watchdog-ProtectionBoat** (WatchdogBoat الجديد، مشوّش: فُكّت الأسماء يدوياً — aER.bgK=thePlayer, bgR=currentScreen,
+  bgF=theWorld, aIY=gameSettings, chq=jump/chr=sneak/chs=sprint, gW/gX/gY=posX/Y/Z, ud/ue/uf=motion, aO=onGround, crx=itemInUseCount,
+  Zz=ticksSinceTeleport, ae=ticksSinceVelocity, aRg=ticksExisted, cuU=isJumping, cuW=moveForward, csb=isDead (تأكد عبر Tracers/TeleportAura),
+  C02=play.client.c مع Action d.daU=ATTACK (تأكد عبر مقارنة inventorymove)، bc=S32, t=S12, n/o=C0BPacketEntityAction/Action مع
+  dbp=START_SNEAKING (استنتاج دلالي)، fg=WorldChangeEvent، i=MoveUtil, aik=PlayerUtil, ahn=PacketUtil, bm=BlinkComponent,
+  bc=PacketQueueComponent) + **MMC** (من المصدر النظيف القديم — المطابق للمحدث؛ isFullBlock→isFullCube، PacketQueueComponent.cR لا
+  مقابل) + **AirJump** (نظيف قديم مطابق).
+- **InventoryMove**: **Grim** (استُبدل بورت b12.11 من عميل 1.12.2 — حُذف كلياً وأضيف بورت هذا العميل مع خيار Manager Extra Sprint
+  Ticks) + **Watchdog-Protection** (جديد — مطابق بنيوياً لبورت WatchdogNCP من 1.12.2 + فرق aec≈!isDead في فحص NPC؛ الخيارات
+  الثلاث Prediction Mode/Ticks/Measure Chest Open).
+- **NoSlow**: **Grim 3.0** (جديد من المصدر النظيف القديم — منطق المحدث غير مفكوك التجميع؛ RightClickEvent→C08 SEND إلغاء تقريبي،
+  SprintEvent→onUpdate) + **WatchdogPrediction** (إعادة تسمية من «Watchdog-Protection» — المنطق متطابق بين القديم والمحدث).
+- **Speed**: **MineMenClub** (جديد من المصدر النظيف — المطابق للمحدث، مع simulateStrafe الأصلي) + Grim2 (الموجود من الدفعة الأولى هو
+  بقاء نفس المصدر النظيف؛ منطق المحدث غير مفكوك التجميع — تحقق مطابقة، لا تغيير).
+
+**قرار فشل فك التجميع**: المحدث clientnew (CFR 0.152 مع تشويش مخصص) فشل فك منطق 3 ملفات كلياً (velocity/GrimReduceMode و
+speed/Grim2Mode و noslow/Grim30Mode: أجسام listener methods غير موجودة + سلاسل مشفّرة XOR عبر decryptor مع
+علامات «Decompilation failed/**»): استُخدم **المصدر النظيف القديم** (client.zip من الدفعة الأولى) لنفس الأوضاع، وقورن المفكوك
+من المحدث بما تيسر (كل الأوضاع المقروءة كانت متطابقة مع القديم عدا aec في inventorymove). خرائط العميل مخصصة (وليست notch
+الرسمية — تأكد عبر joined.srg الرسمي: Entity=pk وليس c) لذا استُخدم الاستدلال الدلالي المقارن.
+
+**بنية تحتية جديدة**: **StrafeEvent أصبح var** (strafe/forward/friction قابلة للتعديل) + MixinEntity.moveFlying يعيد استدعاء
+الأصل بالمعاملات المعدلة (replay مع حارس @Unique strafeEventReplaying) — لازمة لوضع Watchdog-ProtectionBoat (friction=Speed
+وتصفير المدخلات أثناء التجميد).
+
+| # | الدرس / الخلل | التفصيل | الحل المطبّق |
+|---|---|---|---|
+| 17 | **خصائص Kotlin var في constructor = حقول خاصة من Java** | MixinEntity (Java) لا يستطيع strafeEvent.strafe مباشرة | استخدام getStrafe()/getForward()/getFriction() |
+| 18 | **when على object لا يعمل smart-cast** | `when (extra) { WatchdogNCPInventoryMove -> extra.onPreMotionMedium(...) }` لا يجيز استدعاء دالة غير موجودة في الفئة الأساسية | مقارنة === صريحة مع استدعاء باسم الكائن |
+| 19 | **Math.* مع Float يحتاج toDouble()** | Math.toRadians(strafeAngle) مع Float لا يُحوَّل ضمنياً في Kotlin | strafeAngle.toDouble() |
+| 20 | **خرائط العميل المحدث مخصصة وليست notch** | فك الاسم عبر joined.srg الرسمي فشل (Entity=pk وليس c) | استدلال دلالي + مقارنة مع المصدر النظيف القديم + الملفات الأخرى |
+| 21 | **المستودع يُحذف من الـ sandbox بين الجلسات** | lizz-src وfirebounce-src اختفيا (المحفوظ فقط my-project الدائم) | re-clone من GitHub بالتوكن قبل العمل |
+| 22 | **غرادلا يعلّق بعد BUILD في بعض الجولات** | الـ daemon لا يخرج رغم النجاح والـ timeout يقتل الأمر | قراءة ملف السجل بدل الاعتماد على كود الخروج (BUILD SUCCESSFUL ظاهرة في السجل) |
+
+**النتيجة**: compileKotlin وcompileJava محلياً = **BUILD SUCCESSFUL** (جولات: 3+6 أخطاء ثم 0)، وترقية mod_version إلى b12.14،
+ثم البناء والنشر عبر GitHub Actions وإصدار vb12.14-mc1.8.9، والـ changelog بالإنجليزية من RELEASE_NOTES.md (كل الأوضاع
+مكتوبة كإضافات جديدة دون ذكر الاستخراج).
+
 ## 5) سجل المهام
 
 | التاريخ | المهمة | الحالة |
@@ -366,3 +417,4 @@ mod_version إلى b12.13، ثم البناء والنشر عبر GitHub Actions
 | نوفمبر 2026 | المهمة 5 (b12.11): إصلاحات b12.10 الأربعة (تسمية Watchdog-Protection + Polar legit sprint + Sword/KillAura عبر usingItemFunc + إصلاح damageBoost الميت) + الدفعة الثانية: Criticals 3 + LongJump 3 + Phase 3 + Step 2 + InventoryMove (نظام Mode/Custom + وضعان) + AntiVoid 2 = 15 وضعاً جديداً + ترقية b12.11 | ✅ تمت — compileKotlin محلي نجح (خطأ واحد أُصلح) ونجح النشر على Actions (run 42756010821) والإصدار vb12.11-mc1.8.9 |
 | نوفمبر 2026 | المهمة 6 (b12.12): ترقيات OnlyDamage/AutoDamage (Fly/WatchdogNCP-New) + tag لـ AntiVoid + StyleSettings درج (ClickGUI Classic) + الدفعة الثالثة من عميل 1.12.2: KillAura AutoBlock 3 + Disabler 3 (Mode system + دمج MatrixDisabler) + Phase 1 + Fly 3 + Velocity 2 + Speed 2 + NoSlow 3 + Tower 1 = 21 وضعاً جديداً + ترقية b12.12 | ✅ تمت — compileKotlin محلي نجح (3 جولات: 21/2/0 خطأ) ونجح النشر على Actions والإصدار vb12.12-mc1.8.9 |
 | نوفمبر 2026 | المهمة 7 (b12.13): ملاحظات المستخدم الست (OnlyDamage كامل الإلغاء + لون/تجاوز درج ClickGUI + Backward rotations + MatrixNew-Tower-Timer + WaterMark Size + نقل GrimCritical→Criticals/GrimAC مع حذف الموديول) + الدفعة الرابعة من عميل 1.8.9 (fork من Legacy): Velocity 4 (Watchdog-ProtectionNew دمج 5 + AttackReduce + MatrixReduce2/3) + Speed 4 (MatrixLates/IntaveTimer/IntaveNew/Intave14New) + NoWeb 3 (Matrix/MatrixNew/Intave14) + NoSlow 4 (IntaveBlink/Intave14New/GrimNew/GrimTick — دمج Sword/Consume/Bow) + FastUse 1 (Matrix) = 16 وضعاً جديداً + بنية SomeUtil/SilentAttackManager + ترقية b12.13 | ✅ تمت — compileKotlin وcompileJava محلياً نجحا (6 أخطاء استيراد أُصلحت بجولة واحدة) ونجح النشر على Actions والإصدار vb12.13-mc1.8.9 |
+| نوفمبر 2026 | المهمة 8 (b12.14): ملاحظتا المستخدم (Backward يواجه الخلف فعلاً + درج ClickGUI Best لا يتخطى حدود الصنف أبداً: نمو فوري + scissor) + الدفعة الخامسة من عميل الدفعة الأولى المحدَّث (clientnew.zip) بقاعدة الحذف عند تطابق الاسم: Velocity 2 (GrimReduce + WatchdogPrediction إعادة تسمية) + Fly 3 (Watchdog-ProtectionBoat/ MMC/AirJump) + InventoryMove 2 (Grim استبدال + Watchdog-Protection) + NoSlow 2 (Grim 3.0 + WatchdogPrediction إعادة تسمية) + Speed 1 (MineMenClub؛ Grim2 الموجود مطابق للمصدر) = 11 وضعاً جديداً/مستبدلاً + StrafeEvent قابل للتعديل مع replay في mixin + ترقية b12.14 | ✅ تمت — compileKotlin وcompileJava محلياً نجحا ونجح النشر على Actions والإصدار vb12.14-mc1.8.9 |

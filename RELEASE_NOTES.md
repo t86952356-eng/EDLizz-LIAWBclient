@@ -1,68 +1,34 @@
-# Lizz b12.13 — Changelog (6 fixes/upgrades + 16 new modes)
+# Lizz b12.14 — Changelog (2 fixes + 11 new modes)
 
-## Fly — WatchdogNCP-New OnlyDamage rework
+## Scaffold — Backward rotation fix
 
-- **OnlyDamage** now **fully disables the flight until you actually take damage** — no hovering, no onGround spoofing, no boost packets, no vanilla-kick bypass: you fall and move exactly like with the module off. The moment you get hit, the complete flight (stage machine + boost + bypass) starts from a fresh stage. Previously the normal "hover" flight still worked before the damage — only the boost part was gated, making it a half-trigger.
+- The **Backward** rotations mode now really faces **backwards**: previously, when your current rotation already hit the target block (the normal case while bridging), the rotation was kept as-is — i.e. still facing forward. Now the mode always computes the sent rotation from your placement direction and flips it 180°, so you consistently look **away from the bridge direction** (rotation determined purely by your position changes).
 
-## ClickGUI — Classic Best drawer upgrades
+## ClickGUI — Classic Best drawer overflow fix
 
-- **Drawer background**: new `LB-SettingsDrawerColor` option (default dark gray, clearly distinct from the category panel and the untouched module rows) — the expanded settings drawer is now visually separated from everything else. Works for both LiquidBounce and Fatality styles.
-- **Drawer overflow fix**: opening a module's settings in a short category (e.g. Combat) — or after scrolling a long category — no longer lets the drawer stick out below the panel: the panel height now follows its content **instantly** (category open/close keeps the smooth animation).
+- The module settings drawer (StyleSettings = Best) can no longer stick out below the category panel: the panel now grows to its full content height **in the very same frame** the drawer opens (even for the very first open of a module), and as an extra safety the drawer is **clipped to the panel content area** — anything that would ever exceed the panel bounds is simply not drawn outside them.
 
-## Scaffold — new Rotations mode
+## Fly — new modes
 
-- **Backward**: the same rounding system as ReverseYaw (90° / 45° by facing), but the rotation sent to the server faces the **opposite direction** (yaw + 180°) — the visible rotation is derived purely from your position changes, while placement still targets the block behind you.
-
-## Scaffold — Tower MatrixNew new option
-
-- **MatrixNew-Timer** (0.2 – 1.1, default 0.90): while towering in MatrixNew the game timer is set to this value, and it's restored to 1.0 as soon as you stop towering.
-
-## WaterMark — new option
-
-- **Size** (0.5 – 2, default 1): scales the whole watermark island on the HUD (anchored at the top-center, so it stays centered for every style — Normal / Opal / Lizz Morden / Scaffold / Chest / Notifications).
-
-## Criticals — new mode GrimAC (replaces the old GrimCritical module)
-
-- The former standalone **GrimCritical** module has been **moved into Criticals** as the new **GrimAC** mode (the module itself is gone; the arraylist tag shows `GrimAC`):
-  - **Jump** — jumps in the strafe hook right after attacking, so every hit can be a falling (critical) hit; targets that were just hit (hurtTime 9) only get the client-side critical particles.
-  - **AutoFreeze** — jumps with a KillAura target on ground and freezes time while falling (`FreezePercent` = share of falling ticks frozen; 100 = the whole fall).
-  - **OnlyHorJump** — hover-style: locks your Y while falling with a target (client-side), optionally slows horizontal motion by **OnlyHorSpeed**; releases on target loss or a server lagback.
+- **Watchdog-ProtectionBoat** — boat fly: ride a boat, the module swings and attacks your own boat with a use-entity packet (the server kills it) while your own dismount sneak packets are cancelled and all incoming transactions are buffered; once the boat is gone you fly — vertical motion is ±0.42 controlled by the jump/sneak keys (stopping exactly at whole-block heights), horizontal speed is driven by the **Speed** setting (0.1–9.5) through the strafe friction, with motion zeroed for 1s freeze windows after each phase switch; the module auto-disables on world change and flushes the buffered transactions on disable.
+- **MMC** — ground-clip flight: on the first grounded tick with a full solid block 2.5 below you, it drops the timer to 0.1, sends the classic three-position packet chain (current pos grounded / rounded ground 2.5 below / current pos airborne), jumps and strafes at ~7.0 — and cancels the first server teleport that tries to pull you back.
+- **AirJump** — infinite mid-air jumping: whenever you touch the ground you jump, and air blocks below your anchor height get a huge invisible collision platform (30×2×30), so every hop lands on a phantom floor and you keep climbing; the platform anchor follows you while holding jump/sneak, and sneaking disables the platforms to let you fall.
 
 ## Velocity — new modes
 
-- **Watchdog-ProtectionNew** — a full anti-knockback protection stack combining five techniques, each with its own toggle (all on by default):
-  - `PolarJump` — after receiving knockback, jumps at a randomized hurt tick (7–10) while sprinting / grounded / moving to reset the knockback;
-  - `Intave` — holds your S12 / C03 / C02 / C08 / C07 packets (blink) while hurt within `BlinkWorkMaxDistance` of a KillAura target for up to `MaxBlinkTicks`, and reduces motion per attack in six phases (0.6 / 0.36 / 0.216 + reverse boosts); `IntaveJumpReset` (with `ForceSprintJump` / `ForceSprintJumpNeedForward`), `ExtraC0APerReduce` + `ExtraC0APacketCount`, `MoreReduce` + `MaxMoreReduceCount`, `OnlyWhenNeed` and `IntaveSafe` (players only) refine it; cancels the sprint-hit-slow at the right moments;
-  - `Intave2` — attack-triggered motion reduce with a decaying factor (10% per attack, down to `MinFactor`);
-  - `AirJumpReset` — jump-resets **in the air** at hurt tick 9 when moving forward with received knockback;
-  - `Prediction` — blinks your outgoing packets during the `BlinkTicks` hurt window and lands `BlinkTicks` silent attacks inside it, plus a ground jump the moment your own knockback packet arrives;
-  - `WorkOnGround` / `WorkInAir` choose where the whole stack is allowed to run; `DebugMessage` prints the internal decisions.
-- **AttackReduce** — while your hurt time is inside `AttackHurtTime` (default 9), every attack you land multiplies your horizontal motion by `AttackXZFactor` (default 0.6).
-- **MatrixReduce2** — on knockback (hurt ≥ 9): moving cleanly on the ground zeroes your horizontal motion; blocking / sneaking / eating / airborne / standing keeps 20%.
-- **MatrixReduce3** — cancels your knockback packet and rebuilds motion from it: the vertical part is applied directly, standing still keeps 10% of the knockback speed, and `BoostAfterReduce` (+ `BoostFactor`, `BoostCooldown`) can accelerate you instead; zero-horizontal special knockbacks are cancelled too (`KeepMotionYVelocity` keeps their Y).
+- **GrimReduce** — packet-hold knockback reducer: your own velocity packet plus transactions / entity moves / keep-alives are held after you get knocked back, and flushed once the release conditions match (`Delay till Ground`, `Delay Plus` with a target-distance / recent-attack gate, or a 25-tick timeout). While holding, it manages the fight: `Rotate` looks at the closest target right after the hit, locks a 90° straight-down view at the target (or the closest enemy in `Range`), performs the extra hit (`Extra Hit`, version-ordered attack + swing), and jump-resets on the knockback; `Reduce Ticks` / `Teleport Disable Ticks` / `On Swing Disable on Aura` / `Stop Sprint` refine the windows.
+- **WatchdogPrediction** — the Watchdog knockback holder: holds the velocity packet and (almost) all server packets while knocked back mid-air, releasing everything the moment your view aligns with the knockback direction (±15°), when you touch the ground, or after the fall-tick timeout; `Velocity to let through` and `Prevent Ghosting` shape the release. (Replaces the old port of the same mode.)
 
-## Speed — new modes
+## InventoryMove — new + replaced modes
 
-- **MatrixLates** — ground-strafes your current speed with an optional `AutoJump`, caps the speed at 0.2 when airborne against a wall, and sinks 0.0032/tick while unhurt.
-- **IntaveTimer** — auto-jumps on the ground while moving and switches the timer by fall distance: 1.0 when falling far, 0.7 mid-fall, 1.4 right after the jump.
-- **IntaveNew** — ground motion ×1.00666666666 with timer 1.1, first air tick ×1.05 with timer 0.95, then sustained ×1.0015 with timer 1.0015; optional `AutoJump` (safe jump strength 0.22); the timers reset to 1.0 when you stop.
-- **Intave14New** — auto-jumps on the ground, multiplies motion by 1.04 on the first air tick and 1.02 on ticks 2–4, optional `Timer` 1.002 (with `Debugger` chat output).
+- **Watchdog-Protection** (new) — the Watchdog inventory-move: real key presses are fed back into the movement keys, chests/inventories get the speed management (speed-suppression on Speed, the 0.0365 / potion-tiered / 0.09 strafe ladder, diagonal prevention, or the `Prediction Mode` input-freeze variant with sprint/jump key control), server chests are kept open with silent close-window packets, and `Measure Chest Open` measures the chest-open latency (C08 block clicks vs C02 NPC interactions, ignoring dead/stationary entities) to freeze your inputs for the confirmed window and blend your rotation toward the movement direction.
+- **Grim** (replaced) — the updated Grim inventory-move: movement keys are refilled from the real keyboard in any GUI (except chat / the click GUI) and sprinting is force-disabled inside inventories and chests, with the `Manager Extra Sprint Ticks` option carried over.
 
-## NoWeb — new modes
+## NoSlow — new + renamed modes
 
-- **Matrix** — web movement factor 0.12425 with a −0.0125 sink (−0.1625 sneaking) and a 3.0 timer burst every 40 ticks.
-- **MatrixNew** — counts your moving-in-web ticks; past `MatrixNew-ThresholdTicks` every tick gets a jump + motion ×1.1 + air factor 0.26; `KeepY` freezes your Y while not jump/sneaking, `MatrixNew-ShowThresholdTicks` prints the counter.
-- **Intave14** — pure forward in the web against a wall gets a 0.74 jump factor, otherwise 0.2 with onGround spoofed.
+- **Grim 3.0** (new) — the Grim 3 no-slow: a +45° silent rotation while using items (two gated paths), 0.64 strafe while caught in cobwebs, tiny moveFlying boosts while eating (halved when Speed is enabled), right-clicks cancelled on odd airborne ticks, forced sprint while moving forward with an item, and the food/potion/sword/bow slowdowns cancelled on the Grim tick pattern (first item tick / even airborne ticks / odd grounded ticks); **Heypixel** holds your transactions while consuming.
+- **WatchdogPrediction** (renamed) — the ping-spoof eater: after `Max Ping Spoof` ticks of using a food/bow/potion item it blinks everything, releases the use key at `When to finish eating`, cancels the slowdowns for food/potion/bow after the spoof window, and re-declares sword use with a release + use packet chain (cross-version aware); `Non-Blink Speed Bypass` keeps you sprinting before the blink kicks in. (Same mode, now under its source name.)
 
-## NoSlow — new modes
+## Speed — new mode
 
-All four work for the item types you enable with the shared `Sword` / `Food` / `Potion` / `Bow` toggles (each runs its packets on both motion phases, and fully cancels the slowdown for the matching item):
-
-- **IntaveBlink** — while using an item, your C07 / C02 / C12 / C19 / C03 packets are held in a blink; every 5 ticks the blink is flushed and re-declared with a release + use packet; your own knockback or an explosion cancels the blink instantly.
-- **Intave14New** — an 800 ms packet cycle: on cooldown end a RELEASE at an invalid position, otherwise start-sprint on PRE and a barrier click-window + empty slot switch + use + stop-sprint + transaction on POST.
-- **GrimNew** — every tick sends three rapid hotbar slot switches (%8+1 / %7+2 / back) to refresh the server-side use state.
-- **GrimTick** — in a 32-tick cycle, the first two ticks of every 4 send a RELEASE_USE_ITEM to fake the release/re-press rhythm.
-
-## FastUse — new mode
-
-- **Matrix** — slows the timer to 0.5 and re-sends a movement packet every update while consuming, for the fastest legit-looking eat/drink finish.
+- **MineMenClub** — knockback-driven speed: 8+ ticks after taking knockback it strafes at full speed on the ground or when your movement direction is within 90° of the knockback direction, and at 70% (`allow more strafing`) otherwise, auto-jumping every grounded tick.

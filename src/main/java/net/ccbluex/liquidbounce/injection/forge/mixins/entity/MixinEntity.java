@@ -28,6 +28,7 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
@@ -260,12 +261,35 @@ public abstract class MixinEntity implements IMixinEntity {
     private void handleRotations(float strafe, float forward, float friction, final CallbackInfo callbackInfo) {
         //noinspection ConstantConditions
         if ((Object) this != mc.thePlayer) return;
+        // 重入保护：事件处理器改写了参数后的「重放」调用不再触发事件
+        if (strafeEventReplaying) return;
 
         final StrafeEvent strafeEvent = new StrafeEvent(strafe, forward, friction);
         EventManager.INSTANCE.call(strafeEvent);
 
-        if (strafeEvent.isCancelled()) callbackInfo.cancel();
+        if (strafeEvent.isCancelled()) {
+            callbackInfo.cancel();
+            return;
+        }
+
+        // 处理器改写了 strafe/forward/friction（Fly 的 Watchdog-ProtectionBoat 等）
+        // → 取消原调用，用改写后的参数重放一次原版逻辑
+        if (strafeEvent.getStrafe() != strafe || strafeEvent.getForward() != forward || strafeEvent.getFriction() != friction) {
+            callbackInfo.cancel();
+            strafeEventReplaying = true;
+            try {
+                moveFlying(strafeEvent.getStrafe(), strafeEvent.getForward(), strafeEvent.getFriction());
+            } finally {
+                strafeEventReplaying = false;
+            }
+        }
     }
+
+    @Shadow
+    public abstract void moveFlying(float strafe, float forward, float friction);
+
+    @Unique
+    private boolean strafeEventReplaying = false;
 
     @Inject(method = "isInWater", at = @At("HEAD"), cancellable = true)
     private void isInWater(final CallbackInfoReturnable<Boolean> cir) {

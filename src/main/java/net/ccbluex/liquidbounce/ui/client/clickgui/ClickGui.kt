@@ -465,6 +465,9 @@ object ClickGui : GuiScreen() {
             element.y = (contentTop - element.height - 3 - zenithScroll).roundToInt()
             element.hideRow = true
             element.settingsBelow = true
+            // Zenith 的设置列自己管 scissor —— 这里绝不能残留 Classic Best 的 drawerStyle
+            // （否则会用 Classic 遗留的 clip 边界裁切）
+            element.drawerStyle = false
             element.showSettings = true
             element.forceSettingsWidth(set.width - 4)
 
@@ -589,8 +592,8 @@ object ClickGui : GuiScreen() {
         style.clickSound()
     }
 
-    /** 设置列的内容裁切：只留面板内容区，避免超长设置溢出到面板外 */
-    private fun beginScissor(x: Float, y: Float, w: Float, h: Float) {
+    /** 设置列的内容裁切：只留面板内容区，避免超长设置溢出到面板外（Classic Best 抽屉也复用） */
+    fun beginScissor(x: Float, y: Float, w: Float, h: Float) {
         if (w <= 0f || h <= 0f) return
 
         val resolution = ScaledResolution(mc)
@@ -607,7 +610,7 @@ object ClickGui : GuiScreen() {
         )
     }
 
-    private fun endScissor() {
+    fun endScissor() {
         GL11.glDisable(GL11.GL_SCISSOR_TEST)
     }
 

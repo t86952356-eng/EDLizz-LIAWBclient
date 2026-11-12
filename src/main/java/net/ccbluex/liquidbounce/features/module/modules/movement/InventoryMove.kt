@@ -10,6 +10,7 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.movement.inventorymovemodes.GrimInventoryMove
 import net.ccbluex.liquidbounce.features.module.modules.movement.inventorymovemodes.WatchdogNCPInventoryMove
+import net.ccbluex.liquidbounce.features.module.modules.movement.inventorymovemodes.WatchdogProtectionInventoryMove
 import net.ccbluex.liquidbounce.ui.client.clickgui.ClickGui
 import net.ccbluex.liquidbounce.ui.client.hud.designer.GuiHudDesigner
 import net.ccbluex.liquidbounce.utils.client.PacketUtils
@@ -32,10 +33,14 @@ import org.lwjgl.input.Mouse
 object InventoryMove : Module("InventoryMove", Category.MOVEMENT, gameDetecting = false) {
 
     /** Mode：Custom = 原有全部设置与逻辑；新模式（同源客户端移植）自包含。 */
-    val mode by choices("Mode", arrayOf("Custom", "WatchdogNCP", "Grim"), "Custom")
+    val mode by choices(
+        "Mode",
+        arrayOf("Custom", "WatchdogNCP", "Grim", "Watchdog-Protection"),
+        "Custom"
+    )
 
     /** 新模式集合（与 NoSlowMode/CriticalsMode 同套路的分发模型）。 */
-    private val invMoveModes = arrayOf(WatchdogNCPInventoryMove, GrimInventoryMove)
+    private val invMoveModes = arrayOf(WatchdogNCPInventoryMove, GrimInventoryMove, WatchdogProtectionInventoryMove)
 
     private val invMoveMode get() = invMoveModes.firstOrNull { it.modeName == mode }
 
@@ -76,6 +81,14 @@ object InventoryMove : Module("InventoryMove", Category.MOVEMENT, gameDetecting 
     private val wdInvTicks by int("Ticks", 1, 1..20) { mode == "WatchdogNCP" }
     private val wdInvMeasureChestOpen by boolean("Measure Chest Open", true) { mode == "WatchdogNCP" }
 
+    // ---- Grim（InventoryMove，本批替换版）选项 ----
+    private val grimInvManagerExtraSprintTicks by int("Manager Extra Sprint Ticks", 9, 0..20) { mode == "Grim" }
+
+    // ---- Watchdog-Protection（InventoryMove）选项 ----
+    private val wdProtInvPredictionMode by boolean("Prediction Mode", false) { mode == "Watchdog-Protection" }
+    private val wdProtInvTicks by int("Ticks", 1, 1..20) { mode == "Watchdog-Protection" }
+    private val wdProtInvMeasureChestOpen by boolean("Measure Chest Open", true) { mode == "Watchdog-Protection" }
+
     private val affectedBindings = arrayOf(
         mc.gameSettings.keyBindForward,
         mc.gameSettings.keyBindBack,
@@ -92,6 +105,10 @@ object InventoryMove : Module("InventoryMove", Category.MOVEMENT, gameDetecting 
         WatchdogNCPInventoryMove.predictionMode = wdInvPredictionMode
         WatchdogNCPInventoryMove.ticks = wdInvTicks
         WatchdogNCPInventoryMove.measureChestOpen = wdInvMeasureChestOpen
+        GrimInventoryMove.managerExtraSprintTicks = grimInvManagerExtraSprintTicks
+        WatchdogProtectionInventoryMove.predictionMode = wdProtInvPredictionMode
+        WatchdogProtectionInventoryMove.ticks = wdProtInvTicks
+        WatchdogProtectionInventoryMove.measureChestOpen = wdProtInvMeasureChestOpen
     }
 
     val onNewModeMotion = handler<MotionEvent> { event ->
@@ -99,8 +116,10 @@ object InventoryMove : Module("InventoryMove", Category.MOVEMENT, gameDetecting 
         syncNewModeSettings()
         val extra = invMoveMode ?: return@handler
         extra.onPreMotion(event)
-        if (extra is WatchdogNCPInventoryMove) {
-            extra.onPreMotionMedium(event)
+        if (extra === WatchdogNCPInventoryMove) {
+            WatchdogNCPInventoryMove.onPreMotionMedium(event)
+        } else if (extra === WatchdogProtectionInventoryMove) {
+            WatchdogProtectionInventoryMove.onPreMotionMedium(event)
         }
     }
 

@@ -8,6 +8,7 @@ package net.ccbluex.liquidbounce.ui.client.clickgui.style.styles
 import net.ccbluex.liquidbounce.config.*
 import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI.guiColor
 import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI.scale
+import net.ccbluex.liquidbounce.ui.client.clickgui.ClickGui
 import net.ccbluex.liquidbounce.ui.client.clickgui.ClickGui.clamp
 import net.ccbluex.liquidbounce.ui.client.clickgui.Panel
 import net.ccbluex.liquidbounce.ui.client.clickgui.elements.ButtonElement
@@ -597,6 +598,19 @@ object LiquidBounceStyle : Style() {
                     moduleElement.x + moduleElement.width - 2
                 } else {
                     moduleElement.x + moduleElement.width + moduleElement.settingsWidth
+                }
+
+                // drawerStyle（Classic Best 抽屉）：内容裁切到面板内容区 —— 无论面板高度是否已跟上来，
+                // 抽屉（背景 + 控件，含首次打开 settingsHeight 尚为 0 的那帧）都不会画出分类面板背景之外。
+                // （scissor 的关闭由 ModuleElement.drawScreenAndClick 统一负责 —— 覆盖所有 return 路径）
+                val drawerClipped = moduleElement.drawerStyle && moduleElement.clipBottom > moduleElement.clipTop
+                if (drawerClipped) {
+                    ClickGui.beginScissor(
+                        moduleElement.x.toFloat(),
+                        moduleElement.clipTop.toFloat(),
+                        moduleElement.width.toFloat(),
+                        (moduleElement.clipBottom - moduleElement.clipTop).toFloat()
+                    )
                 }
 
                 // settingsBelow 时设置列本身就是一个面板，不再套一层子面板

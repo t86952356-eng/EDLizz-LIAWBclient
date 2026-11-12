@@ -61,9 +61,9 @@ object Velocity : Module("Velocity", Category.COMBAT) {
             "IntaveReduce", "Delay", "GrimC03", "Hypixel", "WatchdogNCP",
             "Click", "BlocksMC", "GrimCombat", "Polar", "Buffer", "Grim",
             "NoSave", "WatchdogNCP-New", "Matrix", "Intave", "Vulcan-New",
-            "Grim-New", "Grim 2", "Watchdog-Protection", "MMC",
+            "Grim-New", "Grim 2", "WatchdogPrediction", "MMC",
             "MatrixBoost", "IntaveNew", "Watchdog-ProtectionNew", "AttackReduce",
-            "MatrixReduce2", "MatrixReduce3"
+            "MatrixReduce2", "MatrixReduce3", "GrimReduce"
         ), "Simple"
     )
 
@@ -74,13 +74,13 @@ object Velocity : Module("Velocity", Category.COMBAT) {
         WatchdogPredictionVelocityMode, MMCVelocityMode,
         MatrixBoostVelocityMode, IntaveNewVelocityMode,
         WatchdogProtectionNewVelocityMode, AttackReduceVelocityMode,
-        MatrixReduce2VelocityMode, MatrixReduce3VelocityMode
+        MatrixReduce2VelocityMode, MatrixReduce3VelocityMode, GrimReduceVelocityMode
     )
 
     private val velocityMode get() = velocityModes.firstOrNull { it.modeName == mode }
 
-    /** On Swing（Intave / MMC 共享，与原实现一致）。 */
-    val onSwing by boolean("On Swing", false) { mode == "Intave" || mode == "MMC" }
+    /** On Swing（Intave / MMC / GrimReduce 共享，与原实现一致）。 */
+    val onSwing by boolean("On Swing", false) { mode == "Intave" || mode == "MMC" || mode == "GrimReduce" }
 
     // ---- WatchdogNCP-New / Vulcan-New 共享 ----
     private val velStack by boolean("Stack", true) { mode == "WatchdogNCP-New" || mode == "Vulcan-New" }
@@ -107,9 +107,9 @@ object Velocity : Module("Velocity", Category.COMBAT) {
     private val velGrim2RotationNoise by float("Rotation Noise", 0.001f, 0f..0.1f) { mode == "Grim 2" }
     private val velGrim2DebugLog by boolean("Debug Log", false) { mode == "Grim 2" }
 
-    // ---- Watchdog-Protection ----
-    private val velWdPredictionLetThrough by float("Velocity to let through", 0.3f, 0f..0.6f) { mode == "Watchdog-Protection" }
-    private val velWdPredictionPreventGhosting by boolean("Prevent Ghosting", true) { mode == "Watchdog-Protection" }
+    // ---- WatchdogPrediction ----
+    private val velWdPredictionLetThrough by float("Velocity to let through", 0.3f, 0f..0.6f) { mode == "WatchdogPrediction" }
+    private val velWdPredictionPreventGhosting by boolean("Prevent Ghosting", true) { mode == "WatchdogPrediction" }
 
     // ---- MatrixBoost（原 Matrix，改名避让已有 Matrix）选项 ----
     private val velMatrixBoostStrafe by boolean("Matrix-HurtStrafe", false) { mode == "MatrixBoost" }
@@ -199,6 +199,17 @@ object Velocity : Module("Velocity", Category.COMBAT) {
         mode == "MatrixReduce3" && velMatrixReduce3Boost
     }
     private val velMatrixReduce3KeepMotionY by boolean("KeepMotionYVelocity", true) { mode == "MatrixReduce3" }
+
+    // ---- GrimReduce（源 Velocity/GrimReduce）选项 ----
+    private val velGrimReduceTicks by int("Reduce Ticks", 14, 1..20) { mode == "GrimReduce" }
+    private val velGrimReduceTeleportDisable by int("Teleport Disable Ticks", 2, 1..7) { mode == "GrimReduce" }
+    private val velGrimReduceOnSwingDisable by boolean("On Swing Disable on Aura", true) { mode == "GrimReduce" }
+    private val velGrimReduceRotate by boolean("Rotate", false) { mode == "GrimReduce" }
+    private val velGrimReduceDelayPlus by boolean("Delay Plus", false) { mode == "GrimReduce" }
+    private val velGrimReduceExtraHit by boolean("Extra Hit", true) { mode == "GrimReduce" }
+    private val velGrimReduceStopSprint by boolean("Stop Sprint", true) { mode == "GrimReduce" }
+    private val velGrimReduceRange by int("Range", 8, 1..100) { mode == "GrimReduce" }
+    private val velGrimReduceDelayTillGround by boolean("Delay till Ground", true) { mode == "GrimReduce" }
 
     private val horizontal by float("Horizontal", 0F, -1F..1F) { mode in arrayOf("Simple", "AAC", "Legit") }
     private val vertical by float("Vertical", 0F, -1F..1F) { mode in arrayOf("Simple", "Legit") }
@@ -410,6 +421,17 @@ object Velocity : Module("Velocity", Category.COMBAT) {
         MatrixReduce3VelocityMode.boostFactor = velMatrixReduce3BoostFactor
         MatrixReduce3VelocityMode.boostDelay = velMatrixReduce3BoostDelay
         MatrixReduce3VelocityMode.keepMotionY = velMatrixReduce3KeepMotionY
+
+        GrimReduceVelocityMode.reduceTicks = velGrimReduceTicks
+        GrimReduceVelocityMode.teleportDisableTicks = velGrimReduceTeleportDisable
+        GrimReduceVelocityMode.onSwingDisableOnAura = velGrimReduceOnSwingDisable
+        GrimReduceVelocityMode.rotations = velGrimReduceRotate
+        GrimReduceVelocityMode.delayPlus = velGrimReduceDelayPlus
+        GrimReduceVelocityMode.extraHit = velGrimReduceExtraHit
+        GrimReduceVelocityMode.stopSprint = velGrimReduceStopSprint
+        GrimReduceVelocityMode.range = velGrimReduceRange
+        GrimReduceVelocityMode.delayTillGround = velGrimReduceDelayTillGround
+        GrimReduceVelocityMode.onSwing = onSwing
     }
 
     val onUpdate = handler<UpdateEvent> {

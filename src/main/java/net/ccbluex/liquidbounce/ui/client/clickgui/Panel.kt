@@ -125,6 +125,14 @@ class Panel(
 
         updateElementsHeight()
 
+        // Best 抽屉：内容高度超过上帧的稳定目标 → 立即长高（在 drawPanel 之前！），
+        // 保证抽屉在「打开的当帧」就被面板背景盖住 —— 不再出现伸出面板底边的过渡帧。
+        // （分类展开动画不受影响：动画期间 elementsHeight == lastContentTarget 不触发）
+        if (open && lastContentTarget > 0 && maxOf(elementsHeight, minBodyHeight) > lastContentTarget) {
+            lastContentTarget = maxOf(elementsHeight, minBodyHeight)
+            fade = maxOf(elementsHeight, minBodyHeight)
+        }
+
         // Drag
         if (drag) {
             x = parseX(x2 + mouseX)
@@ -142,6 +150,12 @@ class Panel(
                 element.isVisible = true
                 element.setLocation(x, yPos)
                 element.width = width
+
+                // 面板内容裁切边界（Best 抽屉的 scissor 用）：面板背景实际覆盖的区域
+                if (element is ModuleElement) {
+                    element.clipTop = y + height - 2
+                    element.clipBottom = y + height + fade
+                }
 
                 // If mouse wasn't hovering above any ButtonElement, drawScreenAndClick got called with mouseButton != null.
                 // Mouse was detected to be hovering above a value while rendering it.

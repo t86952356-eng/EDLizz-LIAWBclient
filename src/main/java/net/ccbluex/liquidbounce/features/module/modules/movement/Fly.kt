@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.ncp.Ol
 import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.matrix.Matrix
 import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.matrix.MatrixDamage
 import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.matrix.OldMatrix
+import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.watchdogncp.WatchdogBoat
 import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.watchdogncp.WatchdogNCPNew
 import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.other.*
 import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.intave.Intave
@@ -86,7 +87,10 @@ object Fly : Module("Fly", Category.MOVEMENT) {
 
         // 第三批新增：TimerGlide / Intave / Matrix（原 MatrixTest，改名 Matrix；
         // 旧 Matrix 改名 OldMatrix）
-        TimerGlide, Intave, Matrix
+        TimerGlide, Intave, Matrix,
+
+        // 第四批新增：Watchdog-ProtectionBoat / MMC / AirJump
+        WatchdogBoat, MMC, AirJump
     )
 
     /**
@@ -195,6 +199,9 @@ object Fly : Module("Fly", Category.MOVEMENT) {
 
     // ---- WatchdogNCP-New（Fly，原 Funcraft 飞行）选项 ----
     private val flyNewSpeed by float("Speed", 1.2f, 0.8f..2f) { mode == "WatchdogNCP-New" }
+
+    // ---- Watchdog-ProtectionBoat（Fly）选项 ----
+    private val boatFlySpeed by float("Speed", 1f, 0.1f..9.5f) { mode == "Watchdog-ProtectionBoat" }
     private val flyNewVanillaKickBypass by boolean("Vanilla Kick Bypass", true) { mode == "WatchdogNCP-New" }
     private val flyNewOnlyDamage by boolean("OnlyDamage", false) { mode == "WatchdogNCP-New" }
     private val flyNewAutoDamage by boolean("AutoDamage", false) { mode == "WatchdogNCP-New" }
@@ -257,6 +264,7 @@ object Fly : Module("Fly", Category.MOVEMENT) {
 
     private fun syncNewFlyModeSettings() {
         WatchdogNCPNew.flySpeed = flyNewSpeed.toDouble()
+        WatchdogBoat.flySpeed = boatFlySpeed
         WatchdogNCPNew.vanillaKickBypass = flyNewVanillaKickBypass
         WatchdogNCPNew.onlyDamage = flyNewOnlyDamage
         WatchdogNCPNew.autoDamage = flyNewAutoDamage

@@ -8,6 +8,7 @@ package net.ccbluex.liquidbounce.ui.client.clickgui.elements
 import net.ccbluex.liquidbounce.LiquidBounce.clickGui
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI.spacedModules
+import net.ccbluex.liquidbounce.ui.client.clickgui.ClickGui
 import net.minecraftforge.fml.relauncher.Side
 import net.minecraftforge.fml.relauncher.SideOnly
 
@@ -50,6 +51,14 @@ class ModuleElement(val module: Module) : ButtonElement(module.name, buttonActio
      * 设置内容宽度限制在分类面板边界内（minX..maxX 由样式的 below 分支负责）。
      */
     var drawerStyle = false
+
+    /**
+     * 面板内容裁切边界（Classic Best 抽屉）：由 Panel 每帧写入，
+     * 样式用它 scissor 抽屉内容 —— 任何情况下抽屉都不会画出面板背景之外。
+     * （Zenith 布局不设置这两个值，且 drawerStyle 会被重置为 false）
+     */
+    var clipTop = 0
+    var clipBottom = 0
 
     /** drawerStyle 展开时的总行高：模块行 16 + 抽屉内容 + 底部间隙 */
     override val height: Int
@@ -96,7 +105,14 @@ class ModuleElement(val module: Module) : ButtonElement(module.name, buttonActio
     override fun drawScreenAndClick(mouseX: Int, mouseY: Int, mouseButton: Int?): Boolean {
         this.supposedWidth = 0
 
-        return clickGui.style.drawModuleElementAndClick(mouseX, mouseY, this, mouseButton)
+        val result = clickGui.style.drawModuleElementAndClick(mouseX, mouseY, this, mouseButton)
+
+        // 安全网：Classic Best 抽屉的 scissor 由样式内部开启；这里统一关闭，
+        // 覆盖样式里所有 return true 的路径（glDisable 未开启时是无害空操作）。
+        // （Zenith 布局不走本方法 —— 直接调 style.drawModuleElementAndClick —— 不受影响）
+        ClickGui.endScissor()
+
+        return result
     }
 
     override fun mouseClicked(mouseX: Int, mouseY: Int, mouseButton: Int): Boolean {

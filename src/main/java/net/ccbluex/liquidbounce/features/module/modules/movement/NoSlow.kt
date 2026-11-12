@@ -49,7 +49,7 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false) {
         "Mode",
         arrayOf(
             "Custom", "WatchdogNCP", "Intave", "Matrix",
-            "Watchdog-Protection", "Grim", "Grim 1.9",
+            "WatchdogPrediction", "Grim", "Grim 1.9", "Grim 3.0",
             "MatrixNew", "MatrixSemi", "GrimSemi",
             "IntaveBlink", "Intave14New", "GrimNew", "GrimTick"
         ),
@@ -61,7 +61,8 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false) {
         WatchdogNoSlowMode, IntaveNoSlowMode, MatrixNoSlowMode,
         WatchdogPredictionNoSlowMode, GrimNoSlowMode, Grim19NoSlowMode,
         MatrixNewNoSlowMode, MatrixSemiNoSlowMode, GrimSemiNoSlowMode,
-        IntaveBlinkNoSlowMode, Intave14NewNoSlowMode, GrimNewNoSlowMode, GrimTickNoSlowMode
+        IntaveBlinkNoSlowMode, Intave14NewNoSlowMode, GrimNewNoSlowMode, GrimTickNoSlowMode,
+        Grim30NoSlowMode
     )
 
     private val noslowMode get() = noslowModes.firstOrNull { it.modeName == mode }
@@ -75,10 +76,13 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false) {
     // ---- WatchdogNCP（NoSlow） ----
     private val wdSlowDownOnSlabs by boolean("Slow down on Slabs", true) { mode == "WatchdogNCP" }
 
-    // ---- Watchdog-Protection（NoSlow） ----
-    private val wdMaxPingSpoof by int("Max Ping Spoof", 8, 0..30) { mode == "Watchdog-Protection" }
-    private val wdWhenToFinishEating by int("When to finish eating", 30, 20..36) { mode == "Watchdog-Protection" }
-    private val wdNonBlinkSpeedBypass by boolean("Non-Blink Speed Bypass", true) { mode == "Watchdog-Protection" }
+    // ---- WatchdogPrediction（NoSlow） ----
+    private val wdMaxPingSpoof by int("Max Ping Spoof", 8, 0..30) { mode == "WatchdogPrediction" }
+    private val wdWhenToFinishEating by int("When to finish eating", 30, 20..36) { mode == "WatchdogPrediction" }
+    private val wdNonBlinkSpeedBypass by boolean("Non-Blink Speed Bypass", true) { mode == "WatchdogPrediction" }
+
+    // ---- Grim 3.0（NoSlow）选项 ----
+    private val grim30Heypixel by boolean("Heypixel", false) { mode == "Grim 3.0" }
 
     // ---- GrimSemi（NoSlow，仅 Food 分支）选项 ----
     private val grimSemiForward by float("GrimSemi-Forward", 0.2f, 0f..1f) { mode == "GrimSemi" }
@@ -183,6 +187,7 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false) {
         WatchdogPredictionNoSlowMode.maxPingSpoof = wdMaxPingSpoof
         WatchdogPredictionNoSlowMode.whenToFinishEating = wdWhenToFinishEating
         WatchdogPredictionNoSlowMode.nonBlinkSpeedBypass = wdNonBlinkSpeedBypass
+        Grim30NoSlowMode.heypixel = grim30Heypixel
         GrimSemiNoSlowMode.forwardMultiplier = grimSemiForward
         GrimSemiNoSlowMode.strafeMultiplier = grimSemiStrafe
     }

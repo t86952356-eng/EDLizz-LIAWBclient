@@ -42,7 +42,7 @@ import net.minecraft.util.EnumFacing
  * 达到 When to finish eating 时自动松开使用键；进食时朝向偏移 45°。
  * 剑分支使用 NoSlow.usingItemFunc()（与 Custom 模式一致）→ 支持 KillAura 自动格挡。
  */
-object WatchdogPredictionNoSlowMode : NoSlowMode("Watchdog-Protection") {
+object WatchdogPredictionNoSlowMode : NoSlowMode("WatchdogPrediction") {
 
     /** Max Ping Spoof（默认 8）。 */
     var maxPingSpoof = 8
