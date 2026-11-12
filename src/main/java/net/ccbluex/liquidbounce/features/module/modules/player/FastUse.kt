@@ -18,7 +18,7 @@ import net.minecraft.network.play.client.C03PacketPlayer
 
 object FastUse : Module("FastUse", Category.PLAYER) {
 
-    private val mode by choices("Mode", arrayOf("Instant", "NCP", "AAC", "Custom"), "NCP")
+    private val mode by choices("Mode", arrayOf("Instant", "NCP", "AAC", "Custom", "Matrix"), "NCP")
 
     private val delay by int("CustomDelay", 0, 0..300) { mode == "Custom" }
     private val customSpeed by int("CustomSpeed", 2, 1..35) { mode == "Custom" }
@@ -62,6 +62,13 @@ object FastUse : Module("FastUse", Category.PLAYER) {
             "aac" -> {
                 mc.timer.timerSpeed = 1.22F
                 usedTimer = true
+            }
+
+            // 新增：Matrix —— 慢速 timer（0.5）+ 每更新补一发 C03
+            "matrix" -> {
+                mc.timer.timerSpeed = 0.5F
+                usedTimer = true
+                sendPacket(C03PacketPlayer(serverOnGround))
             }
 
             "custom" -> {

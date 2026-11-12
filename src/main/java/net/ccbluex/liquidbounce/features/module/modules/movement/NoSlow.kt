@@ -50,7 +50,8 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false) {
         arrayOf(
             "Custom", "WatchdogNCP", "Intave", "Matrix",
             "Watchdog-Protection", "Grim", "Grim 1.9",
-            "MatrixNew", "MatrixSemi", "GrimSemi"
+            "MatrixNew", "MatrixSemi", "GrimSemi",
+            "IntaveBlink", "Intave14New", "GrimNew", "GrimTick"
         ),
         "Custom"
     )
@@ -59,7 +60,8 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false) {
     private val noslowModes = arrayOf(
         WatchdogNoSlowMode, IntaveNoSlowMode, MatrixNoSlowMode,
         WatchdogPredictionNoSlowMode, GrimNoSlowMode, Grim19NoSlowMode,
-        MatrixNewNoSlowMode, MatrixSemiNoSlowMode, GrimSemiNoSlowMode
+        MatrixNewNoSlowMode, MatrixSemiNoSlowMode, GrimSemiNoSlowMode,
+        IntaveBlinkNoSlowMode, Intave14NewNoSlowMode, GrimNewNoSlowMode, GrimTickNoSlowMode
     )
 
     private val noslowMode get() = noslowModes.firstOrNull { it.modeName == mode }

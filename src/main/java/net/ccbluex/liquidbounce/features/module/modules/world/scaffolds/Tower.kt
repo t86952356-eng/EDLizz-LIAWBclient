@@ -103,6 +103,9 @@ object Tower : Configurable("Tower"), MinecraftInstance, Listenable {
     // MatrixNew（原 Matrix，改名避让其它模块的 Matrix 模式）
     private val matrixNewWaitBlocks by int("MatrixNew-WaitBlocks", 1, 0..10) { towerModeValues.get() == "MatrixNew" }
 
+    // MatrixNew 的 Timer 控制（tower 生效期间覆盖游戏计时；0.2..1.1，默认 0.90）
+    private val matrixNewTimer by float("MatrixNew-Timer", 0.90f, 0.2f..1.1f) { towerModeValues.get() == "MatrixNew" }
+
     var isTowering = false
     private var predictionTicks = 0
     private var placeExtraBlock = false
@@ -110,6 +113,9 @@ object Tower : Configurable("Tower"), MinecraftInstance, Listenable {
 
     // MatrixNew 状态机：0 = 等离地，1 = 等落地，2 = 循环贴地起跳
     private var matrixTowerState = 0
+
+    // MatrixNew Timer 是否正被本模式覆盖（离开 tower 时还原 1.0）
+    private var matrixTimerActive = false
 
     // 源 curPlaceBlocks：MatrixNew 起跳前需要已放置的方块数
     private var matrixPlacedBlocks = 0
@@ -140,6 +146,11 @@ object Tower : Configurable("Tower"), MinecraftInstance, Listenable {
         if (towerModeValues.get() == "None" || notOnMoveValues.get() && player.isMoving ||
             onJumpValues.get() && !mc.gameSettings.keyBindJump.isKeyDown
         ) {
+            // MatrixNew Timer 还原（tower 结束：松开空格 / 移动中不 tower 等）
+            if (towerModeValues.get() == "MatrixNew" && matrixTimerActive) {
+                mc.timer.timerSpeed = 1f
+                matrixTimerActive = false
+            }
             return@handler
         }
 
@@ -148,6 +159,10 @@ object Tower : Configurable("Tower"), MinecraftInstance, Listenable {
         // ---- MatrixNew：源 MatrixTower 状态机（PRE/POST 都跑，与源一致不过滤） ----
         if (towerModeValues.get() == "MatrixNew") {
             handleMatrixTower(event)
+
+            // Timer 子选项：tower 生效期间持续覆盖（POST 在 tick 末尾写入，优先级高于 Scaffold 自身的 Timer）
+            mc.timer.timerSpeed = matrixNewTimer
+            matrixTimerActive = true
         }
 
         if (eventState == EventState.POST) {

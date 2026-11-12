@@ -11,9 +11,12 @@ import net.ccbluex.liquidbounce.event.JumpEvent
 import net.ccbluex.liquidbounce.event.MotionEvent
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.event.PacketEvent
+import net.ccbluex.liquidbounce.event.StrafeEvent
+import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.modules.combat.criticalsmodes.GrimACCriticalsMode
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticalsmodes.VerusCriticalsMode
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticalsmodes.VulcanCriticalsMode
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticalsmodes.WatchdogNCPCriticalsMode
@@ -47,14 +50,16 @@ object Criticals : Module("Criticals", Category.COMBAT) {
             "DownInAttack",
             "WatchdogNCP",
             "Vulcan",
-            "Verus"
+            "Verus",
+            "GrimAC"
         ),
         "Packet"
     )
 
     /** 新模式集合（与 NoSlowMode/VelocityMode 同套路的分发模型）。 */
     private val criticalsModes = arrayOf(
-        WatchdogNCPCriticalsMode, VulcanCriticalsMode, VerusCriticalsMode
+        WatchdogNCPCriticalsMode, VulcanCriticalsMode, VerusCriticalsMode,
+        GrimACCriticalsMode
     )
 
     private val criticalsMode get() = criticalsModes.firstOrNull { it.modeName == mode }
@@ -73,6 +78,19 @@ object Criticals : Module("Criticals", Category.COMBAT) {
     // ---- Verus（Criticals）选项 ----
     private val verusCritDelay by int("Verus Delay", 500, 0..1000) { mode == "Verus" }
 
+    // ---- GrimAC（原 GrimCritical 独立模块整体移入）选项 ----
+    private val grimacMode by choices(
+        "GrimACMode",
+        arrayOf("Jump", "AutoFreeze", "OnlyHorJump"),
+        "Jump"
+    ) { mode == "GrimAC" }
+
+    // OnlyHorJump：横向速度倍率（1 = 完全不变）
+    private val grimacOnlyHorSpeed by float("OnlyHorSpeed", 1f, 0.05f..1f) { mode == "GrimAC" && grimacMode == "OnlyHorJump" }
+
+    // AutoFreeze：下落期间冻结时间的占比
+    private val grimacFreezePercent by int("FreezePercent", 100, 0..100) { mode == "GrimAC" && grimacMode == "AutoFreeze" }
+
     val msTimer = MSTimer()
     private var processing = false   // 防止递归
 
@@ -89,6 +107,19 @@ object Criticals : Module("Criticals", Category.COMBAT) {
     private fun syncNewModeSettings() {
         WatchdogNCPCriticalsMode.delay = wdCritDelay.toLong()
         VerusCriticalsMode.delay = verusCritDelay.toLong()
+        GrimACCriticalsMode.grimacMode = grimacMode
+        GrimACCriticalsMode.onlyHorSpeed = grimacOnlyHorSpeed
+        GrimACCriticalsMode.freezePercent = grimacFreezePercent
+    }
+
+    val onUpdate = handler<UpdateEvent> {
+        val extra = criticalsMode ?: return@handler
+        syncNewModeSettings()
+        extra.onUpdate()
+    }
+
+    val onStrafeEvent = handler<StrafeEvent> {
+        criticalsMode?.onStrafe()
     }
 
     val onMotion = handler<MotionEvent> { event ->
@@ -187,6 +218,9 @@ object Criticals : Module("Criticals", Category.COMBAT) {
 
     val onPacket = handler<PacketEvent> { event ->
         val packet = event.packet
+
+        // ---- 新模式分发（GrimAC 的 S08 lagback 检测等） ----
+        criticalsMode?.onPacket(event)
 
         if (packet is C03PacketPlayer && mode == "NoGround") {
             packet.onGround = false

@@ -34,6 +34,7 @@ import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.item.ItemBlock
 import net.minecraft.item.ItemStack
 import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement
+import net.minecraft.network.play.client.C0BPacketEntityAction
 import net.minecraft.util.AxisAlignedBB
 import net.minecraft.util.BlockPos
 import net.minecraft.util.EnumFacing
@@ -215,6 +216,19 @@ infix fun EntityLivingBase.setSprintSafely(new: Boolean) {
     }
 
     isSprinting = new
+}
+
+/**
+ * 疾跑状态 + 同步数据包（移植自 FireBounce PlayerExtension）。
+ */
+infix fun EntityLivingBase.setSprintWithSync(new: Boolean) {
+    this setSprintSafely new
+
+    if (new) {
+        sendPacket(C0BPacketEntityAction(this, C0BPacketEntityAction.Action.START_SPRINTING))
+    } else {
+        sendPacket(C0BPacketEntityAction(this, C0BPacketEntityAction.Action.STOP_SPRINTING))
+    }
 }
 
 // Modified mc.playerController.onPlayerRightClick() that sends correct stack in its C08

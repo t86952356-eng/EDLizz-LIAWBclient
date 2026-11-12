@@ -35,6 +35,15 @@ object ClickGUI : Module("ClickGUI", Category.RENDER, Keyboard.KEY_RSHIFT, canBe
         "Normal"
     ) { layout == "Classic" && style in arrayOf("LiquidBounce", "Fatality") }
 
+    /**
+     * StyleSettings=Best 抽屉的背景色（默认深灰，区别于分类面板与模块行），
+     * 让展开的设置抽屉一眼能和面板背景/未展开的模块区分开。
+     */
+    val lbSettingsDrawerColor by color(
+        "LB-SettingsDrawerColor",
+        Color(40, 40, 40, 235)
+    ) { layout == "Classic" && style in arrayOf("LiquidBounce", "Fatality") && styleSettings == "Best" }
+
     private val style by choices(
         "Style",
         arrayOf("LiquidBounce", "Fatality", "Null", "Slowly", "Black"),

@@ -61,6 +61,9 @@ object WaterMark : Module("WaterMark", Category.RENDER) {
     // 统一圆角大小调节
     private val cornerRadius by float("CornerRadius", 12f, 0f..30f)
 
+    // Size：整块水印的缩放（以顶部中点为锚，居中关系保持不变）
+    private val size by float("Size", 1f, 0.5f..2f)
+
     // Opal 版本名
     private val versionNameUp by text("VersionName","development") {styles=="Opal"}
 
@@ -130,6 +133,13 @@ object WaterMark : Module("WaterMark", Category.RENDER) {
         }
         if (ChestTheme && mc.currentScreen is GuiChest) island_State = State.Chest
 
+        // Size：绕顶部中点缩放（居中不变，纵向随比例伸展）。
+        // 注：BlurUtils 按屏幕绝对坐标采样，Size≠1 时背景模糊区域会与缩放后的水印错位。
+        glPushMatrix()
+        glTranslatef(width / 2f, 0f, 0f)
+        glScalef(size, size, 1f)
+        glTranslatef(-width / 2f, 0f, 0f)
+
         when (island_State) {
             State.Normal -> drawNormal()
             State.Normal2 -> drawNormal2()
@@ -139,6 +149,8 @@ object WaterMark : Module("WaterMark", Category.RENDER) {
             State.Notify -> drawNotificationsUI(scaledScreen, start_y)
             else -> {}
         }
+
+        glPopMatrix()
     }
 
     // ========= 各样式绘制函数 ==========

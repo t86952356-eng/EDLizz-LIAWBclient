@@ -8,6 +8,7 @@ package net.ccbluex.liquidbounce.injection.forge.mixins.entity;
 import com.mojang.authlib.GameProfile;
 import net.ccbluex.liquidbounce.features.module.modules.combat.KeepSprint;
 import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura;
+import net.ccbluex.liquidbounce.features.module.modules.combat.velocitymodes.WatchdogProtectionNewVelocityMode;
 import net.ccbluex.liquidbounce.features.module.modules.movement.NoSlow;
 import net.ccbluex.liquidbounce.utils.attack.CooldownHelper;
 import net.ccbluex.liquidbounce.utils.client.ClassUtils;
@@ -85,6 +86,11 @@ public abstract class MixinEntityPlayer extends MixinEntityLivingBase {
 
     @ModifyConstant(method = "attackTargetEntityWithCurrentItem", constant = @Constant(doubleValue = 0.6))
     private double injectKeepSprintA(double constant) {
+        // Watchdog-ProtectionNew（Intave 分支）：击退已被反转时，本次攻击的 HitSlow 直接取消
+        if (WatchdogProtectionNewVelocityMode.INSTANCE.canCancelHitSlow) {
+            WatchdogProtectionNewVelocityMode.INSTANCE.canCancelHitSlow = false;
+            return 1.0;
+        }
         return KeepSprint.INSTANCE.handleEvents() && isSprinting() ? KeepSprint.INSTANCE.getMotionAfterAttack() : constant;
     }
 

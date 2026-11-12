@@ -1,32 +1,33 @@
 /*
- * GrimCritical —— 移植自 MoonLight Critical 的 Jump / AutoFreeze 分支（独立模块）。
+ * LiquidBounce Hacked Client
+ * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
+ * https://github.com/CCBlueX/LiquidBounce/
+ *
+ * Criticals「GrimAC」模式 —— 由原独立模块 GrimCritical 整体移入（Jump / AutoFreeze / OnlyHorJump）。
  *
  * 跳跃一律走 jump() 钩子（原版 EntityLivingBase.jump()：motionY/sprint 冲量/
  * jumpTicks 全部由原版逻辑处理），不直接改 motion。
  */
-package net.ccbluex.liquidbounce.features.module.modules.combat
+package net.ccbluex.liquidbounce.features.module.modules.combat.criticalsmodes
 
 import net.ccbluex.liquidbounce.event.AttackEvent
 import net.ccbluex.liquidbounce.event.PacketEvent
-import net.ccbluex.liquidbounce.event.StrafeEvent
-import net.ccbluex.liquidbounce.event.UpdateEvent
-import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura
 import net.ccbluex.liquidbounce.features.module.modules.movement.Freeze
 import net.minecraft.entity.EntityLivingBase
 import net.minecraft.network.play.server.S08PacketPlayerPosLook
 
-object GrimCritical : Module("GrimCritical", Category.COMBAT) {
+object GrimACCriticalsMode : CriticalsMode("GrimAC") {
 
-    private val mode by choices("Mode", arrayOf("Jump", "AutoFreeze", "OnlyHorJump"), "Jump")
+    /** 子模式（源 GrimCritical 的 Mode：Jump / AutoFreeze / OnlyHorJump），由 Criticals 同步。 */
+    var grimacMode = "Jump"
 
     // OnlyHorJump：横向速度倍率（1 = 完全不变）
-    private val onlyHorSpeed by float("OnlyHorSpeed", 1f, 0.05f..1f) { mode == "OnlyHorJump" }
+    var onlyHorSpeed = 1f
 
     // AutoFreeze：下落期间冻结时间的占比
     // 100 = 全程冻结（旧行为）；25 = 每 4 tick 下落冻结 1 tick；50 = 隔 tick 冻一次
-    private val freezePercent by int("FreezePercent", 100, 0..100) { mode == "AutoFreeze" }
+    var freezePercent = 100
 
     private var attacking = false
     private var stuckEnabled = false
@@ -53,8 +54,8 @@ object GrimCritical : Module("GrimCritical", Category.COMBAT) {
         attacking = false
     }
 
-    val onAttack = handler<AttackEvent> { event ->
-        val player = mc.thePlayer ?: return@handler
+    override fun onAttack(event: AttackEvent) {
+        val player = mc.thePlayer ?: return
         if (player.onGround && event.targetEntity is EntityLivingBase) {
             val entity = event.targetEntity as EntityLivingBase
             // 目标 hurtTime == 9（刚被打过）→ 只补客户端暴击粒子，不再跳
@@ -65,10 +66,10 @@ object GrimCritical : Module("GrimCritical", Category.COMBAT) {
         }
     }
 
-    val onUpdate = handler<UpdateEvent> {
-        val player = mc.thePlayer ?: return@handler
+    override fun onUpdate() {
+        val player = mc.thePlayer ?: return
 
-        if (mode == "OnlyHorJump") {
+        if (grimacMode == "OnlyHorJump") {
             // 有目标且在地面 → 钩子跳跃
             if (KillAura.target != null && player.onGround) {
                 player.jump()
@@ -98,11 +99,11 @@ object GrimCritical : Module("GrimCritical", Category.COMBAT) {
             if (KillAura.target == null && onlyHorStuck) {
                 onlyHorStuck = false
             }
-            return@handler
+            return
         }
 
-        if (mode != "AutoFreeze") {
-            return@handler
+        if (grimacMode != "AutoFreeze") {
+            return
         }
 
         // 有目标且在地面 → 钩子跳跃（起跳产生 fallDistance）
@@ -120,7 +121,7 @@ object GrimCritical : Module("GrimCritical", Category.COMBAT) {
                 Freeze.state = false
                 stuckEnabled = false
             }
-            return@handler
+            return
         }
 
         fallTicks++
@@ -147,20 +148,17 @@ object GrimCritical : Module("GrimCritical", Category.COMBAT) {
     }
 
     // 被服务端拉回（lagback）→ 立刻解除 stuck，避免位置对不上
-    val onPacket = handler<PacketEvent> { event ->
+    override fun onPacket(event: PacketEvent) {
         if (onlyHorStuck && event.packet is S08PacketPlayerPosLook) {
             onlyHorStuck = false
         }
     }
 
-    val onStrafe = handler<StrafeEvent> {
+    override fun onStrafe() {
         // Jump 模式：攻击后在 Strafe 钩子里跳（保证这一 tick 的移动方向已确定）
-        if (mode == "Jump" && attacking && mc.thePlayer?.onGround == true) {
+        if (grimacMode == "Jump" && attacking && mc.thePlayer?.onGround == true) {
             mc.thePlayer.jump()
             attacking = false
         }
     }
-
-    override val tag
-        get() = mode
 }

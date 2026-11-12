@@ -12,6 +12,7 @@ import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.PreAttackEvent;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.AbortBreaking;
 import net.ccbluex.liquidbounce.utils.attack.CooldownHelper;
+import net.ccbluex.liquidbounce.utils.attack.SilentAttackManager;
 import net.ccbluex.liquidbounce.utils.inventory.SilentHotbar;
 import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils;
 import net.minecraft.client.multiplayer.PlayerControllerMP;
@@ -34,7 +35,11 @@ public class MixinPlayerControllerMP {
 
     @Inject(method = "attackEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/PlayerControllerMP;syncCurrentPlayItem()V"))
     private void attackEntity(EntityPlayer entityPlayer, Entity targetEntity, CallbackInfo callbackInfo) {
-        EventManager.INSTANCE.call(new AttackEvent(targetEntity));
+        // 静默攻击（SilentAttackManager.withSilentAttack）不触发 AttackEvent，
+        // 否则递归进各模块的 onAttack（与源 FireBounce 一致）
+        if (!SilentAttackManager.isSilentAttack()) {
+            EventManager.INSTANCE.call(new AttackEvent(targetEntity));
+        }
         CooldownHelper.INSTANCE.resetLastAttackedTicks();
     }
 

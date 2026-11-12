@@ -662,6 +662,24 @@ object FatalityStyle : Style() {
                     drawRoundedBorder(subLeft, subTop, subRight, subBottom, 1F, FATALITY_BORDER, subRadius)
                 }
 
+                // drawerStyle（Classic Best 抽屉）：独立配色的抽屉背景，
+                // 让展开的设置区域一眼能和分类面板背景 / 未展开的模块行区分开
+                if (moduleElement.drawerStyle && moduleElement.settingsHeight > 0) {
+                    val drawerLeft = moduleElement.x + 1F
+                    val drawerTop = settingsTop - 2F
+                    val drawerRight = (moduleElement.x + moduleElement.width - 1).toFloat()
+                    val drawerBottom = (settingsTop + moduleElement.settingsHeight + 2).toFloat()
+
+                    drawRoundedRect(
+                        drawerLeft, drawerTop, drawerRight, drawerBottom,
+                        ClickGUI.lbSettingsDrawerColor.rgb, FATALITY_RADIUS
+                    )
+                    drawRoundedBorder(
+                        drawerLeft, drawerTop, drawerRight, drawerBottom,
+                        1F, FATALITY_BORDER, FATALITY_RADIUS
+                    )
+                }
+
                 for (value in moduleValues) {
                     assumeNonVolatile = value.get() is Number
 

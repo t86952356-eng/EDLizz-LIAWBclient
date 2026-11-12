@@ -9,6 +9,7 @@ import net.ccbluex.liquidbounce.event.AttackEvent
 import net.ccbluex.liquidbounce.event.JumpEvent
 import net.ccbluex.liquidbounce.event.MotionEvent
 import net.ccbluex.liquidbounce.event.MoveEvent
+import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.utils.client.MinecraftInstance
 
 /**
@@ -19,6 +20,9 @@ open class CriticalsMode(val modeName: String) : MinecraftInstance {
     open fun onAttack(event: AttackEvent) {}
     open fun onJump(event: JumpEvent) {}
     open fun onMove(event: MoveEvent) {}
+    open fun onUpdate() {}
+    open fun onPacket(event: PacketEvent) {}
+    open fun onStrafe() {}
     open fun onEnable() {}
     open fun onDisable() {}
 }

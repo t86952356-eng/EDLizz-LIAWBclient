@@ -39,7 +39,8 @@ object Speed : Module("Speed", Category.MOVEMENT) {
         GrimACSpeed, Grim2Speed,   // Grim 模式
         TargetBoost,               // MoonLight EntityCollide 目标加速
         MatrixSpeed, WatchdogNCPNewSpeed, PolarSpeed, OldNCPYPort, // 新增模式
-        MatrixNewSpeed, MatrixHighSpeed2 // 第三批新增：MatrixNew（原 Matrix）/ MatrixHighSpeed2
+        MatrixNewSpeed, MatrixHighSpeed2, // 第三批新增：MatrixNew（原 Matrix）/ MatrixHighSpeed2
+        MatrixLates, IntaveTimerSpeed, IntaveNewSpeed, Intave14NewSpeed // 第四批新增
     )
 
     private val deprecatedMode = arrayOf(
@@ -166,6 +167,15 @@ object Speed : Module("Speed", Category.MOVEMENT) {
     private val matrixHighDownMotion by float("DownMotion", 0.3f, -0.5f..0.5f) { mode.get() == "MatrixHighSpeed2" }
     private val matrixHighInf by boolean("Inf", false) { mode.get() == "MatrixHighSpeed2" }
 
+    // ---- MatrixLates（源 Matrix3）/ IntaveNew 共用选项 ----
+    private val intaveNewAutoJump by boolean("AutoJump", true) {
+        mode.get() in arrayOf("IntaveNew", "MatrixLates")
+    }
+
+    // ---- Intave14New 选项 ----
+    private val intave14NewUseTimer by boolean("Timer", false) { mode.get() == "Intave14New" }
+    private val intave14NewDebugger by boolean("Debugger", false) { mode.get() == "Intave14New" }
+
     private fun syncNewSpeedModeSettings() {
         WatchdogNCPNewSpeed.type = wdNewType
         WatchdogNCPNewSpeed.airStrafe = wdNewAirStrafe
@@ -182,6 +192,10 @@ object Speed : Module("Speed", Category.MOVEMENT) {
         MatrixHighSpeed2.h = matrixHighH.toDouble()
         MatrixHighSpeed2.downMotion = matrixHighDownMotion.toDouble()
         MatrixHighSpeed2.inf = matrixHighInf
+        MatrixLates.autoJump = intaveNewAutoJump
+        IntaveNewSpeed.autoJump = intaveNewAutoJump
+        Intave14NewSpeed.useTimer = intave14NewUseTimer
+        Intave14NewSpeed.debugger = intave14NewDebugger
     }
 
     // 合法疾跑（TargetBoost/GrimAC/Grim2）：只有纯前进方向才疾跑，

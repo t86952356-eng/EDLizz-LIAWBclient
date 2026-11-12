@@ -11,6 +11,7 @@ import net.ccbluex.liquidbounce.utils.extensions.*
 import net.minecraft.entity.EntityLivingBase
 import net.minecraft.network.play.client.C03PacketPlayer
 import net.minecraft.util.Vec3
+import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt
@@ -30,6 +31,33 @@ object MovementUtils : MinecraftInstance, Listenable {
 
     var airTicks = 0
     var groundTicks = 0
+
+    /** （移植自源客户端）按输入方向计算玩家朝向弧度。 */
+    fun getPlayerDirection(rotationYaw: Float, moveForward: Double, moveStrafe: Double): Double {
+        if (moveForward != 0.0 && moveStrafe != 0.0) {
+            return Math.toRadians(rotationYaw.toDouble())
+        }
+        val angle = atan2(-moveStrafe, moveForward)
+        return angle + Math.toRadians(rotationYaw.toDouble())
+    }
+
+    fun getPlayerDirection(): Double {
+        val player = mc.thePlayer ?: return 0.0
+        return getPlayerDirection(
+            player.rotationYaw, player.movementInput.moveForward.toDouble(),
+            player.movementInput.moveStrafe.toDouble()
+        )
+    }
+
+    /** （移植自源客户端）直接把 XZ 动量设为面向方向上的指定速度。 */
+    fun setSpeed(speed: Double, movingCheck: Boolean) {
+        val player = mc.thePlayer ?: return
+        if (!player.isMoving && movingCheck) return
+
+        val yaw = getPlayerDirection()
+        player.motionX = -sin(yaw) * speed
+        player.motionZ = cos(yaw) * speed
+    }
 
     @JvmOverloads
     fun strafe(

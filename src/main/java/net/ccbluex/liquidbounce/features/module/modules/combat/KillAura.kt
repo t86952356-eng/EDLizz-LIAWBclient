@@ -138,7 +138,12 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R) {
 
     // Bypass
     private val swing by boolean("Swing", true)
-    private val keepSprint by boolean("KeepSprint", true)
+    val keepSprint by boolean("KeepSprint", true)
+
+    /** 与源客户端 KillAura.shouldKeepSprint 等价的近似：模块开启且 KeepSprint 选项打开。
+     *  （源实现还细分 Always/HurtTime 等子条件；lizz 的 KillAura 只有单一开关） */
+    val shouldKeepSprint: Boolean
+        get() = handleEvents() && keepSprint
 
     // Settings
     private val autoF5 by boolean("AutoF5", false)

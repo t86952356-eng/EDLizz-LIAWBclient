@@ -288,6 +288,73 @@ MatrixTest مع إعادة تسمية القديم إلى OldMatrix) + Velocity 
 vb12.12-mc1.8.9 مع lizz-b12.12.jar وlizz-b12.12-source.zip، والـ changelog بالإنجليزية من RELEASE_NOTES.md (كل الأوضاع
 مكتوبة كإضافات جديدة دون ذكر الاستخراج).
 
+### المهمة 7 — نوفمبر 2026 — «ملاحظات المستخدم بعد b12.12 + الدفعة الرابعة من عميل 1.8.9 (fork من LiquidBounce Legacy)» (b12.13)
+
+الهدف: (1) **ست ملاحظات/إصلاحات**: OnlyDamage في Fly/WatchdogNCP-New يجب أن يلغي الطيران **بالكامل** (السابق كان يلغي الـ boost
+فقط ويُبقي الطيران/التحويم العامل = «مشغل نصف»)؛ درج ClickGUI Classic/Best يحتاج (أ) لون خلفية مميزاً و(ب) إصلاح خروج الدراج
+عن حدود طول الفئة؛ وضع **Backward** ضمن Rotations في Scaffold2 (نظام ReverseYaw لكن yaw+180 — rotation يتحدد من تغيّر
+الموقع فقط)؛ خيار **MatrixNew-Timer** (0.2..1.1 افتراضي 0.90) لوضع Tower/MatrixNew؛ خيار **Size** لموديول WaterMark؛ نقل
+موديول **GrimCritical** كوضع **GrimAC** داخل Criticals (نقل حقيقي: الموديول القديم حُذف، الإعدادات كما هي، tag في arraylist).
+(2) **الدفعة الرابعة** من عميل FireBounce (1.8.9، fork من liquidbounce legacy — نفس العائلة): Velocity: دمج
+PolarJump+Intave+Intave2+AirJumpReset+Prediction في وضع واحد **Watchdog-ProtectionNew** (بمفاتيح فرعية لكل مكوّن) +
+**AttackReduce** (من NewVelocity) + **MatrixReduce2**/**MatrixReduce3** (من Velocity)؛ Speed: Matrix3→**MatrixLates**،
+Intave3→**IntaveTimer**، **IntaveNew**، Intave14.8.4→**Intave14New**؛ NoWeb: **Matrix**/**MatrixNew**/**Intave14**؛
+NoSlow: دمج IntaveBlink/Intave14/GrimNew/GrimTick من قوائم SwordMode/ConsumeMode/BowMode الثلاث إلى أوضاع موحدة
+**IntaveBlink**/**Intave14New**/**GrimNew**/**GrimTick** (بوابات Sword/Food/Potion/Bow المشتركة)؛ FastUse: **Matrix**.
+
+**بنية تحتية جديدة لهذه الدفعة** (تُستخدم في الدفعات القادمة من نفس العائلة):
+- `utils/firefly/general/SomeUtil.kt` — منفذ حرفياً بنفس مسار حزمة المصدر: roundToPlacesIfNeeded/reduceXZ/reduceY/setMotion/
+  changeSprint/changeTimer/calculateAngleDifference/isHurting/bps/bpt/setBPSTo/safeJump/runAttack. ملاحظة: شرط
+  attackChance في runAttack عند المصدر **معكوس** (nextFloat() <= chance يهرب دائماً عند chance=1) فصُحح إلى `>` مع تعليق.
+- `utils/attack/SilentAttackManager.kt` + هوك في MixinPlayerControllerMP (الهجوم الصامت لا يطلق AttackEvent).
+- `setSprintWithSync` أُضيف لـ PlayerExtension.kt (changeSprint تحتاجه)، و`setSpeed`/`getPlayerDirection` لـ MovementUtils.
+- **canCancelHitSlow**: حقل JvmField في WatchdogProtectionNewVelocityMode يقرؤه MixinEntityPlayer (injectKeepSprintA)
+  لإلغاء HitSlow مرة واحدة عندما يقرر فرع Intave أن الرد قد انعكس. KillAura.keepSprint أصبح عاماً + خاصية
+  shouldKeepSprint تقريبية، وKeepSprint.shouldKeepSprint تقريبية (handleEvents && isSprinting) — تعليقات موثقة في الملفين.
+
+**قرارات التصميم في هذه الدفعة**:
+- **Watchdog-ProtectionNew** = دمج فعلي: كل مكوّن من الخمسة له مفتاح خاص (PolarJump/Intave/Intave2/AirJumpReset/Prediction،
+  افتراضياً كلها مفتوحة = الجسم المدمج كما طلب المستخدم) — لأن Intave وPrediction كليهما يستخدمان BlinkUtils العام
+  (قائمة انتظار واحدة) فالتشغيل المتوازي مشوّش؛ المفاتيح تتيح للمستخدم ضبط التداخل. إعدادات المصدر كلها منقولة بأسمائها
+  وقيمها الافتراضية. آليات JumpReset العامة (jumpReset/SmartJumpReset/CooldownMode multiChoices) سُقطت: لا يقرؤها أي مكوّن
+  من الخمسة (resetJumpCooldownCounter لا يؤثر إلا في extraJumpReset)، وmultiChoices غير موجودة في Lizz —
+  AllowWorkWhen استُبدلت بـ WorkOnGround/WorkInAir (سلوك canWorkNow نفسه). أُضيف unblink احتياطي في onDisable (المصدر لا
+  ينظف — خطر بقاء الحزم معلقة).
+- **دمج NoSlow**: المنطق في المصدر متطابق حرفياً بين الفروع الثلاثة (SwordMode/ConsumeMode/BowMode تستدعي نفس الدوال)،
+  فالوضع الموحد يطبّق المنطق نفسه عندما يطابق نوع العنصر بوابةً مفتوحة (Sword/Food/Potion/Bow) مع usingItemFunc() (يدعم
+  KillAura blockStatus)، وonSlowDown يعطي 1f/1f للعنصر المطابق (مضاعفات المصدر blockForwardMultiplier افتراضياً 1f).
+  hasMotion (بوابة onMotion عند المصدر) مُطبقة داخل كل وضع.
+- **MatrixReduce3**: خيار CancelSpecialVelocity العام عند المصدر مخصص لكل الأوضاع؛ هنا سلوك الإلغاء متأصل داخل الوضع
+  (S12 صفري XZ يُلغى مع KeepMotionYVelocity)، وخيار BoostCooldown وحدة suffix "ms".
+- **MatrixReduce2**: تفعيل hasReceivedVelocity عند المصدر شرطه الخارجي motionY>0 && (X|Z)!=0 (وليس isValidS12Packet) — نُقل كما هو.
+- **Intave14New Speed**: اسم الوضع في المصدر «Intave14.8.4» — المستخدم سماه Intave14New في الطلب فاعتُمد اسمه (لا تصادم).
+- **Scaffold2 Backward**: البحث/raycast يبقى بالاتجاه الحقيقي المُقرَّب (RoundYaw90/45) والـ rotation المُرسل للسيرفر فقط
+  ينعكس +180 عند إنشاء PlaceRotation (وإلا فشل raytrace) — canUpdateRotation يقبل فرق 180° (يفحص الفرق الأدنى فقط).
+- **ClickGUI تجاوز الدراج**: سببان: (1) updateElementsHeight كان يعدّ أول maxElements عنصراً بدل «النطاق المرئي» — بعد
+  التمرير لا يدخل ارتفاع الدراج فيfade فتخرج الدراج أسفل الفئة؛ (2) fade يتحرك ببطء أثناء فتح الدراج (تأخير إطارين +
+  تهدئة) فيظهر الخروج حتى في الفئات القصيرة. الحل: العد بالنطاق المرئي + إعادة حساب ارتفاع المحتوى نهاية كل رسم + snap
+  فوري لـ fade عند تغيّر ارتفاع المحتوى والفئة مفتوحة (فتح/إغلاق الفئة يبقى بالتهدئة عبر lastContentTarget=0) + لون درج
+  LB-SettingsDrawerColor (افتراضي 40,40,40,235) يرسم مستطيلاً دائرياً بحدود قبل عناصر الإعداد في LiquidBounce وFatality.
+- **WaterMark Size**: glPushMatrix + مقياس حول نقطة (width/2, 0) — يبقى التوسيط. ملاحظة موثقة: BlurUtils يأخذ عيناته
+  بإحداثيات الشاشة المطلقة فالضبابية تتصادم مع Size≠1 (الضباب افتراضياً مغلق).
+- **Tower MatrixNew-Timer**: يُطبق طوال isTowering (PRE وPOST — POST يكتب أخيراً فيفوق Timer الخاص بـScaffold)، والعودة
+  1f في مسار الخروج المبكر (إفلات المسافة/الحركة) بعلم matrixTimerActive.
+- **GrimAC Criticals**: فئة CriticalsMode امتدت بـ onUpdate/onPacket/onStrafe + موزعون جدد في Criticals.kt. اسم إعداد
+  الوضع الفرعي «GrimACMode» (الاسم «Mode» محجوز لموديول Criticals) وبقية الإعدادات بأسمائها (OnlyHorSpeed/FreezePercent).
+
+| # | الدرس / الخلل | التفصيل | الحل المطبّق |
+|---|---|---|---|
+| 11 | **S01PacketPong حزمة status وليست play** | `net.minecraft.network.status.server.S01PacketPong` (الدرس 4 في السابق من 1.12.2، انعكس هنا من مصدر 1.8.9 وصف import play.server) | استيراد من status.server |
+| 12 | **CPSCounter حزمة utils.attack وليست modules.combat** | SomeUtil استوردها من مسار المصدر الخاطئ | استيراد net.ccbluex.liquidbounce.utils.attack.CPSCounter |
+| 13 | **@JvmField لا يولّد getter/setter** | MixinEntityPlayer (Java) لا يمكنه استدعاء getCanCancelHitSlow لحقل JvmField | وصول مباشر للحقل: `INSTANCE.canCancelHitSlow` |
+| 14 | **getDistanceToEntityBox امتداد ويحتاج استيراداً صريحاً** | ليس عضواً في Entity | import net.ccbluex.liquidbounce.utils.extensions.getDistanceToEntityBox |
+| 15 | **عمليات الخلفية تُقتل بين نداءات الأدوات** | nohup/setsid لا ينفعان في الـ sandbox — العملية تُقتل بنهاية نداء Bash | تشغيل الترجمة في المقدمة مع ملف سجل (الـ JVM قد يعلق بعد BUILD SUCCESSFUL — اقرأ السجل بدل انتظار الخروج) |
+| 16 | **ذاكرة Gradle cache تبقى بين الجلسات** | ~/.gradle (384MB مع minecraft) نجت من إعادة تدوير الـ sandbox — الترجمة المحلية ممكنة مباشرة بعد تحميل JDK8 (103MB من adoptium) | JAVA_HOME=/tmp/tools/jdk8u512-b09 مع -Xmx1800m؛ compileKotlin+compileJava = نجاح |
+
+**النتيجة**: compileKotlin وcompileJava محلياً = **BUILD SUCCESSFUL** (جولة واحدة للإصلاح: 6 أخطاء استيراد ثم 0)، وترقية
+mod_version إلى b12.13، ثم البناء والنشر عبر GitHub Actions (push إلى main ثم release/build) وإصدار vb12.13-mc1.8.9،
+والـ changelog بالإنجليزية من RELEASE_NOTES.md (كل الأوضاع مكتوبة كإضافات جديدة دون ذكر الاستخراج).
+
 ## 5) سجل المهام
 
 | التاريخ | المهمة | الحالة |
@@ -298,3 +365,4 @@ vb12.12-mc1.8.9 مع lizz-b12.12.jar وlizz-b12.12-source.zip، والـ changel
 | نوفمبر 2026 | المهمة 4 (b12.10): استخراج الأوضاع من عميل 1.8.9 آخر — NoSlow 6 + Velocity 7 من 8 (Polar لم يُستخرج: هو Legit مُعاد تسميته في المصدر) + Speed 4 + Fly 3 = 20 وضعاً + بنية PortedUtils مشتركة + ترقية b12.10 | ✅ تمت — compileKotlin محلي نجح (بعد إصلاح 35 خطأ) ونجح النشر على Actions (run 42653938466) والإصدار vb12.10-mc1.8.9 |
 | نوفمبر 2026 | المهمة 5 (b12.11): إصلاحات b12.10 الأربعة (تسمية Watchdog-Protection + Polar legit sprint + Sword/KillAura عبر usingItemFunc + إصلاح damageBoost الميت) + الدفعة الثانية: Criticals 3 + LongJump 3 + Phase 3 + Step 2 + InventoryMove (نظام Mode/Custom + وضعان) + AntiVoid 2 = 15 وضعاً جديداً + ترقية b12.11 | ✅ تمت — compileKotlin محلي نجح (خطأ واحد أُصلح) ونجح النشر على Actions (run 42756010821) والإصدار vb12.11-mc1.8.9 |
 | نوفمبر 2026 | المهمة 6 (b12.12): ترقيات OnlyDamage/AutoDamage (Fly/WatchdogNCP-New) + tag لـ AntiVoid + StyleSettings درج (ClickGUI Classic) + الدفعة الثالثة من عميل 1.12.2: KillAura AutoBlock 3 + Disabler 3 (Mode system + دمج MatrixDisabler) + Phase 1 + Fly 3 + Velocity 2 + Speed 2 + NoSlow 3 + Tower 1 = 21 وضعاً جديداً + ترقية b12.12 | ✅ تمت — compileKotlin محلي نجح (3 جولات: 21/2/0 خطأ) ونجح النشر على Actions والإصدار vb12.12-mc1.8.9 |
+| نوفمبر 2026 | المهمة 7 (b12.13): ملاحظات المستخدم الست (OnlyDamage كامل الإلغاء + لون/تجاوز درج ClickGUI + Backward rotations + MatrixNew-Tower-Timer + WaterMark Size + نقل GrimCritical→Criticals/GrimAC مع حذف الموديول) + الدفعة الرابعة من عميل 1.8.9 (fork من Legacy): Velocity 4 (Watchdog-ProtectionNew دمج 5 + AttackReduce + MatrixReduce2/3) + Speed 4 (MatrixLates/IntaveTimer/IntaveNew/Intave14New) + NoWeb 3 (Matrix/MatrixNew/Intave14) + NoSlow 4 (IntaveBlink/Intave14New/GrimNew/GrimTick — دمج Sword/Consume/Bow) + FastUse 1 (Matrix) = 16 وضعاً جديداً + بنية SomeUtil/SilentAttackManager + ترقية b12.13 | ✅ تمت — compileKotlin وcompileJava محلياً نجحا (6 أخطاء استيراد أُصلحت بجولة واحدة) ونجح النشر على Actions والإصدار vb12.13-mc1.8.9 |

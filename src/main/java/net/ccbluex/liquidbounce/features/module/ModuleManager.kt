@@ -104,7 +104,6 @@ object ModuleManager : Listenable, Collection<Module> by MODULE_REGISTRY {
             ComponentOnHover,
             ConsoleSpammer,
             Criticals,
-            GrimCritical,
             Damage,
             Derp,
             ESP,

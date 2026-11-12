@@ -4,4 +4,6 @@ import net.ccbluex.liquidbounce.utils.client.MinecraftInstance
 
 open class NoWebMode(val modeName: String) : MinecraftInstance {
     open fun onUpdate() {}
+    open fun onEnable() {}
+    open fun onDisable() {}
 }

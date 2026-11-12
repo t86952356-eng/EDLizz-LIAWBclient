@@ -64,6 +64,13 @@ object WatchdogNCPNew : FlyMode("WatchdogNCP-New") {
     }
 
     override fun onMotion(event: MotionEvent) {
+        // OnlyDamage：未受伤前完全禁用飞行（不伪造 onGround、不干预任何运动），
+        // 玩家保持原版下落/行走；一旦受伤立刻激活完整飞行
+        if (onlyDamage && !damaged) {
+            checkDamage()
+            return
+        }
+
         if (event.eventState != EventState.PRE) return
         event.onGround = true
     }
@@ -71,14 +78,10 @@ object WatchdogNCPNew : FlyMode("WatchdogNCP-New") {
     override fun onMove(event: MoveEvent) {
         val player = mc.thePlayer ?: return
 
-        // OnlyDamage：受到伤害前不飞行（悬停等待伤害）
-        if (onlyDamage) {
-            if (player.hurtTime > 0) damaged = true
-            if (!damaged) {
-                player.motionY = 0.0
-                event.y = -1.0E-5
-                return
-            }
+        // OnlyDamage：未受伤前完全禁用飞行（原版移动，不悬停）
+        if (onlyDamage && !damaged) {
+            checkDamage()
+            return
         }
 
         if (!player.isMoving || player.isCollidedHorizontally) {
@@ -119,6 +122,17 @@ object WatchdogNCPNew : FlyMode("WatchdogNCP-New") {
         setMoveEvent(event, max(moveSpeed, PortedMove.allowedHorizontalDistance()))
         stage++
         ticks++
+    }
+
+    /** OnlyDamage：检测到受伤后激活飞行，并重置阶段机（从受击瞬间重新开始 boost）。 */
+    private fun checkDamage() {
+        val player = mc.thePlayer ?: return
+        if (player.hurtTime > 0 && !damaged) {
+            damaged = true
+            moveSpeed = 0.0
+            stage = if (player.onGround) 0 else -1
+            ticks = 0
+        }
     }
 
     /** 与原实现 setMoveEvent 相同的方向计算（含斜向 45° 融合）。 */

@@ -165,6 +165,10 @@ class Panel(
             updatePos = false
         }
 
+        // 元素绘制完（settingsHeight 刚更新），立刻重算内容高度，
+        // 下一帧 updateFade 就能拿到最新的抽屉高度
+        updateElementsHeight()
+
         return false
     }
 
@@ -208,6 +212,18 @@ class Panel(
 
     fun updateFade(delta: Int) {
         val target = if (open) maxOf(elementsHeight, minBodyHeight) else 0
+
+        // 面板已展开时内容高度变化（Best 抽屉展开/收起、滚动）：面板高度直接跟随目标，
+        // 不再走缓动 —— 否则抽屉会在动画期间伸出面板底边（短分类下尤其明显）。
+        // 分类展开/收起（lastContentTarget == 0）仍走原来的缓出动画。
+        if (open && lastContentTarget > 0 && target != lastContentTarget) {
+            lastContentTarget = target
+            fade = target
+            return
+        }
+
+        lastContentTarget = target
+
         val remaining = target - fade
 
         // 已经很接近就直接吸附到目标位置
@@ -223,14 +239,19 @@ class Panel(
         fade += if (remaining > 0) step else -step
     }
 
+    /** 上一次 fade 的目标高度：区分「分类展开动画」和「内容高度变化」 */
+    private var lastContentTarget = 0
+
     private fun updateElementsHeight() {
         var height = 0
-        var count = 0
 
-        for (element in elements) {
-            if (count >= maxElements) break
+        // 与绘制循环一致：只统计「可见范围」内元素的高度（含抽屉撑开的行高），
+        // 否则滚动后抽屉高度不进入面板总高，抽屉会伸出面板底边
+        val visibleRange = getVisibleRange()
+
+        for ((index, element) in elements.withIndex()) {
+            if (index !in visibleRange) continue
             height += element.height + 1
-            ++count
         }
 
         // 底部留出圆角半径左右的空隙，否则最后一个（开启的）模块的直角色块

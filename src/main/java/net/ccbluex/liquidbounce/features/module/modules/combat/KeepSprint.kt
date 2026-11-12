@@ -14,4 +14,9 @@ object KeepSprint : Module("KeepSprint", Category.COMBAT) {
 
     val motionAfterAttack
         get() = if (mc.thePlayer.onGround) motionAfterAttackOnGround else motionAfterAttackInAir
+
+    /** 与源客户端 KeepSprint.shouldKeepSprint 等价的近似：模块开启且正在疾跑。
+     *  （源实现还带燃烧/水/药水等环境检查，lizz 的 KeepSprint 没有这些子选项） */
+    val shouldKeepSprint: Boolean
+        get() = handleEvents() && mc.thePlayer?.isSprinting == true
 }

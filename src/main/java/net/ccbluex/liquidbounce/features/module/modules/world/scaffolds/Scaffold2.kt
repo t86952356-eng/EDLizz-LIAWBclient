@@ -171,7 +171,11 @@ object Scaffold2 : Module("Scaffold2", Category.WORLD) {
 
     // Rotation Options
     private val modeList =
-        choices("Rotations", arrayOf("Off", "Normal", "Stabilized", "ReverseYaw", "FastBridge", "Hypixel", "UnfairPitch"), "Normal")
+        choices(
+            "Rotations",
+            arrayOf("Off", "Normal", "Stabilized", "ReverseYaw", "Backward", "FastBridge", "Hypixel", "UnfairPitch"),
+            "Normal"
+        )
     private val hypixelMinPitch by float("HypixelMinPitch", 55f, 50f..90f) { modeList.get() == "Hypixel" }
     private val hypixelMaxPitch by float("HypixelMaxPitch", 75f, 50f..90f) { modeList.get() == "Hypixel" }
     // Unfair Pitch（MoonLight 非法超大俯仰）：yaw 保持玩家朝向，pitch 越过 90°「超低头」
@@ -1124,6 +1128,8 @@ object Scaffold2 : Module("Scaffold2", Category.WORLD) {
         } else when (options.rotationMode) {
             "Stabilized" -> Rotation(roundYaw45, rotation.pitch)
             "ReverseYaw" -> Rotation(if (!isLookingDiagonally) roundYaw90 else roundYaw45, rotation.pitch)
+            // Backward：与 ReverseYaw 同一套取整系统，但实际发送的 rotation 面向反方向（yaw+180）
+            "Backward" -> Rotation(if (!isLookingDiagonally) roundYaw90 else roundYaw45, rotation.pitch)
             else -> rotation
         }).fixedSensitivity()
 
@@ -1146,10 +1152,15 @@ object Scaffold2 : Module("Scaffold2", Category.WORLD) {
                 currRotation, rotation, multiplier
             )
         ) {
+            // Backward：检索/命中校验仍用真实朝向，发送给服务器的 rotation 反转 180°（仅由位置变化决定）
+            val finalRotation = if (options.rotationMode == "Backward") {
+                Rotation(rotation.yaw + 180f, rotation.pitch).fixedSensitivity()
+            } else rotation
+
             return PlaceRotation(
                 PlaceInfo(
                     raytrace.blockPos, side.opposite, modifyVec(raytrace.hitVec, side, Vec3(offsetPos), !raycast)
-                ), rotation
+                ), finalRotation
             )
         }
 

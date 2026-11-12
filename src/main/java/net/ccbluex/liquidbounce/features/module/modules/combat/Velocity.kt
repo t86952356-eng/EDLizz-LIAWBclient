@@ -62,7 +62,8 @@ object Velocity : Module("Velocity", Category.COMBAT) {
             "Click", "BlocksMC", "GrimCombat", "Polar", "Buffer", "Grim",
             "NoSave", "WatchdogNCP-New", "Matrix", "Intave", "Vulcan-New",
             "Grim-New", "Grim 2", "Watchdog-Protection", "MMC",
-            "MatrixBoost", "IntaveNew"
+            "MatrixBoost", "IntaveNew", "Watchdog-ProtectionNew", "AttackReduce",
+            "MatrixReduce2", "MatrixReduce3"
         ), "Simple"
     )
 
@@ -71,7 +72,9 @@ object Velocity : Module("Velocity", Category.COMBAT) {
         WatchdogNCPVelocityMode, MatrixVelocityMode, IntaveVelocityMode,
         VulcanNewVelocityMode, GrimNewVelocityMode, Grim2VelocityMode,
         WatchdogPredictionVelocityMode, MMCVelocityMode,
-        MatrixBoostVelocityMode, IntaveNewVelocityMode
+        MatrixBoostVelocityMode, IntaveNewVelocityMode,
+        WatchdogProtectionNewVelocityMode, AttackReduceVelocityMode,
+        MatrixReduce2VelocityMode, MatrixReduce3VelocityMode
     )
 
     private val velocityMode get() = velocityModes.firstOrNull { it.modeName == mode }
@@ -124,6 +127,78 @@ object Velocity : Module("Velocity", Category.COMBAT) {
     private val velIntaveNewMoveFix by choices(
         "IntaveMoveFixMode", arrayOf("None", "GameSettings", "Strafe"), "None"
     ) { mode == "IntaveNew" }
+
+    // ---- Watchdog-ProtectionNew（源 NewVelocity 五模式合并体）选项 ----
+    private val velWpnPolarJump by boolean("PolarJump", true) { mode == "Watchdog-ProtectionNew" }
+    private val velWpnIntave by boolean("Intave", true) { mode == "Watchdog-ProtectionNew" }
+    private val velWpnIntave2 by boolean("Intave2", true) { mode == "Watchdog-ProtectionNew" }
+    private val velWpnAirJumpReset by boolean("AirJumpReset", true) { mode == "Watchdog-ProtectionNew" }
+    private val velWpnPrediction by boolean("Prediction", true) { mode == "Watchdog-ProtectionNew" }
+
+    // Prediction
+    private val velWpnBlinkTicks by int("BlinkTicks", 5, 1..10) {
+        mode == "Watchdog-ProtectionNew" && velWpnPrediction
+    }
+
+    // Intave
+    private val velWpnBlinkWorkMaxDistance by float("BlinkWorkMaxDistance", 3.5f, 0.0f..6.0f) {
+        mode == "Watchdog-ProtectionNew" && velWpnIntave
+    }
+    private val velWpnMaxBlinkTicks by int("MaxBlinkTicks", 10, 0..10) {
+        mode == "Watchdog-ProtectionNew" && velWpnIntave
+    }
+    private val velWpnIntaveJumpReset by boolean("IntaveJumpReset", true) {
+        mode == "Watchdog-ProtectionNew" && velWpnIntave
+    }
+    private val velWpnForceSprintJump by boolean("ForceSprintJump", false) {
+        mode == "Watchdog-ProtectionNew" && velWpnIntave && velWpnIntaveJumpReset
+    }
+    private val velWpnForceSprintJumpNeedForward by boolean("ForceSprintJumpNeedForward", true) {
+        mode == "Watchdog-ProtectionNew" && velWpnIntave && velWpnIntaveJumpReset && velWpnForceSprintJump
+    }
+    private val velWpnExtraC0A by boolean("ExtraC0APerReduce", false) {
+        mode == "Watchdog-ProtectionNew" && velWpnIntave
+    }
+    private val velWpnExtraC0ACount by int("ExtraC0APacketCount", 1, 1..5) {
+        mode == "Watchdog-ProtectionNew" && velWpnIntave && velWpnExtraC0A
+    }
+    private val velWpnMoreReduce by boolean("MoreReduce", false) {
+        mode == "Watchdog-ProtectionNew" && velWpnIntave
+    }
+    private val velWpnMaxMoreReduce by int("MaxMoreReduceCount", 3, 1..6) {
+        mode == "Watchdog-ProtectionNew" && velWpnIntave && velWpnMoreReduce
+    }
+    private val velWpnOnlyWhenNeed by boolean("OnlyWhenNeed", true) {
+        mode == "Watchdog-ProtectionNew" && velWpnIntave
+    }
+    private val velWpnIntaveSafe by boolean("IntaveSafe", true) {
+        mode == "Watchdog-ProtectionNew" && velWpnIntave
+    }
+
+    // Intave2
+    private val velWpnMinFactor by float("MinFactor", 0.4f, 0f..1f) {
+        mode == "Watchdog-ProtectionNew" && velWpnIntave2
+    }
+
+    // AllowWorkWhen（源 multiChoices OnGround/InAir 的两项）
+    private val velWpnWorkOnGround by boolean("WorkOnGround", true) { mode == "Watchdog-ProtectionNew" }
+    private val velWpnWorkInAir by boolean("WorkInAir", true) { mode == "Watchdog-ProtectionNew" }
+
+    private val velWpnDebug by boolean("DebugMessage", false) { mode == "Watchdog-ProtectionNew" }
+
+    // ---- AttackReduce（源 NewVelocity）选项 ----
+    private val velAttackReduceFactor by float("AttackXZFactor", 0.6f, 0.0f..1.0f) { mode == "AttackReduce" }
+    private val velAttackHurtTime by intRange("AttackHurtTime", 9..9, 1..10) { mode == "AttackReduce" }
+
+    // ---- MatrixReduce3（源 Velocity）选项 ----
+    private val velMatrixReduce3Boost by boolean("BoostAfterReduce", false) { mode == "MatrixReduce3" }
+    private val velMatrixReduce3BoostFactor by float("BoostFactor", 0.33f, 0.0f..5.0f) {
+        mode == "MatrixReduce3" && velMatrixReduce3Boost
+    }
+    private val velMatrixReduce3BoostDelay by int("BoostCooldown", 0, 0..2000, "ms") {
+        mode == "MatrixReduce3" && velMatrixReduce3Boost
+    }
+    private val velMatrixReduce3KeepMotionY by boolean("KeepMotionYVelocity", true) { mode == "MatrixReduce3" }
 
     private val horizontal by float("Horizontal", 0F, -1F..1F) { mode in arrayOf("Simple", "AAC", "Legit") }
     private val vertical by float("Vertical", 0F, -1F..1F) { mode in arrayOf("Simple", "Legit") }
@@ -305,6 +380,36 @@ object Velocity : Module("Velocity", Category.COMBAT) {
         IntaveNewVelocityMode.hurtTimeMax = velIntaveNewHurtMax
         IntaveNewVelocityMode.onlySprint = velIntaveNewOnlySprint
         IntaveNewVelocityMode.intaveMoveFixMode = velIntaveNewMoveFix
+
+        WatchdogProtectionNewVelocityMode.polarJumpEnabled = velWpnPolarJump
+        WatchdogProtectionNewVelocityMode.intaveEnabled = velWpnIntave
+        WatchdogProtectionNewVelocityMode.intave2Enabled = velWpnIntave2
+        WatchdogProtectionNewVelocityMode.airJumpResetEnabled = velWpnAirJumpReset
+        WatchdogProtectionNewVelocityMode.predictionEnabled = velWpnPrediction
+        WatchdogProtectionNewVelocityMode.blinkTicks = velWpnBlinkTicks
+        WatchdogProtectionNewVelocityMode.blinkWorkMaxDistance = velWpnBlinkWorkMaxDistance
+        WatchdogProtectionNewVelocityMode.maxBlinkTicks = velWpnMaxBlinkTicks
+        WatchdogProtectionNewVelocityMode.intaveJumpReset = velWpnIntaveJumpReset
+        WatchdogProtectionNewVelocityMode.intaveJumpResetSprint = velWpnForceSprintJump
+        WatchdogProtectionNewVelocityMode.intaveJumpResetNeedForward = velWpnForceSprintJumpNeedForward
+        WatchdogProtectionNewVelocityMode.extraC0APerReduce = velWpnExtraC0A
+        WatchdogProtectionNewVelocityMode.extraPacketCount = velWpnExtraC0ACount
+        WatchdogProtectionNewVelocityMode.moreReduce = velWpnMoreReduce
+        WatchdogProtectionNewVelocityMode.maxMoreReduce = velWpnMaxMoreReduce
+        WatchdogProtectionNewVelocityMode.onlyWhenNeed = velWpnOnlyWhenNeed
+        WatchdogProtectionNewVelocityMode.intaveSafe = velWpnIntaveSafe
+        WatchdogProtectionNewVelocityMode.minFactor = velWpnMinFactor
+        WatchdogProtectionNewVelocityMode.workOnGround = velWpnWorkOnGround
+        WatchdogProtectionNewVelocityMode.workInAir = velWpnWorkInAir
+        WatchdogProtectionNewVelocityMode.debugMessage = velWpnDebug
+
+        AttackReduceVelocityMode.attackReduceFactor = velAttackReduceFactor
+        AttackReduceVelocityMode.attackHurtTime = velAttackHurtTime
+
+        MatrixReduce3VelocityMode.boostAfterReduce = velMatrixReduce3Boost
+        MatrixReduce3VelocityMode.boostFactor = velMatrixReduce3BoostFactor
+        MatrixReduce3VelocityMode.boostDelay = velMatrixReduce3BoostDelay
+        MatrixReduce3VelocityMode.keepMotionY = velMatrixReduce3KeepMotionY
     }
 
     val onUpdate = handler<UpdateEvent> {

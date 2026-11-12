@@ -35,7 +35,6 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.Criticals
 import net.ccbluex.liquidbounce.features.module.modules.combat.FakeLag
 import net.ccbluex.liquidbounce.features.module.modules.combat.FastBow
 import net.ccbluex.liquidbounce.features.module.modules.combat.ForwardTrack
-import net.ccbluex.liquidbounce.features.module.modules.combat.GrimCritical
 import net.ccbluex.liquidbounce.features.module.modules.combat.GunHack
 import net.ccbluex.liquidbounce.features.module.modules.combat.HitBox
 import net.ccbluex.liquidbounce.features.module.modules.combat.HypixelAimbot

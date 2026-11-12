@@ -11,8 +11,11 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.movement.nowebmodes.aac.AAC
 import net.ccbluex.liquidbounce.features.module.modules.movement.nowebmodes.aac.LAAC
+import net.ccbluex.liquidbounce.features.module.modules.movement.nowebmodes.intave.Intave14
 import net.ccbluex.liquidbounce.features.module.modules.movement.nowebmodes.intave.IntaveNew
 import net.ccbluex.liquidbounce.features.module.modules.movement.nowebmodes.intave.IntaveOld
+import net.ccbluex.liquidbounce.features.module.modules.movement.nowebmodes.other.Matrix
+import net.ccbluex.liquidbounce.features.module.modules.movement.nowebmodes.other.MatrixNewNoWebMode
 import net.ccbluex.liquidbounce.features.module.modules.movement.nowebmodes.other.None
 import net.ccbluex.liquidbounce.features.module.modules.movement.nowebmodes.other.OldGrim
 import net.ccbluex.liquidbounce.features.module.modules.movement.nowebmodes.other.Rewi
@@ -29,10 +32,14 @@ object NoWeb : Module("NoWeb", Category.MOVEMENT) {
         // Intave
         IntaveOld,
         IntaveNew,
+        Intave14,
 
         // Other
         Rewi,
-        OldGrim
+        OldGrim,
+
+        // 新增模式
+        Matrix, MatrixNewNoWebMode
     )
 
     private val modes = noWebModes.map { it.modeName }.toTypedArray()
@@ -41,7 +48,27 @@ object NoWeb : Module("NoWeb", Category.MOVEMENT) {
         "Mode", modes, "None"
     )
 
+    // ---- MatrixNew（NoWeb）选项 ----
+    private val matrixNoWebThreshold by int("MatrixNew-ThresholdTicks", 4, 0..20) { mode == "MatrixNew" }
+    private val matrixShowThresholdTicks by boolean("MatrixNew-ShowThresholdTicks", false) { mode == "MatrixNew" }
+    private val matrixKeepY by boolean("KeepY", false) { mode == "MatrixNew" }
+
+    private fun syncNoWebModeSettings() {
+        MatrixNewNoWebMode.noWebThreshold = matrixNoWebThreshold
+        MatrixNewNoWebMode.showThresholdTicks = matrixShowThresholdTicks
+        MatrixNewNoWebMode.keepY = matrixKeepY
+    }
+
+    override fun onEnable() {
+        modeModule.onEnable()
+    }
+
+    override fun onDisable() {
+        modeModule.onDisable()
+    }
+
     val onUpdate = handler<UpdateEvent> {
+        syncNoWebModeSettings()
         modeModule.onUpdate()
     }
 
