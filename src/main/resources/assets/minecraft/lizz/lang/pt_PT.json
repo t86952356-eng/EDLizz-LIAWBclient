@@ -26,7 +26,6 @@
 
         "module.autoClicker.description": "Constantemente cliqua quando se preme num botão dum rato.",
 
-        "module.autoLeave.description": "Automaticamente faz te deixar um servidor quando a tua vida está baixa.",
 
         "module.autoPot.description": "Automaticamente atira poções de regeneração.",
 
@@ -60,7 +59,6 @@
 
         "module.teleportHit.description": "Permite que tu ataques jogadores de longe.",
 
-        "module.tNTBlock.description": "Automatically blocks with your sword when TNT around you explodes.",
 
         "module.velocity.description": "Permite que tu modifiques a quantidade de \"\"knockback\"\" que tu levas.",
 
@@ -71,11 +69,9 @@
 
         "module.clip.description": "UNTRANSLATED: Allows you to clip through blocks.",
 
-        "module.antiBounce.description": "UNTRANSLATED: Prevents you from bouncing on blocks.",
         
         "module.animations.description": "UNTRANSLATED: Customizes your blocking animation.",
         
-        "module.antiAFK.description": "UNTRANSLATED: Prevents you from getting kicked for being AFK.",
         
         "module.antiBlind.description": "Cancela efeitos de cegueira.",
         
@@ -83,7 +79,6 @@
 
         "module.antiExploit.description": "UNTRANSLATED: Prevents server from crashing you.",
         
-        "module.antiCactus.description": "Prevém cactos de te magoar.",
         
         "module.antiFireBall.description": "Automaticamente ataqua \"\"fireballs\"\" para fora do teu redor.",
 
@@ -95,17 +90,13 @@
         
         "module.autoAccount.description": "UNTRANSLATED: Most feature-packed auto register/login & account manager.",
         
-        "module.autoBreak.description": "Automaticamente quebra o bloco que estás a olhar em.",
         
-        "module.autoFish.description": "UNTRANSLATED: Automatically catches fish when using a rod.",
 
         "module.autoProjectile.description": "UNTRANSLATED: Automatically throws egg/snowball.",
         
-        "module.autoRespawn.description": "UNTRANSLATED: Automatically respawns you after dying.",
         
         "module.autoTool.description": "Automaticamente seleciona o melhor instrumento no teu inventário para destruir um bloco.",
         
-        "module.autoWalk.description": "Automaticamente faz te andar.",
         
         "module.blink.description": "Suspende todos os \"\"packets\"\" de movimento.",
 
@@ -119,7 +110,6 @@
 
         "module.breadcrumbs.description": "Deixa uma trilha atrás de tí.",
         
-        "module.bufferSpeed.description": "Permite que tu andes mais rápido em lajes e escadas.",
         
         "module.cameraClip.description": "Permite que tu vejas atráves de paredes na vista de terceira pessoa.",
         
@@ -129,7 +119,6 @@
         
         "module.chestStealer.description": "Automaticamente rouba todos os items de um cofre.",
         
-        "module.civBreak.description": "Permite que tu quebres blocos instantaneamente.",
         
         "module.clickGUI.description": "Abre o ClickGUI.",
         
@@ -153,7 +142,6 @@
         
         "module.fastPlace.description": "UNTRANSLATED: Allows you to place blocks faster.",
         
-        "module.fastStairs.description": "UNTRANSLATED: Allows you to climb up stairs faster.",
         
         "module.fastUse.description": "UNTRANSLATED: Allows you to use items faster.",
 
@@ -184,7 +172,6 @@
         
         "module.highJump.description": "Permite que tu saltes mais alto.",
         
-        "module.iceSpeed.description": "Permite que tu andes mais rápido em gelo.",
         
         "module.inventoryCleaner.description": "UNTRANSLATED: Automatically throws away useless items.",
         
@@ -196,7 +183,6 @@
 
         "module.itemPhysics.description": "UNTRANSLATED: Allows dropped items to have physics",
         
-        "module.keepAlive.description": "Tenta prevenir que tu morras.",
         
         "module.keepContainer.description": "UNTRANSLATED: Allows you to open a formerly closed inventory container everywhere. (Press INSERT Key to open)",
 
@@ -207,7 +193,6 @@
         "module.liquidChat.description": "Permite que tu fales com outros utilizadores do LiquidBounce.",
         
         
-        "module.liquids.description": "Permite que tu interajas com líquidos.",
         
         "module.longJump.description": "UNTRANSLATED: Allows you to jump further.",
         
@@ -229,7 +214,6 @@
         
         "module.noFall.description": "UNTRANSLATED: Prevents you from taking fall damage.",
         
-        "module.noFluid.description": "UNTRANSLATED: Ignore fluids like water and lava.",
         
         "module.noHurtCam.description": "UNTRANSLATED: Disables hurt cam effect when getting hurt.",
         
@@ -255,7 +239,6 @@
         
         "module.parkour.description": "UNTRANSLATED: Automatically jumps when reaching the edge of a block.",
         
-        "module.perfectHorseJump.description": "UNTRANSLATED: Automatically jumps when the jump bar of a horse is filled up completely.",
         
         "module.phase.description": "UNTRANSLATED: Allows you to walk through blocks.",
         
@@ -265,7 +248,6 @@
         
         "module.portalMenu.description": "UNTRANSLATED: Allows you to open a menu while being in a portal.",
         
-        "module.potionSaver.description": "UNTRANSLATED: Freezes all potion effects while you are standing still.",
         
         "module.projectiles.description": "UNTRANSLATED: Allows you to see where arrows will land.",
         
@@ -279,11 +261,9 @@
         
         "module.resourcePackSpoof.description": "UNTRANSLATED: Prevents servers from forcing you to download their resource pack.",
         
-        "module.reverseStep.description": "UNTRANSLATED: Allows you to step down blocks faster.",
         
         "module.rotations.description": "UNTRANSLATED: Allows you to see server-sided head and body rotations.",
         
-        "module.safeWalk.description": "UNTRANSLATED: Prevents you from falling down as if you were sneaking.",
         
         "module.scaffold.description": "UNTRANSLATED: Automatically places blocks beneath your feet.",
         
@@ -291,11 +271,9 @@
         
         "module.skinDerp.description": "UNTRANSLATED: Makes your skin blink (Requires multi-layer skin).",
 
-        "module.slimeJump.description": "UNTRANSLATED: Allows you to to jump higher on slime blocks.",
 
         "module.silentHotbar.description": "UNTRANSLATED: Controls in which scenarios the silently selected item should be rendered.",
         
-        "module.sneak.description": "UNTRANSLATED: Automatically sneaks all the time.",
         
         "module.spammer.description": "UNTRANSLATED: Spams the chat with a given message.",
         
@@ -325,7 +303,6 @@
         
         "module.vehicleOneHit.description": "Permite que tu quebres veículus em um único ataque.",
         
-        "module.wallClimb.description": "Permite que tu subas paredes como uma aranha.",
         
         "module.xRay.description": "Permite que tu vejas minérios através de paredes.",
         

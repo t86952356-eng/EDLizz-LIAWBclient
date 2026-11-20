@@ -13,8 +13,6 @@ import net.ccbluex.liquidbounce.features.module.modules.exploit.PortalMenu;
 import net.ccbluex.liquidbounce.features.module.modules.fun.Derp;
 import net.ccbluex.liquidbounce.features.module.modules.movement.InventoryMove;
 import net.ccbluex.liquidbounce.features.module.modules.movement.NoSlow;
-import net.ccbluex.liquidbounce.features.module.modules.movement.NoSprint;
-import net.ccbluex.liquidbounce.features.module.modules.movement.Sneak;
 import net.ccbluex.liquidbounce.features.module.modules.movement.Sprint;
 import net.ccbluex.liquidbounce.features.module.modules.render.FreeCam;
 import net.ccbluex.liquidbounce.features.module.modules.render.NoSwing;
@@ -40,12 +38,7 @@ import net.minecraft.crash.CrashReportCategory;
 import net.minecraft.entity.Entity;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemSword;
-import net.minecraft.item.ItemFood;
-import net.minecraft.item.ItemPotion;
-import net.minecraft.item.ItemBucketMilk;
-import net.minecraft.item.ItemStack;
-import net.ccbluex.liquidbounce.utils.client.ViaUseItem;
-import com.viaversion.viaversion.api.protocol.version.ProtocolVersion;
+import net.minecraft.util.*;
 import de.florianmichael.vialoadingbase.ViaLoadingBase;
 import net.minecraft.network.play.client.C03PacketPlayer;
 import net.minecraft.network.play.client.C0APacketAnimation;
@@ -152,12 +145,10 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
         EventManager.INSTANCE.call(motionEvent);
 
         final InventoryMove inventoryMove = InventoryMove.INSTANCE;
-        final Sneak sneak = Sneak.INSTANCE;
         final Derp derp = Derp.INSTANCE;
 
         final boolean fakeSprint = inventoryMove.handleEvents() && inventoryMove.getAacAdditionPro()
                 || AntiHunger.INSTANCE.handleEvents()
-                || sneak.handleEvents() && (!PlayerExtensionKt.isMoving(mc.thePlayer) || !sneak.getStopMove()) && sneak.getMode().equals("MineSecure")
                 || Disabler.INSTANCE.handleEvents() && Disabler.INSTANCE.getStartSprint();
 
         boolean sprinting = isSprinting() && !fakeSprint;
@@ -172,7 +163,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
 
         boolean sneaking = isSneaking();
 
-        if (sneaking != serverSneakState && (!sneak.handleEvents() || sneak.getMode().equals("Legit"))) {
+        if (sneaking != serverSneakState) {
             if (sneaking)
                 sendQueue.addToSendQueue(new C0BPacketEntityAction((EntityPlayerSP) (Object) this, START_SNEAKING));
             else sendQueue.addToSendQueue(new C0BPacketEntityAction((EntityPlayerSP) (Object) this, STOP_SNEAKING));
@@ -443,10 +434,6 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
         EventManager.INSTANCE.call(PostSprintUpdateEvent.INSTANCE);
 
         sprint.correctSprintState(modifiedInput, isUsingItem);
-
-        if (NoSprint.INSTANCE.handleEvents()) {
-            NoSprint.INSTANCE.stopSprinting();
-        }
 
         if (capabilities.allowFlying) {
             if (mc.playerController.isSpectatorMode()) {
@@ -850,21 +837,5 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
     private void postTickEvent(CallbackInfo ci) {
         final PlayerTickEvent tickEvent = new PlayerTickEvent(EventState.POST);
         EventManager.INSTANCE.call(tickEvent);
-
-        // ---- 跨版本吃食物保活（MoonLight 手法）----
-        // 1.8 客户端只发一次 C08 就等服务器驱动进食；但跨 1.9+ 协议（ViaForge 跨 1.9/1.12.2
-        // 再进 1.8 服）时，客户端本地进食计时器还在走，服务端侧却可能因协议转换丢掉
-        // 「持续使用物品」的状态 → 金苹果/药水吃到一半被打断、吃不完。
-        // 这里在「正在使用物品 + 手持可食用物」时，每个 tick 通过 Via 管线补发一个
-        // 1.9 的 Use Item，让服务端始终认为你在持续进食，恢复跨版本正常吃。
-        if (net.ccbluex.liquidbounce.features.module.modules.player.Gapple.INSTANCE.isViaKeepAlive()
-                && ViaUseItem.isCrossVersionTo9Plus() && isUsingItem()) {
-            final ItemStack held = getHeldItem();
-            if (held != null && (held.getItem() instanceof ItemFood
-                    || held.getItem() instanceof ItemPotion
-                    || held.getItem() instanceof ItemBucketMilk)) {
-                ViaUseItem.sendUseItem();
-            }
-        }
     }
 }

@@ -12,7 +12,6 @@ import net.ccbluex.liquidbounce.event.RotationSetEvent;
 import net.ccbluex.liquidbounce.event.StrafeEvent;
 import net.ccbluex.liquidbounce.features.module.modules.combat.HitBox;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.NoPitchLimit;
-import net.ccbluex.liquidbounce.features.module.modules.movement.NoFluid;
 import net.ccbluex.liquidbounce.features.module.modules.render.FreeCam;
 import net.ccbluex.liquidbounce.injection.implementations.IMixinEntity;
 import net.minecraft.block.Block;
@@ -290,20 +289,6 @@ public abstract class MixinEntity implements IMixinEntity {
 
     @Unique
     private boolean strafeEventReplaying = false;
-
-    @Inject(method = "isInWater", at = @At("HEAD"), cancellable = true)
-    private void isInWater(final CallbackInfoReturnable<Boolean> cir) {
-        if (NoFluid.INSTANCE.handleEvents() && NoFluid.INSTANCE.getWaterValue()) {
-            cir.setReturnValue(false);
-        }
-    }
-
-    @Inject(method = "isInLava", at = @At("HEAD"), cancellable = true)
-    private void isInLava(final CallbackInfoReturnable<Boolean> cir) {
-        if (NoFluid.INSTANCE.handleEvents() && NoFluid.INSTANCE.getLavaValue()) {
-            cir.setReturnValue(false);
-        }
-    }
 
     @Inject(method = "getPositionEyes", at = @At("RETURN"), cancellable = true)
     private void hookFreeCamModifiedRaycast(float tickDelta, CallbackInfoReturnable<Vec3> cir) {

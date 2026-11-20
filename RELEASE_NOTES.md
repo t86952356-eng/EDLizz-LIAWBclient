@@ -1,17 +1,27 @@
-# Lizz b12.15 — Changelog (4 new modes)
+# Lizz b12.16 — Changelog (ClickGUI "Menu" style + big module cleanup)
 
-## Fly — new mode
+## ClickGUI — new StyleSettings option: Menu
 
-- **WatchdogDamage** — a six-state damage flight: on the first grounded tick it sends the self-damage ladder (3.1 blocks of up/down position packets, jump-potion aware, rate-limited against your recent packet count), then flies with the classic stage machine (boost → jump ×2.145 → 0.66 recovery → triple-formula friction decay) while keeping the timer boosted for a configurable window; every other grounded tick nudges your client position by a 1e-9 offset. If you enable it high in the air (**Drop**), it freezes your fall over the void — all outgoing packets are held (blinked) while nothing solid is below you, and it auto-disables on ground, low health or after 3s. The **Disabler** branch can start a 3-second free-flight window three ways: throwing an **Ender pearl** (silent slot + 90° down rotation, the window opens when the server accepts the pearl teleport), throwing a **Fireball**, or the **Packet** hover (y+0.2/y+0.1 position ladder, then waits ~4s for the check to drop). Options: Speed, Damage (Normal/Wait/None), Timer enable/speed/time, Drop enable/speed, Disabler enable + methods (Ender pearl / Fireball / Packet) + horizontal & vertical speed, and Bobbing (None / Normal only / Always).
+- **Menu** (StyleSettings → Normal / Best / **Menu**, Classic layout with the LiquidBounce or Fatality style) — a unified settings panel: right-click any module and its settings open in one **Panel Menu anchored above that category's main list**, overlaying it without moving the module rows. Select another module and the same panel switches to it (one panel for everything — a unified interface). The panel carries a title bar with the module name and a close button, opens with a smooth grow animation, scrolls with the mouse wheel when the settings are longer than the list, follows its category panel when you drag it, never extends past the panel's content bounds (same boundary rule as the Best drawer), and reuses the `LB-SettingsDrawerColor` background color. Right-clicking the same module again, clicking the ✕, clicking empty space, or collapsing the category closes it. While Menu is active, modules no longer expand their old inline right-side settings — all settings live in the unified panel. Normal and Best behave exactly as before.
 
-## LongJump — new mode
+## Removed modules (permanent cleanup — deleted from source)
 
-- **WatchdogNCP-New** — speed-potion friction long jump: requires an active Speed potion (auto-disables with a notice otherwise); charges the initial speed, jumps with potion-aware 0.42 motion ×2.149, then on the first airborne tick recovers with the 0.66 drop ×2.2 boost (reduced per Jump potion level) and afterwards decays through the 159/25 friction denominators — auto-disabling the moment you land.
+48 rarely-used / outdated modules were removed permanently, including their files, registrations, mixins, hooks and language entries:
 
-## NoSlow — new mode
+- **Combat (8):** ArmorBreak, AutoLeave, CSGOFight, GunHack, JKLArBreak, MoreDamage, Strict, TNTBlock
+- **Player (16):** AntiAFK, AntiCactus, AutoFish, AutoJump, AutoL, AutoRespawn, AutoWaterFall, AvoidHazards, Gapple, Gapple2, Hub, KeepAlive, KeyPearl, PotionSaver, PotionSpoof, SaveArmor
+- **Movement (19):** AntiBounce, AutoSave, AutoWalk, BloxdMove, BufferSpeed, Entityspeed, FastStairs, GhostMove, IceSpeed, NCPSpeed, NoFluid, NoSprint, PerfectHorseJump, ReverseStep, SafeWalk, SendMovePackets, SlimeJump, Sneak, WallClimb
+- **World (5):** AutoBreak, CivBreak, Liquids, Stealer, Stuck
 
-- **WatchdogNCP-Full** — the sword packet-hold no-slow: the moment you right-click with a sword, your use/swing/attack (and slot-switch-during-attack) packets are held back and only flushed **after** that tick's position packet, so the server sees the block start at your settled position; right-clicks aiming at interactive blocks (chests, doors, fences, …) are suppressed so you never accidentally open them, sneaking explicitly allows interacting, and the item slowdown itself is fully removed while the mode is on.
+Along with the modules themselves, their dedicated mixin hooks were removed (slime-block bounce cancel, liquid collision, water/lava "no fluid" checks, the Sneak fake-sprint/sneak-sync patches, the NoSprint sprint cancel, and the Gapple cross-version eat keep-alive). Everything else in the client is untouched.
 
-## Criticals — new mode
+## Velocity — removed outdated modes
 
-- **WatchdogNCP-Packet** — server-perspective crits: tracks the fall distance the server actually sees (from your reported positions), and while you're grounded and not already offset it lifts the outgoing motion packet by 0.0301 so the server believes you're airborne — your next hits crit without any fake packets. When the predicted fall distance crosses 3 blocks it reports onGround instead (vanilla would cancel crits), and attacks played while the server thinks you're falling get the critical hit animation client-side.
+Six legacy anti-cheat modes were removed from Velocity: **AAC, AACPush, AACZero, AACv4, SmoothReverse, GrimC03** (together with their settings: AACPushXZReducer, AACPushYReducer, AACv4MotionReducer, SmoothReverseStrength). All other Velocity modes are unchanged. If a saved config selected one of the removed modes it safely falls back to Simple.
+
+## Files
+
+| File | Description |
+|---|---|
+| `lizz-b12.16.jar` | The ready-to-use mod (Forge 1.8.9) |
+| `lizz-b12.16-source.zip` | Full source code of this build |

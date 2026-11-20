@@ -10,7 +10,6 @@ import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura
-import net.ccbluex.liquidbounce.features.module.modules.player.Gapple
 import net.ccbluex.liquidbounce.utils.client.BlinkUtils
 import net.ccbluex.liquidbounce.utils.client.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.client.ViaUseItem
@@ -378,7 +377,7 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false) {
             }
         }
 
-        if (heldItem.item is ItemSword && isUsingItem && !Gapple.eating) {
+        if (heldItem.item is ItemSword && isUsingItem) {
             when (swordMode.lowercase()) {
                 "postplace" ->
                     if (event.eventState == EventState.PRE) {
@@ -776,7 +775,7 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false) {
      * 之后的 RELEASE / S2F 槽位重置全被吞掉，吃照常吃完（假吃期间 foodSpeed=1）。
      */
     private fun updateMoonGapple(heldItem: ItemStack) {
-        if (heldItem.item !is ItemAppleGold || Gapple.eating) return
+        if (heldItem.item !is ItemAppleGold) return
 
         if (mc.gameSettings.keyBindUseItem.isKeyDown) {
             if (moonEat) {

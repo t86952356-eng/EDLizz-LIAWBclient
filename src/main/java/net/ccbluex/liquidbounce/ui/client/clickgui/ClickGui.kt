@@ -33,6 +33,7 @@ import net.ccbluex.liquidbounce.ui.client.hud.HUD
 import net.ccbluex.liquidbounce.ui.client.hud.designer.GuiHudDesigner
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Notification
 import net.ccbluex.liquidbounce.ui.font.AWTFontRenderer.Companion.assumeNonVolatile
+import net.ccbluex.liquidbounce.ui.font.Fonts.fontSemibold35
 import net.ccbluex.liquidbounce.utils.attack.EntityUtils.Targets
 import net.ccbluex.liquidbounce.utils.client.ClientUtils
 import net.ccbluex.liquidbounce.utils.client.asResourceLocation
@@ -42,6 +43,8 @@ import net.ccbluex.liquidbounce.utils.kotlin.SharedScopes
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.deltaTime
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawImage
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRect
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRoundedBorder
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRoundedRect
 import net.minecraft.client.gui.GuiScreen
 import net.minecraft.client.gui.ScaledResolution
 import net.minecraft.client.renderer.GlStateManager.disableLighting
@@ -51,6 +54,7 @@ import org.lwjgl.input.Keyboard
 import org.lwjgl.input.Mouse
 import org.lwjgl.opengl.GL11
 import org.lwjgl.opengl.GL11.glScaled
+import java.awt.Color
 import kotlin.math.abs
 import kotlin.math.exp
 import kotlin.math.roundToInt
@@ -130,6 +134,27 @@ object ClickGui : GuiScreen() {
 
     private var zenithX = 0
     private var zenithY = 0
+
+    // ------------------------------------------------------------------ StyleSettings=Menu 状态
+
+    /** StyleSettings=Menu（Classic 布局）是否激活 —— 统一设置面板（Panel Menu） */
+    private val menuMode: Boolean
+        get() = mode == Mode.CLASSIC && ClickGUI.styleSettings == "Menu" && style.supportsSettingsBelow
+
+    /** 每个模块独立的菜单渲染元素（不干扰分类列表里那一行的状态） */
+    private val menuElements = HashMap<Module, ModuleElement>()
+
+    /** 当前在统一 Menu 面板里展示设置的模块（一次只有一个 —— 统一接口） */
+    private var menuElement: ModuleElement? = null
+
+    /** menuElement 所属的分类面板（Menu 锚定在它的主列表上方） */
+    private var menuHostPanel: Panel? = null
+
+    private var menuScroll = 0F
+    private var menuMaxScroll = 0F
+    private var menuProgress = 0F
+    private var menuBounds: FloatArray? = null
+    private var menuCloseBounds: FloatArray? = null
 
     // ------------------------------------------------------------------ classic 面板
 
@@ -330,15 +355,19 @@ object ClickGui : GuiScreen() {
         // StyleSettings=Best（Classic 布局）：设置面板以「抽屉」形式画在模块行正下方，
         // 下方的模块自动下移；设置宽度被限制在分类面板边界内。
         // Normal（默认）：现有外观完全不变（设置面板画在行右侧）。
+        // Menu：模块行不再各自展开内联设置 —— 任何模块的设置都进统一的 Menu 面板。
         val drawerBest = ClickGUI.styleSettings == "Best" && style.supportsSettingsBelow
+        val menuActive = menuMode
         for (panel in panels) {
             for (element in panel.elements) {
                 if (element is ModuleElement) {
                     element.drawerStyle = drawerBest
                     element.settingsBelow = drawerBest
+                    if (menuActive) element.showSettings = false
                 }
             }
         }
+        if (!menuActive && menuElement != null) resetMenu()
 
         for (panel in panels) {
             panel.updateFade(deltaTime)
@@ -352,9 +381,20 @@ object ClickGui : GuiScreen() {
             LiquidBounceStyle.drawIrcPanel(ircProgress, mouseX, mouseY)
         }
 
+        // StyleSettings=Menu：统一设置面板 —— 画在所有分类面板之上，盖在宿主面板的主列表上方
+        if (menuMode) drawMenuPanel(mouseX, mouseY)
+
         descriptions@ for (panel in panels.reversed()) {
             // Don't draw hover text when hovering over a panel header.
             if (panel.isHovered(mouseX, mouseY)) break
+
+            // StyleSettings=Menu：悬停在统一菜单上时不显示被盖住的模块的描述
+            if (menuElement != null) {
+                val menuRect = menuBounds
+                if (menuRect != null && mouseX >= menuRect[0] && mouseX <= menuRect[2] &&
+                    mouseY >= menuRect[1] && mouseY <= menuRect[3]
+                ) break@descriptions
+            }
 
             for (element in panel.elements) {
                 if (element is ButtonElement) {
@@ -382,11 +422,24 @@ object ClickGui : GuiScreen() {
             if (wheel != 0) {
                 var handledScroll = false
 
-                // Handle foremost panel.
-                for (panel in panels.reversed()) {
-                    if (panel.handleScroll(mouseX, mouseY, wheel)) {
+                // StyleSettings=Menu：悬停在统一菜单上时滚轮只滚菜单内容（优先于分类列表）
+                if (menuMode && menuElement != null) {
+                    val menuRect = menuBounds
+                    if (menuRect != null && mouseX >= menuRect[0] && mouseX <= menuRect[2] &&
+                        mouseY >= menuRect[1] && mouseY <= menuRect[3]
+                    ) {
+                        menuScroll = (menuScroll - wheel / 10F).coerceIn(0F, menuMaxScroll)
                         handledScroll = true
-                        break
+                    }
+                }
+
+                if (!handledScroll) {
+                    // Handle foremost panel.
+                    for (panel in panels.reversed()) {
+                        if (panel.handleScroll(mouseX, mouseY, wheel)) {
+                            handledScroll = true
+                            break
+                        }
                     }
                 }
 
@@ -614,6 +667,187 @@ object ClickGui : GuiScreen() {
         GL11.glDisable(GL11.GL_SCISSOR_TEST)
     }
 
+    // ------------------------------------------------------------------ StyleSettings=Menu 面板
+
+    /**
+     * StyleSettings=Menu 的统一设置面板（Panel Menu）：
+     * 右键任意模块 → 它的设置显示在所属分类面板主列表上方的同一个菜单面板里。
+     *
+     * - 锚定宿主面板（拖动面板时菜单跟着走），高度不超过宿主面板当前内容高度，
+     *   永远罩在主列表范围内、不伸出面板边界（同 Best 抽屉的边界规则）。
+     * - 设置内容用与 Zenith 设置列同一套渲染（hideRow + settingsBelow + scissor），
+     *   可用滚轮滚动；点击由 [menuHandleMouseClicked] 转发给样式层处理。
+     */
+    private fun drawMenuPanel(mouseX: Int, mouseY: Int) {
+        val element = menuElement ?: return
+        val host = menuHostPanel
+
+        // 宿主面板被收起（或消失）→ 菜单一并关闭
+        if (host == null || !host.isVisible || !host.open || host.fade <= 0) {
+            resetMenu()
+            return
+        }
+
+        // 打开动画：缓出（0 → 1）
+        val remaining = 1F - menuProgress
+        menuProgress = if (remaining < 0.02F) 1F else menuProgress + remaining * 0.25F
+        val progress = menuProgress
+
+        val titleHeight = 15F
+        val menuX = host.x + 1F
+        val menuW = (host.width - 2).toFloat()
+        val contentTop = host.y + host.height - 2
+
+        // 菜单高度不超过宿主面板当前内容高度（罩在主列表范围内）
+        val maxH = (host.fade - 3).coerceAtLeast((titleHeight + 12).toInt()).toFloat()
+        // 首帧 settingsHeight 尚未计算 —— 先给个临时高度，画完一帧后自然校正
+        val contentH = if (element.settingsHeight > 0) element.settingsHeight.toFloat() else 80F
+        val menuH = (titleHeight + contentH + 9F).coerceAtMost(maxH)
+
+        val top = contentTop.toFloat()
+        val bottom = top + menuH * progress
+
+        // 背景 + 边框（与 Best 抽屉同一条配色）
+        drawRoundedRect(menuX, top, menuX + menuW, bottom, ClickGUI.lbSettingsDrawerColor.rgb, 3F)
+        drawRoundedBorder(menuX, top, menuX + menuW, bottom, 1F, ClickGUI.lbPanelBorderColor.rgb, 3F)
+
+        // 标题栏：模块名 + 右上角关闭按钮（hover 变红，同 IRC 面板）
+        fontSemibold35.drawString(element.displayName, (menuX + 5F).roundToInt(), (top + 4F).roundToInt(), guiColor)
+
+        val closeSize = 11F
+        val closeLeft = menuX + menuW - closeSize - 4F
+        val closeTop = top + 2.5F
+        menuCloseBounds = floatArrayOf(closeLeft, closeTop, closeLeft + closeSize, closeTop + closeSize)
+        menuBounds = floatArrayOf(menuX, top, menuX + menuW, bottom)
+
+        val closeHovered = mouseX >= closeLeft && mouseX <= closeLeft + closeSize &&
+                mouseY >= closeTop && mouseY <= closeTop + closeSize
+        drawRoundedRect(
+            closeLeft, closeTop, closeLeft + closeSize, closeTop + closeSize,
+            if (closeHovered) Color(232, 17, 35, 235).rgb else Color(255, 255, 255, 26).rgb, 3F
+        )
+        fontSemibold35.drawString(
+            "x", (closeLeft + 3.5F).roundToInt(), (closeTop + 2F).roundToInt(),
+            if (closeHovered) Int.MAX_VALUE else Color(200, 200, 200).rgb
+        )
+
+        // 设置内容：与 Zenith 设置列同一套渲染，裁切到菜单内容区
+        val viewTop = top + titleHeight + 2F
+        val viewH = (bottom - viewTop - 2F).coerceAtLeast(0F)
+        if (viewH <= 0F) return
+
+        element.x = (menuX + 2F).roundToInt()
+        element.width = (menuW - 4F).roundToInt()
+        element.forceSettingsWidth((menuW - 4F).roundToInt())
+
+        menuMaxScroll = (contentH - viewH).coerceAtLeast(0F)
+        menuScroll = menuScroll.coerceIn(0F, menuMaxScroll)
+
+        // settingsBelow 把设置画在「行下方 3px」处 —— 把行推到内容区顶部之上
+        element.y = (viewTop - ModuleElement.ROW_HEIGHT - 3 - menuScroll).roundToInt()
+        element.hideRow = true
+        element.settingsBelow = true
+        element.drawerStyle = false
+        element.showSettings = true
+
+        beginScissor(menuX, viewTop, menuW, viewH)
+        style.drawModuleElementAndClick(mouseX, mouseY, element, null)
+        endScissor()
+    }
+
+    /**
+     * StyleSettings=Menu 的点击处理（在原面板逻辑之前拦截）：
+     * 1. 菜单已打开 → 关闭按钮 / 设置控件优先，区域内空白不穿透
+     * 2. 右键模块行 → 打开/切换统一菜单；再右键同一模块 = 关闭
+     * 3. 点到所有面板与菜单之外 → 关菜单（其余交给原逻辑）
+     */
+    private fun menuHandleMouseClicked(mouseX: Int, mouseY: Int, mouseButton: Int): Boolean {
+        val element = menuElement
+
+        if (element != null) {
+            // 关闭按钮
+            val close = menuCloseBounds
+            if (mouseButton == 0 && close != null && mouseX >= close[0] && mouseX <= close[2] &&
+                mouseY >= close[1] && mouseY <= close[3]
+            ) {
+                closeMenu()
+                return true
+            }
+
+            // 菜单区域内：设置控件吃掉的返回 true；区域内空白也吃掉（不穿透到下面的列表）
+            val bounds = menuBounds
+            if (mouseButton == 0 && bounds != null && mouseX >= bounds[0] && mouseX <= bounds[2] &&
+                mouseY >= bounds[1] && mouseY <= bounds[3]
+            ) {
+                style.drawModuleElementAndClick(mouseX, mouseY, element, mouseButton)
+                return true
+            }
+        }
+
+        if (mouseButton == 1) {
+            for (panel in panels.reversed()) {
+                if (!panel.isVisible) continue
+                // 面板头右键 = 原逻辑开关面板，这里直接放行
+                if (panel.isHovered(mouseX, mouseY)) return false
+
+                for (e in panel.elements) {
+                    if (e is ModuleElement && e.isVisible && e.y <= panel.y + panel.fade &&
+                        e.isHovered(mouseX, mouseY)
+                    ) {
+                        if (e.module === element?.module && panel === menuHostPanel) {
+                            closeMenu()
+                        } else if (e.module.values.any { it.shouldRender() }) {
+                            openMenu(e.module, panel)
+                        }
+                        return true
+                    }
+                }
+            }
+
+            return false
+        }
+
+        if (mouseButton == 0 && element != null) {
+            val inMenu = menuBounds?.let {
+                mouseX >= it[0] && mouseX <= it[2] && mouseY >= it[1] && mouseY <= it[3]
+            } == true
+            val inAnyPanel = panels.any { p ->
+                p.isVisible && mouseX >= p.x && mouseX <= p.x + p.width &&
+                        mouseY >= p.y && mouseY <= p.y + p.height + p.fade
+            }
+            if (!inMenu && !inAnyPanel) closeMenu()
+        }
+
+        return false
+    }
+
+    /** 在统一 Menu 里展示 [module] 的设置（锚定 [panel] 的主列表上方） */
+    private fun openMenu(module: Module, panel: Panel) {
+        menuElement = menuElements.getOrPut(module) { ModuleElement(module) }
+        menuHostPanel = panel
+        menuScroll = 0F
+        menuMaxScroll = 0F
+        menuProgress = 0F
+        menuBounds = null
+        menuCloseBounds = null
+        style.showSettingsSound()
+    }
+
+    private fun closeMenu() {
+        if (menuElement != null) style.clickSound()
+        resetMenu()
+    }
+
+    private fun resetMenu() {
+        menuElement = null
+        menuHostPanel = null
+        menuBounds = null
+        menuCloseBounds = null
+        menuScroll = 0F
+        menuMaxScroll = 0F
+        menuProgress = 0F
+    }
+
     // ------------------------------------------------------------------ 输入
 
     public override fun mouseClicked(screenMouseX: Int, screenMouseY: Int, mouseButton: Int) {
@@ -695,6 +929,9 @@ object ClickGui : GuiScreen() {
 
         mouseX = (screenMouseX / scale).roundToInt()
         mouseY = (screenMouseY / scale).roundToInt()
+
+        // StyleSettings=Menu：统一设置面板的点击（菜单本体 + 右键模块打开/切换/关闭）
+        if (menuMode && menuHandleMouseClicked(mouseX, mouseY, mouseButton)) return
 
         // Handle foremost panel.
         panels.reversed().forEachIndexed { _, panel ->
@@ -918,6 +1155,7 @@ object ClickGui : GuiScreen() {
         modulePanel = null
         settingsPanel = null
         settingsElement = null
+        resetMenu()
     }
 
     override fun onGuiClosed() {
@@ -925,6 +1163,7 @@ object ClickGui : GuiScreen() {
         closing = false
         openValue = 0f
         openVelocity = 0f
+        resetMenu()
         saveConfig(clickGuiConfig)
         Keyboard.enableRepeatEvents(false)
         for (panel in panels) panel.fade = 0

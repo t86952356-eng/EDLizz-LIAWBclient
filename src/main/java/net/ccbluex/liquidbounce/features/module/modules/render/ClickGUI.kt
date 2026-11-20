@@ -28,21 +28,24 @@ object ClickGUI : Module("ClickGUI", Category.RENDER, Keyboard.KEY_RSHIFT, canBe
      * - Normal：现有外观，完全不变（设置面板画在模块行右侧）
      * - Best  ：设置面板以「抽屉」形式展开在模块正下方，下方模块自动下移，
      *           设置宽度不超出分类（如 Combat）面板边界
+     * - Menu  ：统一设置面板（Panel Menu）—— 右键任意模块，它的设置显示在所属
+     *           分类面板主列表上方的同一个菜单面板里（一次只开一个，换模块即切换内容），
+     *           主列表本身不移动；面板带标题栏 + 关闭按钮，内容可滚动
      */
     val styleSettings by choices(
         "StyleSettings",
-        arrayOf("Normal", "Best"),
+        arrayOf("Normal", "Best", "Menu"),
         "Normal"
     ) { layout == "Classic" && style in arrayOf("LiquidBounce", "Fatality") }
 
     /**
-     * StyleSettings=Best 抽屉的背景色（默认深灰，区别于分类面板与模块行），
-     * 让展开的设置抽屉一眼能和面板背景/未展开的模块区分开。
+     * StyleSettings=Best 抽屉 / StyleSettings=Menu 统一面板的背景色（默认深灰，
+     * 区别于分类面板与模块行），让展开的设置区域一眼能和面板背景/未展开的模块区分开。
      */
     val lbSettingsDrawerColor by color(
         "LB-SettingsDrawerColor",
         Color(40, 40, 40, 235)
-    ) { layout == "Classic" && style in arrayOf("LiquidBounce", "Fatality") && styleSettings == "Best" }
+    ) { layout == "Classic" && style in arrayOf("LiquidBounce", "Fatality") && styleSettings != "Normal" }
 
     private val style by choices(
         "Style",

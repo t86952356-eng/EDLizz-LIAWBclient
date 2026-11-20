@@ -61,7 +61,6 @@
 
         "module.autoDisable.description": "根據指定事件自動停用特定模組。",
 
-        "module.autoLeave.description": "血量低時自動離開伺服器。",
 
         "module.autoPot.description": "血量低時自動丟擲治療藥水。",
 
@@ -97,7 +96,6 @@
 
         "module.teleportHit.description": "允許你手動攻擊時打擊遠處的生物。",
 
-        "module.tNTBlock.description": "當周圍的TNT爆炸時，自動用劍格擋。",
 
         "module.tNTTimer.description": "顯示一個計時器，指示距離附近TNT爆炸還有多長時間。",
 
@@ -112,11 +110,9 @@
 
         "module.clip.description": "允許你穿過方塊。",
 
-        "module.antiBounce.description": "防止你在方塊上彈跳.",
 
         "module.animations.description": "自定義格擋動畫。",
 
-        "module.antiAFK.description": "防止掛機時被踢。",
 
         "module.antiBlind.description": "消除失明效果。(視覺上)",
 
@@ -124,7 +120,6 @@
 
         "module.antiExploit.description": "防止伺服器當機你。",
 
-        "module.antiCactus.description": "防止受到仙人掌傷害。",
 
         "module.antiFireball.description": "自動打走火球。",
 
@@ -136,21 +131,16 @@
 
         "module.autoAccount.description": "功能豐富的自動註冊/登入和帳號管理器。",
 
-        "module.autoBreak.description": "自動破壞你瞄準的方塊。",
 
-        "module.autoFish.description": "切換到魚竿時自動釣魚。",
 
         "module.autoProjectile.description": "自動丟雞蛋/雪球。",
 
         "module.autoPlay.description": "自動為下一場比賽排隊。",
 
-        "module.autoRespawn.description": "死亡後自動重生。",
 
         "module.autoTool.description": "挖方塊時自動切換到快捷欄中最合適的工具。",
 
-        "module.autoWalk.description": "持續前進。",
 
-        "module.avoidHazards.description": "防止走進可能對你有害的方塊。",
 
         "module.blink.description": "掛起所有移動資料包(達到開關後瞬間移動的效果)。",
 
@@ -164,7 +154,6 @@
 
         "module.breadcrumbs.description": "在你身後留下足跡。",
 
-        "module.bufferSpeed.description": "允許你在階梯和樓梯上走得更快。",
 
         "module.cameraClip.description": "允許你在第三人稱視角中穿過牆壁看到另一邊。",
 
@@ -176,7 +165,6 @@
 
         "module.chestStealer.description": "自動拿走箱子里的物品。",
 
-        "module.civBreak.description": "允許你立即破壞所選的方塊。",
 
         "module.clickGUI.description": "打開功能介面。",
 
@@ -200,7 +188,6 @@
 
         "module.fastPlace.description": "允許你更快地放方塊。",
 
-        "module.fastStairs.description": "允許你更快地上樓梯。",
 
         "module.fastUse.description": "允許你更快地使用物品。",
 
@@ -231,7 +218,6 @@
 
         "module.highJump.description": "允許你跳得更高。",
 
-        "module.iceSpeed.description": "允許你在冰上走得更快。",
 
         "module.inventoryCleaner.description": "自動丟棄無用物品。",
 
@@ -243,20 +229,17 @@
 
         "module.itemPhysics.description": "使掉落物具有物理特性。",
 
-        "module.keepAlive.description": "嘗試防止你死去。",
 
         "module.keepContainer.description": "允許你在任何位置打開上次關閉的容器 (按INSERT鍵打開)",
 
         "module.keepTabList.description": "保持TAB列表打開",
 
-        "module.keyPearl.description": "允許你使用快捷鍵丟出在快捷欄中的末影珍珠。",
 
         "module.kick.description": "把自己踢出伺服器。",
 
         "module.liquidChat.description": "允許你與其他LiquidBounce用戶聊天。",
 
 
-        "module.liquids.description": "允許你與液體互動。",
 
         "module.longJump.description": "允許你跳得更遠。",
 
@@ -278,7 +261,6 @@
 
         "module.noFall.description": "防止你受到摔落傷害。",
 
-        "module.noFluid.description": "消除水和熔岩等流體造成的減速效果。",
 
         "module.noHurtCam.description": "禁用受傷時視角晃動效果。",
 
@@ -304,7 +286,6 @@
 
         "module.parkour.description": "到方塊邊緣自動跳躍幫助你完成跑酷。",
 
-        "module.perfectHorseJump.description": "自動在馬的跳躍進度條完全充滿時跳躍。",
 
         "module.phase.description": "允許你穿過方塊。",
 
@@ -314,9 +295,7 @@
 
         "module.portalMenu.description": "允許你在地獄傳送門中打開菜單。",
 
-        "module.potionSaver.description": "當你靜止不動時，凍結所有藥水效果。",
 
-        "module.potionSpoof.description": "讓你憑空獲得藥水效果。",
 
         "module.projectiles.description": "允許你看到投擲物的落點。",
 
@@ -330,11 +309,9 @@
 
         "module.resourcePackSpoof.description": "防止伺服器強制下載其資源包。",
 
-        "module.reverseStep.description": "允許你更快地走下方塊。",
 
         "module.rotations.description": "允許你看到你在伺服器端的身體旋轉。",
 
-        "module.safeWalk.description": "防止你在方塊邊緣掉落。",
 
         "module.scaffold.description": "自動在你的腳下放方塊。",
 
@@ -342,11 +319,9 @@
 
         "module.skinDerp.description": "讓你的皮膚閃爍 (需要多層皮膚)。",
 
-        "module.slimeJump.description": "允許你在粘液塊上跳得更高。",
 
         "module.silentHotbar.description": "在某些時候使選擇物品保持靜默。",
 
-        "module.sneak.description": "自動保持潛行。",
 
         "module.spammer.description": "使用指定的訊息在聊天框刷屏。",
 
@@ -378,7 +353,6 @@
 
         "module.vehicleOneHit.description": "允許你一擊就可破壞載具。",
 
-        "module.wallClimb.description": "允許你像蜘蛛一樣爬上牆壁。",
 
         "module.xRay.description": "允許你穿過牆壁看到礦石。",
 

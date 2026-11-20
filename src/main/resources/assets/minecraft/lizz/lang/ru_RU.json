@@ -25,7 +25,6 @@
 
         "module.autoClicker.description": "Кликает за вас при удержании кнопки атаки.",
 
-        "module.autoLeave.description": "Автоматически выходит с сервера при малом ХП.",
 
         "module.autoPot.description": "Автоматически кидает зелья исцеления.",
 
@@ -59,7 +58,6 @@
 
         "module.teleportHit.description": "Позволяет бить цели с большого расстояния.",
 
-        "module.tNTBlock.description": "Автоматический блок мечом при взрыве TNT.",
 
         "module.velocity.description": "Позволяет изменить количество получаемого КБ(сила отталкивания).",
 
@@ -72,11 +70,9 @@
 
         "module.clip.description": "Позволяет проходить сквозь блоки.",
 
-        "module.antiBounce.description": "UNTRANSLATED: Prevents you from bouncing on blocks.",
         
         "module.animations.description": "Кастомизация анимаций блокирования.",
         
-        "module.antiAFK.description": "Предотвращает кик за АФК.",
         
         "module.antiBlind.description": "Убирает эффект слепоты.",
         
@@ -84,7 +80,6 @@
 
         "module.antiExploit.description": "UNTRANSLATED: Prevents server from crashing you.",
         
-        "module.antiCactus.description": "Отключает урон от кактусов.",
         
         "module.antiFireball.description": "Автоматически отталкивает фаерболы.",
 
@@ -96,19 +91,14 @@
         
         "module.autoAccount.description": "Наиболее функциональный менеджер авторегистрации/логина учетных записей.",
         
-        "module.autoBreak.description": "Автоматически ломает блок, на который смотрите.",
         
-        "module.autoFish.description": "Автоматически ловит рыбу",
 
         "module.autoProjectile.description": "UNTRANSLATED: Automatically throws egg/snowball.",
         
-        "module.autoRespawn.description": "Автоматическое возраждение после смерти.",
         
         "module.autoTool.description": "Автоматически выбирает инструмент из хотбара для ломания блока.",
         
-        "module.autoWalk.description": "Автоматическая ходьба.",
 
-        "module.avoidHazards.description": "Предотвращает попадание в блоки, наносящие урон.",
         
         "module.blink.description": "Приостанавливает все пакеты перемещения.",
 
@@ -122,7 +112,6 @@
 
         "module.breadcrumbs.description": "Оставляет след за вами.",
         
-        "module.bufferSpeed.description": "Позволяет быстрее подниматься по плитам и лестницам.",
         
         "module.cameraClip.description": "Позволяет видеть сквозь стены с видом от третьего лица.",
         
@@ -132,7 +121,6 @@
         
         "module.chestStealer.description": "Автоматически забирает всё из сундука.",
         
-        "module.civBreak.description": "Позволяет мгновенно разрушать блоки.",
         
         "module.clickGUI.description": "Открывает ClickGUI.",
         
@@ -156,7 +144,6 @@
         
         "module.fastPlace.description": "Позволяет ставить блоки быстрее.",
         
-        "module.fastStairs.description": "Позволяет быстрее забираться по лестнице.",
         
         "module.fastUse.description": "Позволяет быстрее использовать предметы.",
 
@@ -187,7 +174,6 @@
         
         "module.highJump.description": "Позволяет прыгать выше.",
         
-        "module.iceSpeed.description": "Позволяет быстрее двигаться по льду.",
         
         "module.inventoryCleaner.description": "Автоматически выкидывает бесполезные вещи.",
         
@@ -199,20 +185,17 @@
 
         "module.itemPhysics.description": "UNTRANSLATED: Allows dropped items to have physics",
         
-        "module.keepAlive.description": "Пытается не дать вам умереть",
         
         "module.keepContainer.description": "Позволяет открыть ранее закрытый инвентарь в любом месте. (Для открытия нажать INSERT)",
 
         "module.keepTabList.description": "UNTRANSLATED: Keeps TAB List opened",
 
-        "module.keyPearl.description": "Позволяет бросать эндер пёрлы из хотбара, используя определенную клавишу.",
 
         "module.kick.description": "Позволяет кикнуть самого себя с сервера.",
         
         "module.liquidChat.description": "Чат для общения с другими пользователями LiquidBounce.",
         
         
-        "module.liquids.description": "Позволяет взаимодействовать с жидкостями (вода/лава...).",
         
         "module.longJump.description": "Позволяет прыгать дальше.",
         
@@ -234,7 +217,6 @@
         
         "module.noFall.description": "Предтовращает урон от падения.",
         
-        "module.noFluid.description": "Игнорирует жидкости вроде воды или лавы.",
         
         "module.noHurtCam.description": "Отключает эффект камеры ранения при получении урона.",
         
@@ -260,7 +242,6 @@
         
         "module.parkour.description": "Автоматически прыгает при достижении края блока.",
         
-        "module.perfectHorseJump.description": "Автоматически прыгает на лошади максимально высоко.",
         
         "module.phase.description": "Позволяет проходить сквозь блоки.",
         
@@ -270,9 +251,7 @@
         
         "module.portalMenu.description": "Позволяет открывать меню, находясь в портале.",
         
-        "module.potionSaver.description": "Замораживает таймер всез эффектов зелий, пока вы стоите на месте.",
 
-        "module.potionSpoof.description": "Позволяет получить эффект от зелья, без самого зелья.",
         
         "module.projectiles.description": "Позволяет видеть куда приземлится стрела.",
         
@@ -286,11 +265,9 @@
         
         "module.resourcePackSpoof.description": "Серверы больше не заставят вас скачивать Ресурс паки.",
         
-        "module.reverseStep.description": "Позволяет быстрее спускаться по блокам.",
         
         "module.rotations.description": "Позволяет видеть повороты тела и головы на стороне сервере.",
         
-        "module.safeWalk.description": "Не даёт вам упасть, будто идёте на шифте.",
         
         "module.scaffold.description": "Автоматически ставит блоки под ногами.",
         
@@ -298,11 +275,9 @@
         
         "module.skinDerp.description": "Делает ваш скин мигающим (Требуется многослойный скин).",
 
-        "module.slimeJump.description": "Позволяет выше прыгать на слайм блоках.",
 
         "module.silentHotbar.description": "UNTRANSLATED: Controls in which scenarios the silently selected item should be rendered.",
         
-        "module.sneak.description": "Автоматически идёт(крадётся) на шифте.",
         
         "module.spammer.description": "Спамит в чат определённым сообщением.",
         
@@ -332,7 +307,6 @@
         
         "module.vehicleOneHit.description": "Позволяет ломать транспортные средства одним ударом.",
         
-        "module.wallClimb.description": "Позволяет ползать по стенам как паук.",
         
         "module.xRay.description": "Позволяет видеть руды сквозь блоки.",
         

@@ -25,7 +25,6 @@
 
         "module.autoClicker.description": "Постоянно щрака при задържане на бутон на мишката.",
 
-        "module.autoLeave.description": "Автоматично напуска сървъра, когато здравето ви е ниско.",
 
         "module.autoPot.description": "Автоматично хвърля лечебни отвари. (pot-ове)",
 
@@ -59,7 +58,6 @@
 
         "module.teleportHit.description": "Позволява да се удрят обекти от далеч.",
 
-        "module.tNTBlock.description": "Автоматично блокира с меча ви, когато TNT експлодира около вас.",
 
         "module.velocity.description": "Позволява ви да промените количеството отхвърляне, което приемате.",
 
@@ -72,11 +70,9 @@
 
         "module.clip.description": "Позволява ви да 'клипвате' пред блокове.",
 
-        "module.antiBounce.description": "UNTRANSLATED: Prevents you from bouncing on blocks.",
         
         "module.animations.description": "Персонализира вашата блокираща анимация.",
         
-        "module.antiAFK.description": "Предотвратява да бъдете кикнати, защото сте AFK.",
         
         "module.antiBlind.description": "Отменя ефекта на слепотата (blindness) .",
         
@@ -84,7 +80,6 @@
 
         "module.antiExploit.description": "UNTRANSLATED: Prevents server from crashing you.",
         
-        "module.antiCactus.description": "Предотвратява кактусите да ви навредят.",
         
         "module.antiFireball.description": "Автоматично отблъсква огнени топки от вас.",
 
@@ -96,19 +91,14 @@
         
         "module.autoAccount.description": "Позволява за автоматично сменяне на акаунти.",
         
-        "module.autoBreak.description": "Автоматично чупи блока, който гледате.",
         
-        "module.autoFish.description": "Автоматично улавя риба при използване на въдица.",
 
         "module.autoProjectile.description": "UNTRANSLATED: Automatically throws egg/snowball.",
         
-        "module.autoRespawn.description": "Автоматично ви преражда, след като умрете.",
         
         "module.autoTool.description": "Автоматично избира най-добрия инструмент във вашия инвентар, за да изкопае блок.",
         
-        "module.autoWalk.description": "Автоматично ви кара да ходите.",
 
-        "module.avoidHazards.description": "Не позволява да ходите в блокове, които може да са вредни за вас.",
         
         "module.blink.description": "Спира всички пакети за движение.",
 
@@ -122,7 +112,6 @@
 
         "module.breadcrumbs.description": "Оставя пътека зад теб.",
         
-        "module.bufferSpeed.description": "Позволява ви да ходите по-бързо по плочи и стълби.",
         
         "module.cameraClip.description": "Позволява ви да виждате през стени в изглед от трето лице.",
         
@@ -132,7 +121,6 @@
         
         "module.chestStealer.description": "Автоматично краде всички елементи от сандък.",
         
-        "module.civBreak.description": "Позволява ви да прекъсвате блокове незабавно.",
         
         "module.clickGUI.description": "Отваря ClickGui.",
         
@@ -156,7 +144,6 @@
         
         "module.fastPlace.description": "Позволява ви да поставяте блокове по-бързо.",
         
-        "module.fastStairs.description": "Позволява ви да се изкачвате по стълби по-бързо.",
         
         "module.fastUse.description": "Позволява ви да използвате артикули по-бързо.",
 
@@ -187,7 +174,6 @@
         
         "module.highJump.description": "Ви позволява да скочите по-високо.",
         
-        "module.iceSpeed.description": "Позволява ви да ходите по-бързо на лед.",
     
         "module.inventoryCleaner.description": "Автоматично изхвърля безполезни елементи.",
         
@@ -199,20 +185,17 @@
 
         "module.itemPhysics.description": "UNTRANSLATED: Allows dropped items to have physics",
         
-        "module.keepAlive.description": "Опитва се да ви попречи да умрете.",
         
         "module.keepContainer.description": "Позволява ви да отворите бивш затворен контейнер за инвентаризация навсякъде. (Натиснете клавиша INSERT, за да отворите)",
 
         "module.keepTabList.description": "UNTRANSLATED: Keeps TAB List opened",
 
-        "module.keyPearl.description": "Позволява ви да хвърлите Ender перла от вашия Hotbar, като използвате определен бутон.",
 
         "module.kick.description": "Позволява ви да се кик-нете от сървър.",
         
         "module.liquidChat.description": "Позволява ви да разговаряте с други потребители на Liquidbounce.",
         
         
-        "module.liquids.description": "Ви позволява да общувате с течности.",
         
         "module.longJump.description": "Позволява ви да скочите по-нататък.",
         
@@ -234,7 +217,6 @@
         
         "module.noFall.description": "Предотвратява ви да нанасяте щети от падане.",
         
-        "module.noFluid.description": "Игнорира течности като вода и лава.",
         
         "module.noHurtCam.description": "Деактивира нараняването на ефекта на камерата при нараняване.",
         
@@ -260,7 +242,6 @@
         
         "module.parkour.description": "Автоматично скача, когато достигате ръба на блок.",
         
-        "module.perfectHorseJump.description": "Автоматично скача, когато скокът на кон се запълни напълно.",
         
         "module.phase.description": "Позволява ви да преминете през блокове.",
         
@@ -270,9 +251,7 @@
         
         "module.portalMenu.description": "Позволява ви да отворите меню, докато сте в портал.",
         
-        "module.potionSaver.description": "Замръзва всички ефекти на отвара, докато стоите неподвижно.",
 
-        "module.potionSpoof.description": "Позволява на играча да има ефекти на отвара, без всъщност да има отварата.",
         
         "module.projectiles.description": "Позволява ви да видите къде ще кацне стрелите.",
         
@@ -286,11 +265,9 @@
         
         "module.resourcePackSpoof.description": "Пречи на сървърите да ви принудят да изтеглите техния пакет с ресурси.",
         
-        "module.reverseStep.description": "Позволява ви да отстъпвате по-бързо блокове.",
         
         "module.rotations.description": "Позволява ви да виждате ротации на сървъра и тялото.",
         
-        "module.safeWalk.description": "Предотвратява ви да падате, сякаш се промъквате.",
         
         "module.scaffold.description": "Автоматично поставя блокове под краката ви.",
         
@@ -298,11 +275,9 @@
         
         "module.skinDerp.description": "Прави кожата ви мига (изисква многослойна кожа).",
 
-        "module.slimeJump.description": "Позволява ви да скочите по-високо на слузните блокове.",
 
         "module.silentHotbar.description": "UNTRANSLATED: Controls in which scenarios the silently selected item should be rendered.",
         
-        "module.sneak.description": "Автоматично се промъква през цялото време.",
         
         "module.spammer.description": "Спами чата с дадено съобщение.",
         
@@ -332,7 +307,6 @@
         
         "module.vehicleOneHit.description": "Позволява ви да разбивате превозни средства с един удар.",
         
-        "module.wallClimb.description": "Позволява ви да се изкачвате по стени като паяк.",
         
         "module.xRay.description": "Позволява ви да виждате руди през стени.",
         

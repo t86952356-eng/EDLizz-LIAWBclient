@@ -12,7 +12,6 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.combat.velocitymodes.*
 import net.ccbluex.liquidbounce.features.module.modules.exploit.Disabler
-import net.ccbluex.liquidbounce.features.module.modules.movement.Speed
 import net.ccbluex.liquidbounce.utils.attack.EntityUtils.isLookingOnEntities
 import net.ccbluex.liquidbounce.utils.attack.EntityUtils.isSelected
 import net.ccbluex.liquidbounce.utils.client.*
@@ -55,10 +54,10 @@ object Velocity : Module("Velocity", Category.COMBAT) {
      */
     private val mode by choices(
         "Mode", arrayOf(
-            "Simple", "AAC", "AACPush", "AACZero", "AACv4",
-            "Reverse", "SmoothReverse", "Jump", "Glitch", "Legit",
+            "Simple",
+            "Reverse", "Jump", "Glitch", "Legit",
             "GhostBlock", "Vulcan", "S32Packet", "MatrixReduce",
-            "IntaveReduce", "Delay", "GrimC03", "Hypixel", "WatchdogNCP",
+            "IntaveReduce", "Delay", "Hypixel", "WatchdogNCP",
             "Click", "BlocksMC", "GrimCombat", "Polar", "Buffer", "Grim",
             "NoSave", "WatchdogNCP-New", "Matrix", "Intave", "Vulcan-New",
             "Grim-New", "Grim 2", "WatchdogPrediction", "MMC",
@@ -211,27 +210,19 @@ object Velocity : Module("Velocity", Category.COMBAT) {
     private val velGrimReduceRange by int("Range", 8, 1..100) { mode == "GrimReduce" }
     private val velGrimReduceDelayTillGround by boolean("Delay till Ground", true) { mode == "GrimReduce" }
 
-    private val horizontal by float("Horizontal", 0F, -1F..1F) { mode in arrayOf("Simple", "AAC", "Legit") }
+    private val horizontal by float("Horizontal", 0F, -1F..1F) { mode in arrayOf("Simple", "Legit") }
     private val vertical by float("Vertical", 0F, -1F..1F) { mode in arrayOf("Simple", "Legit") }
 
     // Reverse
     private val reverseStrength by float("ReverseStrength", 1F, 0.1F..1F) { mode == "Reverse" }
-    private val reverse2Strength by float("SmoothReverseStrength", 0.05F, 0.02F..0.1F) { mode == "SmoothReverse" }
 
-    private val onLook by boolean("onLook", false) { mode in arrayOf("Reverse", "SmoothReverse") }
+    private val onLook by boolean("onLook", false) { mode == "Reverse" }
     private val range by float("Range", 3.0F, 1F..5.0F) {
-        onLook && mode in arrayOf("Reverse", "SmoothReverse")
+        onLook && mode == "Reverse"
     }
     private val maxAngleDifference by float("MaxAngleDifference", 45.0f, 5.0f..90f) {
-        onLook && mode in arrayOf("Reverse", "SmoothReverse")
+        onLook && mode == "Reverse"
     }
-
-    // AAC Push
-    private val aacPushXZReducer by float("AACPushXZReducer", 2F, 1F..3F) { mode == "AACPush" }
-    private val aacPushYReducer by boolean("AACPushYReducer", true) { mode == "AACPush" }
-
-    // AAC v4
-    private val aacv4MotionReducer by float("AACv4MotionReducer", 0.62F, 0F..1F) { mode == "AACv4" }
 
     // Legit
     private val legitDisableInAir by boolean("DisableInAir", true) { mode == "Legit" }
@@ -299,8 +290,6 @@ object Velocity : Module("Velocity", Category.COMBAT) {
     private val velocityTimer = MSTimer()
     private var hasReceivedVelocity = false
 
-    private var reverseHurt = false
-    private var jump = false
     private var limitUntilJump = 0
     private var intaveTick = 0
     private var lastAttackTime = 0L
@@ -308,7 +297,6 @@ object Velocity : Module("Velocity", Category.COMBAT) {
 
     private val packets = LinkedHashMap<Packet<*>, Long>()
 
-    private var timerTicks = 0
     private var transaction = false
     private var absorbedVelocity = false
     private var pauseTicks = 0
@@ -345,7 +333,6 @@ object Velocity : Module("Velocity", Category.COMBAT) {
         velocityMode?.onDisable()
         pauseTicks = 0
         mc.thePlayer?.speedInAir = 0.02F
-        timerTicks = 0
         bufferedPackets.clear()
         noSaveCanceled = 0
         noSaveGrimActive = false
@@ -465,68 +452,6 @@ object Velocity : Module("Velocity", Category.COMBAT) {
                     } else if (velocityTimer.hasTimePassed(80)) hasReceivedVelocity = false
                 }
             }
-
-            "smoothreverse" -> {
-                val nearbyEntity = getNearestEntityInRange()
-                if (hasReceivedVelocity) {
-                    if (nearbyEntity == null) {
-                        thePlayer.speedInAir = 0.02F
-                        reverseHurt = false
-                    } else {
-                        if (onLook && !isLookingOnEntities(nearbyEntity, maxAngleDifference.toDouble())) {
-                            hasReceivedVelocity = false
-                            thePlayer.speedInAir = 0.02F
-                            reverseHurt = false
-                        } else {
-                            if (thePlayer.hurtTime > 0) reverseHurt = true
-                            if (!thePlayer.onGround) {
-                                thePlayer.speedInAir = if (reverseHurt) reverse2Strength else 0.02F
-                            } else if (velocityTimer.hasTimePassed(80)) {
-                                hasReceivedVelocity = false
-                                thePlayer.speedInAir = 0.02F
-                                reverseHurt = false
-                            }
-                        }
-                    }
-                }
-            }
-
-            "aac" -> if (hasReceivedVelocity && velocityTimer.hasTimePassed(80)) {
-                thePlayer.motionX *= horizontal
-                thePlayer.motionZ *= horizontal
-                hasReceivedVelocity = false
-            }
-
-            "aacv4" ->
-                if (thePlayer.hurtTime > 0 && !thePlayer.onGround) {
-                    val reduce = aacv4MotionReducer
-                    thePlayer.motionX *= reduce
-                    thePlayer.motionZ *= reduce
-                }
-
-            "aacpush" -> {
-                if (jump) {
-                    if (thePlayer.onGround) jump = false
-                } else {
-                    if (thePlayer.hurtTime > 0 && thePlayer.motionX != 0.0 && thePlayer.motionZ != 0.0)
-                        thePlayer.onGround = true
-                    if (thePlayer.hurtResistantTime > 0 && aacPushYReducer && !Speed.handleEvents())
-                        thePlayer.motionY -= 0.014999993
-                }
-                if (thePlayer.hurtResistantTime >= 19) {
-                    val reduce = aacPushXZReducer
-                    thePlayer.motionX /= reduce
-                    thePlayer.motionZ /= reduce
-                }
-            }
-
-            "aaczero" ->
-                if (thePlayer.hurtTime > 0) {
-                    if (!hasReceivedVelocity || thePlayer.onGround || thePlayer.fallDistance > 2F) return@handler
-                    thePlayer.motionY -= 1.0
-                    thePlayer.isAirBorne = true
-                    thePlayer.onGround = true
-                } else hasReceivedVelocity = false
 
             "legit" -> {
                 if (legitDisableInAir && !isOnGround(0.5)) return@handler
@@ -730,18 +655,6 @@ object Velocity : Module("Velocity", Category.COMBAT) {
         }
     }
 
-    private fun checkAir(blockPos: BlockPos): Boolean {
-        val world = mc.theWorld ?: return false
-        if (!world.isAirBlock(blockPos)) return false
-        timerTicks = 20
-        sendPackets(
-            C03PacketPlayer(true),
-            C07PacketPlayerDigging(STOP_DESTROY_BLOCK, blockPos, DOWN)
-        )
-        world.setBlockToAir(blockPos)
-        return true
-    }
-
     private fun getDirection(): Double {
         var moveYaw = mc.thePlayer.rotationYaw
         when {
@@ -832,7 +745,7 @@ object Velocity : Module("Velocity", Category.COMBAT) {
 
                 "simple" -> handleVelocity(event)
 
-                "aac", "reverse", "smoothreverse", "aaczero", "ghostblock", "intavereduce", "grim" -> hasReceivedVelocity = true
+                "reverse", "ghostblock", "intavereduce", "grim" -> hasReceivedVelocity = true
 
                 "jump" -> {
                     var packetDirection = 0.0
@@ -881,13 +794,6 @@ object Velocity : Module("Velocity", Category.COMBAT) {
                         event.cancelEvent()
                         sendPacket(C0BPacketEntityAction(thePlayer, START_SNEAKING))
                         sendPacket(C0BPacketEntityAction(thePlayer, STOP_SNEAKING))
-                    }
-                }
-
-                "grimc03" -> {
-                    if (thePlayer.isMoving) {
-                        hasReceivedVelocity = true
-                        event.cancelEvent()
                     }
                 }
 
@@ -964,19 +870,6 @@ object Velocity : Module("Velocity", Category.COMBAT) {
             return@handler
         }
 
-        if (mode == "GrimC03") {
-            if (timerTicks > 0 && mc.timer.timerSpeed <= 1) {
-                val timerSpeed = 0.8f + (0.2f * (20 - timerTicks) / 20)
-                mc.timer.timerSpeed = timerSpeed.coerceAtMost(1f)
-                --timerTicks
-            } else if (mc.timer.timerSpeed <= 1) {
-                mc.timer.timerSpeed = 1f
-            }
-            if (hasReceivedVelocity) {
-                val pos = BlockPos(player.posX, player.posY, player.posZ)
-                if (checkAir(pos)) hasReceivedVelocity = false
-            }
-        }
     }
 
     val onDelayPacket = handler<PacketEvent> { event ->
@@ -1033,13 +926,6 @@ object Velocity : Module("Velocity", Category.COMBAT) {
         }
 
         if (thePlayer == null || thePlayer.isInLiquid || thePlayer.isInWeb) return@handler
-        when (mode.lowercase()) {
-            "aacpush" -> {
-                jump = true
-                if (!thePlayer.isCollidedVertically) event.cancelEvent()
-            }
-            "aaczero" -> if (thePlayer.hurtTime > 0) event.cancelEvent()
-        }
     }
 
     val onStrafe = handler<StrafeEvent> {

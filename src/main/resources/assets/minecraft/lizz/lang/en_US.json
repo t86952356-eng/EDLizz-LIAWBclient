@@ -63,7 +63,6 @@
 
         "module.autoDisable.description": "Automatically disables selected module based on specified events.",
 
-        "module.autoLeave.description": "Automatically makes you leave the server whenever your health is low.",
 
         "module.autoPot.description": "Automatically throws healing potions.",
 
@@ -99,7 +98,6 @@
 
         "module.teleportHit.description": "Allows to hit entities from far away.",
 
-        "module.tNTBlock.description": "Automatically blocks with your sword when TNT around you explodes.",
 
         "module.tNTTimer.description": "Display a timer indicating how long until nearby TNT explodes.",
 
@@ -114,11 +112,9 @@
 
         "module.clip.description": "Allows you to clip through blocks.",
 
-        "module.antiBounce.description": "Prevents you from bouncing on blocks.",
 
         "module.animations.description": "Customizes your blocking animation.",
         
-        "module.antiAFK.description": "Prevents you from getting kicked for being AFK.",
         
         "module.antiBlind.description": "Cancels blindness effects.",
         
@@ -126,7 +122,6 @@
 
         "module.antiExploit.description": "Prevents server from crashing you.",
         
-        "module.antiCactus.description": "Prevents cacti from damaging you.",
         
         "module.antiFireball.description": "Automatically punches fireballs away from you.",
 
@@ -138,21 +133,16 @@
         
         "module.autoAccount.description": "Most feature-packed auto register/login & account manager.",
         
-        "module.autoBreak.description": "Automatically breaks the block you are looking at.",
         
-        "module.autoFish.description": "Automatically catches fish when using a rod.",
 
         "module.autoProjectile.description": "Automatically throws egg/snowball.",
 
         "module.autoPlay.description": "Automatically queues up for next match",
         
-        "module.autoRespawn.description": "Automatically respawns you after dying.",
         
         "module.autoTool.description": "Automatically selects the best tool in your inventory to mine a block.",
         
-        "module.autoWalk.description": "Automatically makes you walk.",
 
-        "module.avoidHazards.description": "Prevents you from walking into blocks that might be harmful to you.",
         
         "module.blink.description": "Suspends all movement packets.",
 
@@ -166,7 +156,6 @@
 
         "module.breadcrumbs.description": "Leaves a trail behind you.",
         
-        "module.bufferSpeed.description": "Allows you to walk faster on slabs and stairs.",
         
         "module.cameraClip.description": "Allows you to see through walls in third person view.",
 
@@ -178,7 +167,6 @@
         
         "module.chestStealer.description": "Automatically steals all items from a chest.",
         
-        "module.civBreak.description": "Allows you to break blocks instantly.",
         
         "module.clickGUI.description": "Opens the ClickGUI.",
         
@@ -202,7 +190,6 @@
         
         "module.fastPlace.description": "Allows you to place blocks faster.",
         
-        "module.fastStairs.description": "Allows you to climb up stairs faster.",
         
         "module.fastUse.description": "Allows you to use items faster.",
 
@@ -233,7 +220,6 @@
         
         "module.highJump.description": "Allows you to jump higher.",
         
-        "module.iceSpeed.description": "Allows you to walk faster on ice.",
         
         "module.inventoryCleaner.description": "Automatically throws away useless items.",
         
@@ -247,20 +233,17 @@
 
         "module.jumpCircle.description": "Renders a circle below you when jumping.",
 
-        "module.keepAlive.description": "Tries to prevent you from dying.",
         
         "module.keepContainer.description": "Allows you to open a formerly closed inventory container everywhere. (Press INSERT Key to open)",
 
         "module.keepTabList.description": "Keeps TAB List opened",
 
-        "module.keyPearl.description": "Allows you to throw an ender pearl from your hotbar using a certain key.",
 
         "module.kick.description": "Allows you to kick yourself from a server.",
         
         "module.liquidChat.description": "Allows you to chat with other LiquidBounce users.",
         
         
-        "module.liquids.description": "Allows you to interact with liquids.",
         
         "module.longJump.description": "Allows you to jump further.",
         
@@ -282,7 +265,6 @@
         
         "module.noFall.description": "Prevents you from taking fall damage.",
         
-        "module.noFluid.description": "Ignore fluids like water and lava.",
         
         "module.noHurtCam.description": "Disables hurt cam effect when getting hurt.",
         
@@ -310,7 +292,6 @@
         
         "module.parkour.description": "Automatically jumps when reaching the edge of a block.",
         
-        "module.perfectHorseJump.description": "Automatically jumps when the jump bar of a horse is filled up completely.",
         
         "module.phase.description": "Allows you to walk through blocks.",
         
@@ -320,9 +301,7 @@
         
         "module.portalMenu.description": "Allows you to open a menu while being in a portal.",
         
-        "module.potionSaver.description": "Freezes all potion effects while you are standing still.",
 
-        "module.potionSpoof.description": "Allows the player to have potion effects without actually having the potion.",
         
         "module.projectiles.description": "Allows you to see where arrows will land.",
         
@@ -336,11 +315,9 @@
         
         "module.resourcePackSpoof.description": "Prevents servers from forcing you to download their resource pack.",
         
-        "module.reverseStep.description": "Allows you to step down blocks faster.",
         
         "module.rotations.description": "Allows you to see server-sided head and body rotations.",
         
-        "module.safeWalk.description": "Prevents you from falling down as if you were sneaking.",
         
         "module.scaffold.description": "Automatically places blocks beneath your feet.",
         
@@ -348,11 +325,9 @@
         
         "module.skinDerp.description": "Makes your skin blink (Requires multi-layer skin).",
 
-        "module.slimeJump.description": "Allows you to to jump higher on slime blocks.",
 
         "module.silentHotbar.description": "Controls in which scenarios the silently selected item should be rendered.",
         
-        "module.sneak.description": "Automatically sneaks all the time.",
         
         "module.spammer.description": "Spams the chat with a given message.",
         
@@ -384,7 +359,6 @@
         
         "module.vehicleOneHit.description": "Allows you to break vehicles with a single hit.",
         
-        "module.wallClimb.description": "Allows you to climb up walls like a spider.",
         
         "module.xRay.description": "Allows you to see ores through walls.",
         

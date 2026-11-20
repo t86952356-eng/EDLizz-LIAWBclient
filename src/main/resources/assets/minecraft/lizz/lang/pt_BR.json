@@ -25,7 +25,6 @@
 
         "module.autoClicker.description": "Clica constantemente ao segurar um botão do mouse.",
 
-        "module.autoLeave.description": "Automaticamente faz você sair do servidor sempre que sua saúde estiver baixa.",
 
         "module.autoPot.description": "Jogue poções automaticamente.",
 
@@ -70,11 +69,9 @@
 
         "module.clip.description": "Permite atravessar blocos.",
 
-        "module.antiBounce.description": "UNTRANSLATED: Prevents you from bouncing on blocks.",
 
         "module.animations.description": "Personaliza sua animação de bloqueio.",
 
-        "module.antiAFK.description": "Impede que você seja expulso por estar AFK (Inativo).",
 
         "module.antiBlind.description": "Cancela efeitos de cegueira.",
 
@@ -82,7 +79,6 @@
 
         "module.antiExploit.description": "UNTRANSLATED: Prevents server from crashing you.",
 
-        "module.antiCactus.description": "Impede que cactos o danifiquem.",
 
         "module.antiFireball.description": "Automáticamente tira as bolas de fogo longe de você.",
 
@@ -94,19 +90,14 @@
 
         "module.autoAccount.description": "Gerenciador de registro / login e conta automático mais completo.",
 
-        "module.autoBreak.description": "Quebra automaticamente o bloco que você está olhando.",
 
-        "module.autoFish.description": "Pesca automaticamente ao usar uma vara de pesca.",
 
         "module.autoProjectile.description": "UNTRANSLATED: Automatically throws egg/snowball.",
 
-        "module.autoRespawn.description": "Faz você ressurgir automaticamente após a morte.",
 
         "module.autoTool.description": "Seleciona automaticamente a melhor ferramenta em seu inventário para minerar um bloco.",
 
-        "module.autoWalk.description": "Faz você andar automaticamente.",
 
-        "module.avoidHazards.description": "UNTRANSLATED: Prevents you from walking into blocks that might be harmful to you.",
 
         "module.blink.description": "Suspende todos os pacotes de movimento.",
 
@@ -120,7 +111,6 @@
 
         "module.breadcrumbs.description": "Deixa um rastro atrás de você.",
 
-        "module.bufferSpeed.description": "Permite caminhar mais rápido em lajes e escadas.",
 
         "module.cameraClip.description": "Permite ver através das paredes em vista de terceira pessoa.",
 
@@ -130,7 +120,6 @@
 
         "module.chestStealer.description": "Rouba automaticamente todos os itens de um baú.",
 
-        "module.civBreak.description": "Permite quebrar blocos instantaneamente..",
 
         "module.clickGUI.description": "Abre o ClickGUI.",
 
@@ -154,7 +143,6 @@
 
         "module.fastPlace.description": "Permite que você coloque blocos mais rapidamente.",
 
-        "module.fastStairs.description": "Permite que você suba escadas mais rapidamente.",
 
         "module.fastUse.description": "Permite que você use itens mais rapidamente.",
 
@@ -185,7 +173,6 @@
 
         "module.highJump.description": "Permite que você pule mais alto.",
 
-        "module.iceSpeed.description": "Permite que você ande mais rapidamente no gelo.",
 
         "module.inventoryCleaner.description": "Descarta automaticamente itens inúteis.",
 
@@ -197,7 +184,6 @@
 
         "module.itemPhysics.description": "UNTRANSLATED: Allows dropped items to have physics",
 
-        "module.keepAlive.description": "Tenta impedir que você morra.",
 
         "module.keepContainer.description": "Permite que você abra um contêiner de inventário anteriormente fechado em qualquer lugar. (Pressione a tecla INSERT para abrir)",
 
@@ -208,7 +194,6 @@
         "module.liquidChat.description": "Permite que você intereja com outros usuários do LiquidBounce.",
 
 
-        "module.liquids.description": "Permite que você interaja com líquidos.",
 
         "module.longJump.description": "Permite que você pule mais longe.",
 
@@ -230,7 +215,6 @@
 
         "module.noFall.description": "Impede que você sofra danos de queda.",
 
-        "module.noFluid.description": "Ignora líquidos como água e lava.",
 
         "module.noHurtCam.description": "Desativa o efeito de câmera de dano quando você é ferido.",
 
@@ -256,7 +240,6 @@
 
         "module.parkour.description": "Pula automaticamente ao chegar na borda de um bloco.",
 
-        "module.perfectHorseJump.description": "Pula automaticamente quando a barra de salto de um cavalo estiver completamente cheia.",
 
         "module.phase.description": "Permite que você ande através de blocos.",
 
@@ -266,9 +249,7 @@
 
         "module.portalMenu.description": "Permite que você abra um menu enquanto estiver em um portal.",
 
-        "module.potionSaver.description": "Congela todos os efeitos de poção enquanto você está parado.",
 
-        "module.potionSpoof.description": "Permite que o jogador tenha efeitos de poção sem realmente ter a poção.",
 
         "module.projectiles.description": "Permite que você veja onde as flechas vão pousar.",
 
@@ -282,11 +263,9 @@
 
         "module.resourcePackSpoof.description": "Impede que servidores o forcem a baixar seu pacote de recursos.",
 
-        "module.reverseStep.description": "Permite descer blocos mais rápido.",
 
         "module.rotations.description": "Permite ver rotações de cabeça e corpo do servidor.",
 
-        "module.safeWalk.description": "Evita que você caia como se estivesse agachado.",
 
         "module.scaffold.description": "Automaticamente coloca blocos sob seus pés.",
 
@@ -294,11 +273,9 @@
 
         "module.skinDerp.description": "Faz com que sua pele pisque (requer pele de múltiplas camadas).",
 
-        "module.slimeJump.description": "Permite saltar mais alto em blocos de slime.",
 
         "module.silentHotbar.description": "UNTRANSLATED: Controls in which scenarios the silently selected item should be rendered.",
 
-        "module.sneak.description": "Automaticamente agacha o tempo todo.",
 
         "module.spammer.description": "Spamma o chat com uma mensagem dada.",
 
@@ -328,7 +305,6 @@
 
         "module.vehicleOneHit.description": "Permite quebrar veículos com um único golpe.",
 
-        "module.wallClimb.description": "Permite escalar paredes como uma aranha.",
 
         "module.xRay.description": "Permite ver minérios através de paredes.",
 
