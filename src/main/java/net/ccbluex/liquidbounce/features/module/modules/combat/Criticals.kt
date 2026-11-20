@@ -20,6 +20,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.criticalsmodes.Gr
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticalsmodes.VerusCriticalsMode
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticalsmodes.VulcanCriticalsMode
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticalsmodes.WatchdogNCPCriticalsMode
+import net.ccbluex.liquidbounce.features.module.modules.combat.criticalsmodes.WatchdogNCPPacketCriticalsMode
 import net.ccbluex.liquidbounce.features.module.modules.movement.Fly
 import net.ccbluex.liquidbounce.utils.client.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.client.PacketUtils.sendPackets
@@ -51,7 +52,8 @@ object Criticals : Module("Criticals", Category.COMBAT) {
             "WatchdogNCP",
             "Vulcan",
             "Verus",
-            "GrimAC"
+            "GrimAC",
+            "WatchdogNCP-Packet"
         ),
         "Packet"
     )
@@ -59,7 +61,7 @@ object Criticals : Module("Criticals", Category.COMBAT) {
     /** 新模式集合（与 NoSlowMode/VelocityMode 同套路的分发模型）。 */
     private val criticalsModes = arrayOf(
         WatchdogNCPCriticalsMode, VulcanCriticalsMode, VerusCriticalsMode,
-        GrimACCriticalsMode
+        GrimACCriticalsMode, WatchdogNCPPacketCriticalsMode
     )
 
     private val criticalsMode get() = criticalsModes.firstOrNull { it.modeName == mode }

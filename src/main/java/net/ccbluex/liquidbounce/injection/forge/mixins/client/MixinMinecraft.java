@@ -11,6 +11,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.AutoClicker;
 import net.ccbluex.liquidbounce.features.module.modules.combat.TickBase;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.AbortBreaking;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.MultiActions;
+import net.ccbluex.liquidbounce.features.module.modules.movement.noslowmodes.WatchdogNCPFullNoSlowMode;
 import net.ccbluex.liquidbounce.features.module.modules.world.FastPlace;
 import net.ccbluex.liquidbounce.file.configs.models.ClientConfiguration;
 import net.ccbluex.liquidbounce.injection.forge.SplashProgressLock;
@@ -244,6 +245,15 @@ public abstract class MixinMinecraft {
     @Inject(method = "middleClickMouse", at = @At("HEAD"))
     private void middleClickMouse(CallbackInfo ci) {
         CPSCounter.INSTANCE.registerClick(CPSCounter.MouseButton.MIDDLE);
+    }
+
+    @Inject(method = "rightClickMouse", at = @At("HEAD"), cancellable = true)
+    private void onRightClickMouseHead(final CallbackInfo callbackInfo) {
+        // WatchdogNCP-Full（Rewound NoSlow）：右键点击前的门控与包扣留登记
+        //（等价源的 IngameActionEvent 拦截，发生在点击处理之前）
+        if (WatchdogNCPFullNoSlowMode.onRightClick()) {
+            callbackInfo.cancel();
+        }
     }
 
     @Inject(method = "rightClickMouse", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;rightClickDelayTimer:I", shift = At.Shift.AFTER))

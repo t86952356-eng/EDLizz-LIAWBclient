@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.longjumpmodes.o
 import net.ccbluex.liquidbounce.features.module.modules.movement.longjumpmodes.other.VerusDamage
 import net.ccbluex.liquidbounce.features.module.modules.movement.longjumpmodes.other.VerusDamage.damaged
 import net.ccbluex.liquidbounce.features.module.modules.movement.longjumpmodes.other.WatchdogFireBallLongJump
+import net.ccbluex.liquidbounce.features.module.modules.movement.longjumpmodes.other.WatchdogNCPNewLongJump
 import net.ccbluex.liquidbounce.utils.extensions.isMoving
 import net.ccbluex.liquidbounce.utils.extensions.tryJump
 
@@ -41,7 +42,10 @@ object LongJump : Module("LongJump", Category.MOVEMENT) {
 
         // Other
         Redesky, Hycraft, Buzz, VerusDamage,
-        WatchdogFireBallLongJump, GrimLongJump, VulcanLongJump
+        WatchdogFireBallLongJump, GrimLongJump, VulcanLongJump,
+
+        // 第五批新增：WatchdogNCP-New（Rewound RewoundLongJumpMode 整体移植）
+        WatchdogNCPNewLongJump
     )
 
     private val modes = longJumpModes.map { it.modeName }.toTypedArray()
@@ -52,7 +56,7 @@ object LongJump : Module("LongJump", Category.MOVEMENT) {
     private val autoJump by boolean("AutoJump.kt", true)
 
     /** 新模式集合（自包含：自带起跳/时序，不走 autoJump/jumped 机制）。 */
-    private val newLongJumpModes = arrayOf(WatchdogFireBallLongJump, GrimLongJump, VulcanLongJump)
+    private val newLongJumpModes = arrayOf(WatchdogFireBallLongJump, GrimLongJump, VulcanLongJump, WatchdogNCPNewLongJump)
 
     private val newMode get() = newLongJumpModes.firstOrNull { it.modeName == mode }
 

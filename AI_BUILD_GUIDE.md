@@ -2,8 +2,9 @@
 
 > هذا الملف مكتوب ليقرأه وكيل ذكاء اصطناعي (AI Agent) في محادثة جديدة، ليتمكن من بناء
 > مشروع Lizz ونشر إصدار (Release) بنجاح من أول مرة، دون تكرار الأخطاء التي حُلّت مسبقاً.
-> آخر تحديث: نوفمبر 2026. إصدار مُختبر ناجح: `lizz-b12.9.jar` لـ Minecraft 1.8.9 (Forge)
-> عبر Release بتاغ `vb12.9-mc1.8.9` (إصدار إعادة تسمية الموديولات والأوضاع + نظام Mode/Custom).
+> آخر تحديث: نوفمبر 2026. إصدار مُختبر ناجح: `lizz-b12.15.jar` لـ Minecraft 1.8.9 (Forge)
+> عبر Release بتاغ `vb12.15-mc1.8.9` (إصدار الدفعة السادسة من عميل Rewound: Fly/WatchdogDamage +
+> LongJump/WatchdogNCP-New + NoSlow/WatchdogNCP-Full + Criticals/WatchdogNCP-Packet).
 > ملف مرافق إلزامي: `LIZZ_HANDOFF.md` (معلومات العميل + البرمجة + سجل الأخطاء).
 
 ---
@@ -29,9 +30,9 @@
 | **JDK للبناء** | **`8`** | `build.gradle` (`sourceCompatibility = 1.8`) + CI الأصلي |
 | Gradle Wrapper | `6.9.4` (مرآة huaweicloud) | `gradle/wrapper/gradle-wrapper.properties` |
 | Kotlin | `2.0.21` | `gradle.properties` → `kotlin_version` |
-| إصدار المود | `b12.9` | `gradle.properties` → `mod_version` |
+| إصدار المود | `b12.15` | `gradle.properties` → `mod_version` |
 | اسم الـ artifact | `lizz` | `gradle.properties` → `archives_base_name` |
-| ناتج البناء | `build/libs/lizz-b12.9.jar` | — |
+| ناتج البناء | `build/libs/lizz-b12.15.jar` | — |
 
 > ⚠️ **جافا هي 8 وليست 17.** Gradle 6.9.4 لا يعمل أصلاً على JDK 17+ (أول دعم لـ17 كان
 > Gradle 7.3). الـ CI الرسمي لـ LiquidBounce Legacy يستخدم `java-version: 8` حرفياً.
@@ -68,22 +69,31 @@ maven.minecraftforge.net) تعمل بشكل طبيعي.
 ```bash
 curl -sL -o /tmp/jdk8.tar.gz \
   "https://api.adoptium.net/v3/binary/latest/8/ga/linux/x64/jdk/hotspot/normal/eclipse"
-tar xzf /tmp/jdk8.tar.gz -C $HOME        # ينتج $HOME/jdk8u512-b09
-export JAVA_HOME=$HOME/jdk8u512-b09 && export PATH=$JAVA_HOME/bin:$PATH
+tar xzf /tmp/jdk8.tar.gz -C /tmp/tools   # ينتج /tmp/tools/jdk8uXXX-bYY (اسم الإصدار يتغير حسب آخر بناء)
+export JAVA_HOME=/tmp/tools/jdk8uXXX-bYY && export PATH=$JAVA_HOME/bin:$PATH
 ```
+
+> ملاحظة (نوفمبر 2026): اسم مجلد JDK من adoptium يتغير بين البناءات (كان jdk8u512-b09 ثم
+> jdk8u514-b01) — تحقق من الاسم بـ `ls` بعد فك الضغط، ولا تفترض اسماً ثابتاً.
 
 أوامر البناء المحلي (ذاكرة الـ sandbox محدودة ~4GB — لا تستخدم -Xmx3g الافتراضية):
 
 ```bash
 cd <مسار المستودع>
 chmod +x gradlew   # إذا كانت صلاحية التنفيذ مفقودة من القرص (انظر §6-1)
-JAVA_HOME=$HOME/jdk8u512-b09 ./gradlew help --no-daemon --console=plain \
+JAVA_HOME=<مسار jdk8> ./gradlew help --no-daemon --console=plain \
   -Dorg.gradle.jvmargs="-Xmx1500m -XX:MaxMetaspaceSize=512m"   # اختبار حلّ الإضافات
-JAVA_HOME=$HOME/jdk8u512-b09 ./gradlew build --no-daemon --console=plain \
+JAVA_HOME=<مسار jdk8> GRADLE_USER_HOME=/tmp/lizz-gradle ./gradlew compileKotlin compileJava \
+  --no-daemon --console=plain \
+  -Dorg.gradle.jvmargs="-Xmx1800m -XX:MaxMetaspaceSize=512m"   # فحص الترجمة (القناة المعتادة قبل كل دفعة)
+JAVA_HOME=<مسار jdk8> ./gradlew build --no-daemon --console=plain \
   -Dorg.gradle.jvmargs="-Xmx1500m -XX:MaxMetaspaceSize=512m"   # بناء كامل (قد يُقتل بالذاكرة)
 ```
 
 - `./gradlew help` يكفي للتحقق من صحة حلّ الإضافات (settings.gradle + maven-repo) — يستغرق ~1.5 دقيقة.
+- **إعادة بناء الكاش من الصفر ممكنة داخل الـ sandbox**: بعد ضياع كاش FG بين الجلسات (نوفمبر 2026)
+  نجح إعداد FG الكامل (deobf + AT + Exceptor) + compileKotlin + compileJava بذاكرة 4GB عبر
+  `GRADLE_USER_HOME=/tmp/lizz-gradle` و`-Xmx1800m` (الإعداد الأول ~5 دقائق + ترجمة ~2 دقيقة).
 - البناء الكامل محلياً محفوف بالمخاطر بسبب الذاكرة؛ **القناة الموثوقة هي GitHub Actions** (§5).
 - خطوة تحضير Minecraft الأولى (تنزيل + فك التحويل) تستهلك وقتاً وذاكرة — على Actions متاحة لها 7GB.
 

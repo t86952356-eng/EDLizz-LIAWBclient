@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.matrix
 import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.matrix.OldMatrix
 import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.watchdogncp.WatchdogBoat
 import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.watchdogncp.WatchdogNCPNew
+import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.watchdogncp.WatchdogDamage
 import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.other.*
 import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.intave.Intave
 import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.spartan.BugSpartan
@@ -90,7 +91,10 @@ object Fly : Module("Fly", Category.MOVEMENT) {
         TimerGlide, Intave, Matrix,
 
         // 第四批新增：Watchdog-ProtectionBoat / MMC / AirJump
-        WatchdogBoat, MMC, AirJump
+        WatchdogBoat, MMC, AirJump,
+
+        // 第五批新增：WatchdogDamage（Rewound 客户端 RewoundFlightMode 整体移植）
+        WatchdogDamage
     )
 
     /**
@@ -262,6 +266,42 @@ object Fly : Module("Fly", Category.MOVEMENT) {
         "TimerGlide-NoMove", false
     ) { mode == "TimerGlide" && timerGlideAutoAirDamage }
 
+    // ---- WatchdogDamage（Fly，Rewound RewoundFlightMode）选项 ----
+    private val wdDamageSpeed by float("WatchdogDamage-Speed", 1f, 0.5f..5f) { mode == "WatchdogDamage" }
+    private val wdDamageDamage by choices(
+        "WatchdogDamage-Damage", arrayOf("Normal", "Wait", "None"), "Normal"
+    ) { mode == "WatchdogDamage" }
+    private val wdDamageTimerEnabled by boolean("WatchdogDamage-Timer", true) { mode == "WatchdogDamage" }
+    private val wdDamageTimerSpeed by float("WatchdogDamage-TimerSpeed", 2f, 0.5f..10f) {
+        mode == "WatchdogDamage" && wdDamageTimerEnabled
+    }
+    private val wdDamageTimerTime by int("WatchdogDamage-TimerTime", 500, 5..2000) {
+        mode == "WatchdogDamage" && wdDamageTimerEnabled
+    }
+    private val wdDamageDropEnabled by boolean("WatchdogDamage-Drop", true) { mode == "WatchdogDamage" }
+    private val wdDamageDropSpeed by float("WatchdogDamage-DropSpeed", 4f, 0.5f..10f) {
+        mode == "WatchdogDamage" && wdDamageDropEnabled
+    }
+    private val wdDamageDisabler by boolean("WatchdogDamage-Disabler", true) { mode == "WatchdogDamage" }
+    private val wdDamageEnderPearl by boolean("WatchdogDamage-EnderPearl", true) {
+        mode == "WatchdogDamage" && wdDamageDisabler
+    }
+    private val wdDamageFireball by boolean("WatchdogDamage-Fireball", true) {
+        mode == "WatchdogDamage" && wdDamageDisabler
+    }
+    private val wdDamagePacket by boolean("WatchdogDamage-Packet", true) {
+        mode == "WatchdogDamage" && wdDamageDisabler
+    }
+    private val wdDamageHorizontalSpeed by float("WatchdogDamage-HorizontalSpeed", 4f, 0.5f..10f) {
+        mode == "WatchdogDamage" && wdDamageDisabler
+    }
+    private val wdDamageVerticalSpeed by float("WatchdogDamage-VerticalSpeed", 2f, 0.5f..10f) {
+        mode == "WatchdogDamage" && wdDamageDisabler
+    }
+    private val wdDamageBobbing by choices(
+        "WatchdogDamage-Bobbing", arrayOf("None", "Normal only", "Always"), "None"
+    ) { mode == "WatchdogDamage" }
+
     private fun syncNewFlyModeSettings() {
         WatchdogNCPNew.flySpeed = flyNewSpeed.toDouble()
         WatchdogBoat.flySpeed = boatFlySpeed
@@ -300,6 +340,21 @@ object Fly : Module("Fly", Category.MOVEMENT) {
         MatrixDamage.packet = matrixDamagePacket
         MatrixDamage.motionYMode = matrixDamageMotionY
         MatrixDamage.motion = matrixDamageMotion.toDouble()
+        // ---- WatchdogDamage 同步 ----
+        WatchdogDamage.flySpeed = wdDamageSpeed.toDouble()
+        WatchdogDamage.damageMode = wdDamageDamage
+        WatchdogDamage.timerEnabled = wdDamageTimerEnabled
+        WatchdogDamage.timerSpeed = wdDamageTimerSpeed
+        WatchdogDamage.timerTime = wdDamageTimerTime.toLong()
+        WatchdogDamage.dropEnabled = wdDamageDropEnabled
+        WatchdogDamage.dropSpeed = wdDamageDropSpeed.toDouble()
+        WatchdogDamage.disablerEnabled = wdDamageDisabler
+        WatchdogDamage.enderPearl = wdDamageEnderPearl
+        WatchdogDamage.fireball = wdDamageFireball
+        WatchdogDamage.packetMode = wdDamagePacket
+        WatchdogDamage.horizontalSpeed = wdDamageHorizontalSpeed.toDouble()
+        WatchdogDamage.verticalSpeed = wdDamageVerticalSpeed.toDouble()
+        WatchdogDamage.bobbing = wdDamageBobbing
     }
 
 

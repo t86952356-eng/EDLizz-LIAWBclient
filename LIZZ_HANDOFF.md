@@ -15,12 +15,12 @@
 | البند | القيمة |
 |---|---|
 | اسم العميل | **Lizz** (داخل الكود: `CLIENT_NAME = "L"+"izz"`) — يعرف أيضاً بـ **LAWIB / LIAWB client** |
-| الإصدار الحالي | **b12.12** (`LiquidBounce.kt` → `clientVersionText` و`gradle.properties` → `mod_version`) |
+| الإصدار الحالي | **b12.15** (`LiquidBounce.kt` → `clientVersionText` و`gradle.properties` → `mod_version`) |
 | اللعبة | Minecraft **1.8.9** — Forge `11.15.1.2318` — mappings `stable_22` |
 | الأساس | **LiquidBounce Legacy** (فرع المجتمع النهائي، آخر إصدار رسمي منه b100) |
 | مود id | `Lizz` — الاسم الظاهر في mcmod.info: `LAWIB` |
 | المؤلفون (mcmod.info) | CCBlueX، PickBowen، bzym2، RainRuin، sunbox |
-| عنوان النافذة | `LIAWB client 1.8.9 b12.12 \| 免费注册加群：815061613` (عنوان مجتمع صيني — رقم مجموعة QQ) |
+| عنوان النافذة | `LIAWB client 1.8.9 b12.15 \| 免费注册加群：815061613` (عنوان مجتمع صيني — رقم مجموعة QQ) |
 | التوزيع الرسمي | عبر Discord العميل: **discord.gg/Y2U2gWyRUN** (فيديو «Lizz 7.0 (fork lb b100)») |
 | المستودع | `https://github.com/t86952356-eng/EDLizz-LIAWBclient` (عام، فرع `main`) |
 | سجل التسمية | الفورك بدأ بـ «LIAWB client (chat prefix rebrand)» من LiquidBounce Legacy، ثم أُضيف MusicPlayer، ثم ClickGUI بأسلوب Fatality في b12.7، ثم إصدار تخفيف الحجم في b12.8، ثم إعادة تسمية الموديولات والأوضاع (WatchdogNCP/UpdatedNCP/FastBridge/Verus/AimAssist/MoreKB) في b12.9 |
@@ -406,6 +406,55 @@ speed/Grim2Mode و noslow/Grim30Mode: أجسام listener methods غير موج�
 ثم البناء والنشر عبر GitHub Actions وإصدار vb12.14-mc1.8.9، والـ changelog بالإنجليزية من RELEASE_NOTES.md (كل الأوضاع
 مكتوبة كإضافات جديدة دون ذكر الاستخراج).
 
+### المهمة 9 — نوفمبر 2026 — «العودة إلى Lizz: الدفعة السادسة من عميل Rewound (yxzeroo/openadjust)» (b12.15)
+
+الهدف: العودة لمشروع Lizz بعد فترة AtroNextGen والاستخراج من عميل **Rewound 1.8.9** (مصدر Java نظيف:
+`github.com/yxzeroo/openadjust`، بنية `com.adjustclient` الخاصة به) بأربع أوضاع كاملة بنفس المنطق والوظائف:
+- **Fly/WatchdogDamage** (من RewoundFlightMode): ست حالات — DAMAGE (سلم حزم C04 ذاتي ±0.06249 لـ3.1
+  بلوك + سلسلة الاحتكاك stage 1..4 مع 2.145/0.66/مثلث-احتكاك + Timer Boost + إزاحة 1e-9 أرضية) وXPROSS
+  (سقوط عالٍ: blink كل الرزم الصادرة فوق الفراغ عبر BlinkUtils + إيقاف سقوط + تعطيل عند الصحة<6) و
+  DISABLER_PEARL/FIREBALL (SilentHotbar + دوران 90° للأسفل + sendUseItem) وDISABLER_HOVER (سلم y+0.2/y+0.1
+  ثم انتظار ~4 ثوان لـ S08) وDISABLER (نافذة طيران 3 ثوان بمفاتيح القفز/التسلل). مع بنية تحتية جديدة:
+  **`RewoundFlyTracker`** (كائن Listenable دائم): عد حزم آخر ثانية (حد 795)، تتبع C08-لؤلؤة + S0E(type=65)
+  + S08(ping+500ms) → تفعيل ENDER_PEARL، S27 انفجار → تفعيل EXPLOSION، S01 → تصفير، وisActive = 3 ثوان.
+- **LongJump/WatchdogNCP-New** (من RewoundLongJumpMode): يتطلب جرعة سرعة (تعطيل تلقائي مع إشعار)؛
+  سرعة أولية (base×1.38-0.01)/1.6 ثم قفزة 0.42×2.149 ثم استرجاع 0.66×2.2 (معدل بجرعة القفز) واحتكاك 159/25
+  حسب motionY — تعطيل تلقائي عند الهبوط.
+- **NoSlow/WatchdogNCP-Full** (من RewoundNoSlowMode): لا-إبطاء السيف بحجز الحزم — عند النقر الأيمن بالسيف
+  تُحجز C08/C0A/C02 (+C09 أثناء الهجوم) حتى ما بعد رزمة الموضع (POST motion)، والنقر على بلوكات التفاعل
+  (قائمة 26 بلوك + أبواب/أسوار/بوابات + قرويين) يُمنع ما لم يكن مفتاح الهجوم مضغوطاً أو متسللاً، والإبطاء
+  يُلغى دون قيد نوع عنصر. **حقن Mixin جديد**: `MixinMinecraft#rightClickMouse` HEAD قابل للإلغاء يستدعي
+  `WatchdogNCPFullNoSlowMode.onRightClick()` (يعيد true = إلغاء النقرة) — لأن Lizz بلا IngameActionEvent
+  (نقطة ما قبل معالجة النقر).
+- **Criticals/WatchdogNCP-Packet** (من RewoundCriticalsMode): زاوية الخادم — يتعقب آخر Y/onGround مُبلَّغين
+  (MovementUtils.serverY/serverOnGround المطابقين حرفياً لـ lastReported*)، يجمع مسافة سقوط الخادم، وعند
+  الوقوف بلا إزاحة سابقة يرفع رزمة الحركة +0.0301 (الخادم يراك معلقاً → حرج) مع onGround=true عند توقع
+  سقوط ≥3، ويعرض أنيميشن الحرجة عند الهجوم والخادم يراك ساقطاً (canCritical: سلم/كرمة تتطلب spectator
+  ذاتياً + لا ماء/عمى/مركب + هدف حي).
+
+| # | الدرس / الخلل | التفصيل | الحل المطبّق |
+|---|---|---|---|
+| 23 | **S27PacketExplosion: getters غير معرّفة في stable_22** | Rewound يقرأ func_149149_c()/func_149144_d()/func_149147_e() (دوال getter لحقول motion الثلاثة) — غير مُسمّاة في MCP فتظهر بأسماء SRG حقلية فقط | حقول motion في stable_22 هي **field_149152_f/g/h** (كما يستخدمها Velocity.kt أصلاً) — القراءة الحقلية المباشرة؛ تحقق من mcp-srg.srg + fields.csv في كاش FG قبل التخمين |
+| 24 | **كاش Gradle لا يُحفظ بين الجلسات إلا داخل my-project** | gradle-home2 المحفوظ في my-project يعود لمشروع Fabric آخر (9.3.0)؛ كاش Lizz (FG/minecraft) ضاع مع إعادة تدوير الـ sandbox | إعادة بناء الكاش من الصفر: تحميل JDK8 (jdk8u514-b01 من adoptium، 103MB) + GRADLE_USER_HOME=/tmp/lizz-gradle — إعداد FG كامل + compileKotlin نجح داخل 4GB بـ -Xmx1800m (الإعداد الأول استغرق ~5 دقائق) |
+| 25 | **MoveFlyingEvent(post) بلا مقابل في Lizz** | أوضاع Rewound تعلق على ما بعد تطبيق المدخلات وقبل moveEntity — Lizz بلا حدث هناك | المكافئ الدقيق هو **MoveEvent (moveEntity HEAD)** لأن moveEntityWithHeading يستدعي moveFlying ثم moveEntity فوراً؛ لكن الحدث يُبنى بمعاملات motion المُلتقطة → أي كتابة لـ player.motion يجب أن تُنسخ يدوياً إلى event.x/y/z أيضاً |
+| 26 | **حقول EntityPlayer المُرقّعة (lastDistance/offGroundTicks/lastGroundY/lastReported*)** | Rewound يرقّع مصدر MC بحقول عامة تُحدَّث في EntityPlayer.onUpdate نهاية كل تيك | التتبع محلياً داخل كل وضع عند PRE motion (hypot(pos-prevPos) وعدّاد onGround وآخر Y أرضي) — الدلالة مطابقة (قيمة التيك السابق تُقرأ في تيك لاحق)؛ lastReported* يوفرها MovementUtils.serverY/serverOnGround أصلاً (تتبع C03 الصادر) |
+| 27 | **rightClickMouse بلا حدث في Lizz** | بوابات NoSlow تحتاج نقطة ما قبل معالجة النقر (تعطيل النقرة/تجهيز حجز الحزم) — Lizz بلا IngameActionEvent | حقن HEAD قابل للإلغاء في MixinMinecraft#rightClickMouse يستدعي دالة @JvmStatic على كائن الوضع — نفس نمط clickMouse/rightClickMouse الموجود أصلاً في الملف |
+| 28 | **PacketHoldHandle (حجز مُفلتر) بلا مكافئ** | Rewound يحجز C09(شرطي)/C0A/C08/C02 عبر outboundPacketQueue بمرشح | حجز محلي داخل الوضع: ArrayDeque + التقاط في onPacket(SEND) مع cancelEvent، والإفراغ في POST motion بـ sendPacket(triggerEvent=false) — نفس نمط IntaveNoSlowMode.packetQueue الموجود |
+
+**تبسيطات موثّقة (Fly/WatchdogDamage)**: بوابات Features.FLIGHT_REWOUND (أعلام anticheat خاصة بسيرفر Rewound) أُسقطت؛
+بوابات حالة اللعبة في canSelfDamage (lobby/BEDWARS started) أُسقطت (Damage=None هو البوابة الوحيدة)؛ شرط
+Fireball=BEDWARS أُسقط؛ movementPredictor.historyTicks<10 قُرِّب بـ ticksExisted<10؛ positionUpdateTicks=0 (خاص) أُسقط؛
+تقدم الرسم (ProgressBar/Progress) أُسقط (لا مُصيّر في Lizz)؛ الإشعارات chat بدل النوافذ المنبثقة؛ نص «You an fly»
+الخطأ صُحح إملائياً. **(NoSlow/WatchdogNCP-Full)**: isInServersideGui → serverOpenContainer/serverOpenInventory؛
+شرط BreakerModule أُسقط؛ ControllerUpdatePhaseEvent (تعليم C09 أثناء التفاعل) قُرِّب بـ AttackEvent؛ إعداد الوحدة
+«Click while using» خارج نطاق الوضع. **(Criticals/WatchdogNCP-Packet)**: jumped يبقى كالتوافر الدلالي (يضبطه
+RewoundSpeed/Jesus غير المنقولين → دائماً false)؛ فحص BreakerModule أُسقط (بقي getIsHittingBlock)؛
+WorldResetEvent → مقارنة مرجع العالم في onUpdate. **(LongJump)**: بلا تبسيط وظيفي.
+
+**النتيجة**: compileKotlin وcompileJava محلياً = **BUILD SUCCESSFUL** (جولة إصلاح واحدة: 3 أخطاء أسماء حقول S27)،
+وترقية mod_version وclientVersionText إلى b12.15، ثم البناء والنشر عبر GitHub Actions وإصدار vb12.15-mc1.8.9،
+والـ changelog بالإنجليزية من RELEASE_NOTES.md (كل الأوضاع مكتوبة كإضافات جديدة دون ذكر الاستخراج).
+
 ## 5) سجل المهام
 
 | التاريخ | المهمة | الحالة |
@@ -418,3 +467,4 @@ speed/Grim2Mode و noslow/Grim30Mode: أجسام listener methods غير موج�
 | نوفمبر 2026 | المهمة 6 (b12.12): ترقيات OnlyDamage/AutoDamage (Fly/WatchdogNCP-New) + tag لـ AntiVoid + StyleSettings درج (ClickGUI Classic) + الدفعة الثالثة من عميل 1.12.2: KillAura AutoBlock 3 + Disabler 3 (Mode system + دمج MatrixDisabler) + Phase 1 + Fly 3 + Velocity 2 + Speed 2 + NoSlow 3 + Tower 1 = 21 وضعاً جديداً + ترقية b12.12 | ✅ تمت — compileKotlin محلي نجح (3 جولات: 21/2/0 خطأ) ونجح النشر على Actions والإصدار vb12.12-mc1.8.9 |
 | نوفمبر 2026 | المهمة 7 (b12.13): ملاحظات المستخدم الست (OnlyDamage كامل الإلغاء + لون/تجاوز درج ClickGUI + Backward rotations + MatrixNew-Tower-Timer + WaterMark Size + نقل GrimCritical→Criticals/GrimAC مع حذف الموديول) + الدفعة الرابعة من عميل 1.8.9 (fork من Legacy): Velocity 4 (Watchdog-ProtectionNew دمج 5 + AttackReduce + MatrixReduce2/3) + Speed 4 (MatrixLates/IntaveTimer/IntaveNew/Intave14New) + NoWeb 3 (Matrix/MatrixNew/Intave14) + NoSlow 4 (IntaveBlink/Intave14New/GrimNew/GrimTick — دمج Sword/Consume/Bow) + FastUse 1 (Matrix) = 16 وضعاً جديداً + بنية SomeUtil/SilentAttackManager + ترقية b12.13 | ✅ تمت — compileKotlin وcompileJava محلياً نجحا (6 أخطاء استيراد أُصلحت بجولة واحدة) ونجح النشر على Actions والإصدار vb12.13-mc1.8.9 |
 | نوفمبر 2026 | المهمة 8 (b12.14): ملاحظتا المستخدم (Backward يواجه الخلف فعلاً + درج ClickGUI Best لا يتخطى حدود الصنف أبداً: نمو فوري + scissor) + الدفعة الخامسة من عميل الدفعة الأولى المحدَّث (clientnew.zip) بقاعدة الحذف عند تطابق الاسم: Velocity 2 (GrimReduce + WatchdogPrediction إعادة تسمية) + Fly 3 (Watchdog-ProtectionBoat/ MMC/AirJump) + InventoryMove 2 (Grim استبدال + Watchdog-Protection) + NoSlow 2 (Grim 3.0 + WatchdogPrediction إعادة تسمية) + Speed 1 (MineMenClub؛ Grim2 الموجود مطابق للمصدر) = 11 وضعاً جديداً/مستبدلاً + StrafeEvent قابل للتعديل مع replay في mixin + ترقية b12.14 | ✅ تمت — compileKotlin وcompileJava محلياً نجحا ونجح النشر على Actions والإصدار vb12.14-mc1.8.9 |
+| نوفمبر 2026 | المهمة 9 (b12.15): العودة إلى Lizz والدفعة السادسة من عميل Rewound (openadjust): Fly/WatchdogDamage (6 حالات + RewoundFlyTracker بنية تحتية) + LongJump/WatchdogNCP-New + NoSlow/WatchdogNCP-Full (مع حقن rightClickMouse HEAD جديد في MixinMinecraft) + Criticals/WatchdogNCP-Packet = 4 أوضاع جديدة + ترقية b12.15 | ⏳ قيد النشر — compileKotlin وcompileJava محلياً نجحا (3 أخطاء S27 أُصلحت بجولة واحدة)
