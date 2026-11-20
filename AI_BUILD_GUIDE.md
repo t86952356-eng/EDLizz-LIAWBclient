@@ -2,9 +2,9 @@
 
 > هذا الملف مكتوب ليقرأه وكيل ذكاء اصطناعي (AI Agent) في محادثة جديدة، ليتمكن من بناء
 > مشروع Lizz ونشر إصدار (Release) بنجاح من أول مرة، دون تكرار الأخطاء التي حُلّت مسبقاً.
-> آخر تحديث: نوفمبر 2026. إصدار مُختبر ناجح: `lizz-b12.15.jar` لـ Minecraft 1.8.9 (Forge)
-> عبر Release بتاغ `vb12.15-mc1.8.9` (إصدار الدفعة السادسة من عميل Rewound: Fly/WatchdogDamage +
-> LongJump/WatchdogNCP-New + NoSlow/WatchdogNCP-Full + Criticals/WatchdogNCP-Packet).
+> آخر تحديث: نوفمبر 2026. إصدار مُختبر ناجح: `lizz-b12.16.jar` لـ Minecraft 1.8.9 (Forge)
+> عبر Release بتاغ `vb12.16-mc1.8.9` (استايل Menu في ClickGUI/StyleSettings + حذف 48 موديل نهائياً +
+> حذف أوضاع Velocity الستة AAC/AACPush/AACZero/AACv4/SmoothReverse/GrimC03).
 > ملف مرافق إلزامي: `LIZZ_HANDOFF.md` (معلومات العميل + البرمجة + سجل الأخطاء).
 
 ---
@@ -30,9 +30,9 @@
 | **JDK للبناء** | **`8`** | `build.gradle` (`sourceCompatibility = 1.8`) + CI الأصلي |
 | Gradle Wrapper | `6.9.4` (مرآة huaweicloud) | `gradle/wrapper/gradle-wrapper.properties` |
 | Kotlin | `2.0.21` | `gradle.properties` → `kotlin_version` |
-| إصدار المود | `b12.15` | `gradle.properties` → `mod_version` |
+| إصدار المود | `b12.16` | `gradle.properties` → `mod_version` |
 | اسم الـ artifact | `lizz` | `gradle.properties` → `archives_base_name` |
-| ناتج البناء | `build/libs/lizz-b12.15.jar` | — |
+| ناتج البناء | `build/libs/lizz-b12.16.jar` | — |
 
 > ⚠️ **جافا هي 8 وليست 17.** Gradle 6.9.4 لا يعمل أصلاً على JDK 17+ (أول دعم لـ17 كان
 > Gradle 7.3). الـ CI الرسمي لـ LiquidBounce Legacy يستخدم `java-version: 8` حرفياً.
@@ -178,7 +178,16 @@ git push origin v{mod_version}-mc1.8.9 --force # يشغّل دورة بناء ع
    المهمة: عند إزالة استيراد **لا تستبدله بـ«جاره»** — استُبدل سطر BedGodMode بـ
    `exploit.Blink` ففشل البناء لأن Blink موجود فعلياً في `player.Blink` (وكذلك Liquids في
    `world.Liquids` وليس movement). احذف السطر نهائياً أو تحقق من المسار الفعلي للملف.
-9. **قيمة `Mode` لا تتكرر في الموديول الواحد**: نظام الإعدادات يحفظ القيم بالاسم
+9. **الحذف الدائم للموديولات — قائمة تحقق كاملة** (المهمة 10/b12.16، نوفمبر 2026 — 48 موديل):
+   الملفات + أسطر `ModuleManager.kt` (احذر التسجيلات المكررة — Entityspeed كان مسجلاً مرتين)
+   + استيرادات `grim.kt` + مفاتيح `module.<name>.description` في الملفات السبعة تحت
+   `assets/minecraft/lizz/lang/` (فحص zh_TW يجب أن يكون متسامحاً مع الفواصل — الدرس 2 أعلاه)
+   + المكسرات المرتبطة (ملف المكسن نفسه + سطره في `liquidbounce.forge.mixins.json`)
+   + الإشارات من موديولات باقية ومكسنات. وتوخّف «الإيجابيات الكاذبة»: أسماء إعدادات وقيم
+   نصية وتعليقات تحتوي أسماء موديولات لكنها لا تشير إليها (مثل "Strict" في RotationSettings
+   ووضع Fly المسمى KeepAlive — قائمة كاملة في LIZZ_HANDOFF المهمة 10). بعد البناء تحقق أن
+   كلاسات المحذوفات غير موجودة في الـ jar وأن مفاتيح لغاته محية.
+10. **قيمة `Mode` لا تتكرر في الموديول الواحد**: نظام الإعدادات يحفظ القيم بالاسم
    (`Configurable.fromJsonF` يبحث بالاسم) — إضافة قيمة جديدة اسمها كقيمة موجودة في نفس
    الموديول يكسر التحميل/الحفظ. عند إضافة `Mode` لمستوى أعلى في Disabler أُعيدت تسمية
    القيمة الداخلية القديمة إلى `ModifyMode`. تحقق دائماً من تفرد أسماء القيم داخل الموديول.

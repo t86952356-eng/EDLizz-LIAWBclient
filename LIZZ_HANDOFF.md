@@ -15,12 +15,12 @@
 | البند | القيمة |
 |---|---|
 | اسم العميل | **Lizz** (داخل الكود: `CLIENT_NAME = "L"+"izz"`) — يعرف أيضاً بـ **LAWIB / LIAWB client** |
-| الإصدار الحالي | **b12.15** (`LiquidBounce.kt` → `clientVersionText` و`gradle.properties` → `mod_version`) |
+| الإصدار الحالي | **b12.16** (`LiquidBounce.kt` → `clientVersionText` و`gradle.properties` → `mod_version`) |
 | اللعبة | Minecraft **1.8.9** — Forge `11.15.1.2318` — mappings `stable_22` |
 | الأساس | **LiquidBounce Legacy** (فرع المجتمع النهائي، آخر إصدار رسمي منه b100) |
 | مود id | `Lizz` — الاسم الظاهر في mcmod.info: `LAWIB` |
 | المؤلفون (mcmod.info) | CCBlueX، PickBowen، bzym2، RainRuin، sunbox |
-| عنوان النافذة | `LIAWB client 1.8.9 b12.15 \| 免费注册加群：815061613` (عنوان مجتمع صيني — رقم مجموعة QQ) |
+| عنوان النافذة | `LIAWB client 1.8.9 b12.16 \| 免费注册加群：815061613` (عنوان مجتمع صيني — رقم مجموعة QQ) |
 | التوزيع الرسمي | عبر Discord العميل: **discord.gg/Y2U2gWyRUN** (فيديو «Lizz 7.0 (fork lb b100)») |
 | المستودع | `https://github.com/t86952356-eng/EDLizz-LIAWBclient` (عام، فرع `main`) |
 | سجل التسمية | الفورك بدأ بـ «LIAWB client (chat prefix rebrand)» من LiquidBounce Legacy، ثم أُضيف MusicPlayer، ثم ClickGUI بأسلوب Fatality في b12.7، ثم إصدار تخفيف الحجم في b12.8، ثم إعادة تسمية الموديولات والأوضاع (WatchdogNCP/UpdatedNCP/FastBridge/Verus/AimAssist/MoreKB) في b12.9 |
@@ -455,6 +455,74 @@ WorldResetEvent → مقارنة مرجع العالم في onUpdate. **(LongJum
 وترقية mod_version وclientVersionText إلى b12.15، ثم البناء والنشر عبر GitHub Actions وإصدار vb12.15-mc1.8.9،
 والـ changelog بالإنجليزية من RELEASE_NOTES.md (كل الأوضاع مكتوبة كإضافات جديدة دون ذكر الاستخراج).
 
+### المهمة 10 — نوفمبر 2026 — «استايل Menu في ClickGUI + تنضيف كبير: حذف 48 موديل نهائياً + حذف 6 أوضاع Velocity» (b12.16)
+
+الهدف (3 مطالب في طلب واحد):
+1. **استايل «Menu» في StyleSettings**: خيار ثالث (Normal/Best/**Menu**) في ClickGUI — Classic مع استايل LiquidBounce/Fatality —
+   يعرض إعدادات أي موديل كـ **Panel Menu موحّد فوق القائمة الرئيسية** (واجهة موحدة).
+2. **حذف 48 موديل نهائياً** حتى من الملفات: ArmorBreak، AutoLeave، CSGOFight، GunHack، JKLArBreak، MoreDamage، Strict،
+   TNTBlock، AntiCactus، AutoL، AutoFish، AntiAFK، AutoRespawn، Hub، Gapple، Gapple2، KeepAlive، KeyPearl، PotionSpoof،
+   PotionSaver، SaveArmor، SendMovePackets، AntiBounce، AutoJump، AutoSave، AutoWaterFall، BloxdMove، AutoWalk،
+   BufferSpeed، Entityspeed، FastStairs، GhostMove، IceSpeed، NCPSpeed، NoFluid، NoSprint، PerfectHorseJump،
+   ReverseStep، SafeWalk، SlimeJump، Sneak، WallClimb، AutoBreak، AvoidHazards، CivBreak، Liquids، Stealer، Stuck.
+3. **حذف 6 أوضاع من Velocity**: AAC، AACPush، AACZero، AACv4، SmoothReverse، GrimC03.
+
+**تنفيذ Menu (قرارات التصميم)**:
+- الخيار في نفس `styleSettings` (رؤية نفس شرط Best: Classic + LB/Fatality)، ولون خلفيته يعيد استخدام
+  `LB-SettingsDrawerColor` (شرط ظهوره صار `styleSettings != "Normal"`).
+- **التفسير المعتمد لـ «فوق القائمة الرئيسية»**: القائمة ترسو أعلى منطقة محتوى اللوحة المضيفة (تحت رأس اللوحة مباشرة)
+  وتغطي أعلى قائمة الموديلات دون تحريكها — وليست نافذة عائمة منفصلة. النقر الأيمن على أي موديل يفتح/يبدّل القائمة
+  (نفس الموديل = إغلاق)، النقر الأيسر يظل تبديل الموديل، ورأس اللوحة يظل سحباً/فتحاً كالمعتاد.
+- البنية: حالة خاصة في ClickGui.kt (menuElements خريطة لكل موديل + menuHostPanel + تمرير + أنيميشن 0→1 +
+  menuBounds/menuCloseBounds) والرسم `drawMenuPanel` **يعيد استخدام نمط عمود إعدادات Zenith حرفياً**
+  (hideRow + settingsBelow + forceSettingsWidth + scissor عبر style.drawModuleElementAndClick) — إذن يعمل مع LB وFatality
+  معاً بلا كود مكرر. القائمة لا يتجاوز ارتفاعها ارتفاع محتوى اللوحة (نفس قاعدة حدود Best) وتتبع اللوحة عند سحبها.
+- التفاعل: التقاط النقر في ClickGui.mouseClicked قبل حلقة اللوحات (`menuHandleMouseClicked`) — أولوية: زر الإغلاق ✕ ثم
+  داخل حدود القائمة (عناصر التحكم عبر style + الفراغ يستهلك)، ثم النقر الأيمن على صفوف الموديلات، ثم النقر خارج كل
+  شيء يغلق. العجلة فوق القائمة تمرر محتواها (أولوية قبل تمرير اللوحات)، وأوصاف hover خلف القائمة تُمنع.
+- عند تفعيل Menu تُطفأ showSettings لكل عناصر القوائم (لا إعدادات inline يميناً) — الإعدادات كلها عبر الواجهة الموحدة.
+
+**تنفيذ الحذف (قائمة تحقق الحذف الدائم — منقولة لكل حذف مستقبلي)**:
+1. حذف ملفات الموديلات الـ 48 (سكربت).
+2. `ModuleManager.kt`: حذف أسطر التسجيل (كان 49 سطراً — Entityspeed مسجل مرتين تاريخياً؛ الحذف شمل الاثنين).
+3. `misc/grim.kt`: حذف أسطر الاستيراد (45 سطراً؛ SendMovePackets/AutoWaterFall لم يكونا مستوردين أصلاً).
+4. مفاتيح اللغة (7 ملفات في `assets/minecraft/lizz/lang/`): حذف مفاتيح `module.<name>.description` — 26+26+24+23+26+26+26 = 177 مفتاحاً.
+5. المكسرات: حذف ملف `MixinBlockSlime.java` كاملاً (كان لـ AntiBounce وحده) + سطره من `liquidbounce.forge.mixins.json`،
+   وحذف هوك Liquids من `MixinBlockLiquid.java`، وهوكا NoFluid (isInWater/isInLava) من `MixinEntity.java`.
+6. `MixinEntityPlayerSP.java`: حذف مستوردَي NoSprint/Sneak + متغير sneak + شرطه في fakeSprint + شرط sneak في مزامنة السباق +
+   بلوك NoSprint.stopSprinting + بلوك «الاستمرار في الأكل عبر الإصدارات» الخاص بـ Gapple (مع استيراداتهغير المستخدمة:
+   ViaUseItem/ItemFood/ItemPotion/ItemBucketMilk/ItemStack/ProtocolVersion).
+7. الموديلات الباقية التي كانت تشير للمحذوفات: `NoSlow.kt` (import Gapple + شرطا `Gapple.eating` أُسقطا)،
+   `InventoryMove.kt` (بند AutoWalk في فحص المفاتيح أُسقط).
+8. **إيجابيات كاذبة موثقة** (لم تُمس وتدل على تسميات لا علاقة لها بالموديلات): "AutoLeave" اسم إعداد في StaffDetector،
+   "Strict" قيمة إعداد في TargetStrafe + اسم إعداد في RotationSettings + صفة في قائمة أسماء RandomUtils، "Gapple"
+   فئة عنصر في InventoryCleaner + إعداد في BlurSettings + نص رسالة في AutoGapple، KeepAlive وضع طيران في Fly
+   (flymodes/other/KeepAlive.kt — غير موديل player)، "AutoJump"/"AutoJump.kt" أسماء إعدادات في Fly/Speed/LongJump،
+   "SafeWalk" إعدادات داخلية في Scaffold/Scaffold2، "Stuck" إعداد في AutoGapple، وتعليقات فقط في MatrixLates/
+   IntaveNewSpeed/VerusDamage/Teleport/Fucker/WatchdogNCPCriticalsMode/JNICExclude/ItemUtils.
+
+**تنفيذ حذف أوضاع Velocity**: الأوضاع الستة كانت inline داخل Velocity.kt (ليست ملفات velocitymodes) — حُذفت أسماؤها من
+قائمة Mode، إعداداتها (Horizontal شرط AAC أُسقط، SmoothReverseStrength، onLook/Range/MaxAngleDifference صارت للوضع
+Reverse فقط، AACPushXZReducer/AACPushYReducer، AACv4MotionReducer)، فروعها في onUpdate/onPacket/onJump، فرع GrimC03
+في onTick، ودالة checkAir المساعدة، والمتغيرات التي صارت ميته (reverseHurt/jump/timerTicks)، واستيراد Speed
+(كان مستخدماً في فرع aacpush فقط). Configs المحفوظة باسم وضع محذوف ترجع لافتراضي Simple بأمان (ListValue يتجاهل غير المعروف).
+
+| # | الخطأ / الدرس | التفصيل | الحل المطبّق |
+|---|---|---|---|
+| 29 | **ModuleElement.settingsHeight من نوع Int وليس Float** | خلط `element.settingsHeight` مع Float في if-else أنتج Any → خطأ overloaded plus/minus في سطرين | التحويل الصريح `element.settingsHeight.toFloat()` — ونفس السبب جعل Zenith يستخدم (Int - Float) المسموح |
+| 30 | **أداة MultiEdit ليست ذرية دائماً في هذه البيئة** | فشل التعديل الخامس في مجموعة من 5 أفقد التعديل الأخير فقط — التعديلات 1-4 طُبقت فعلاً رغم رسالة "No replacement was performed" | التحقق من حالة الملف الفعلية بعد كل MultiEdit فاشل (grep للمناطق المستهدفة) قبل إعادة المحاولة — لا تفترض عدم التطبيق |
+| 31 | **zh_TW.json والفحص الصارم** (تعزيز الدرس 2 من b12.9) | سكربت الحذف فشل عند فحص JSON الصارم بسبب الفاصلة التاريخية بعد "Xebook1", — قبل أي كتابة (كان الحذف آمناً قبل الكتابة) | فحص متسامح (strip فواصل الذيل) للقديم والجديد + مقارنة المفاتيف المحذوفة المتوقعة فقط — لا تفترض أن الملف سليم بفحص صارم أبداً |
+| 32 | **الخلفية قد تنجو بين النداءات أحياناً** | nohup + gradle نجا فعلاً بين نداءين هذه المرة (خلافاً للدرس 15) | لا تعتمد عليه: الترجمة في المقدمة مع سجل يبقى الطريقة الموثوقة؛ الخلفية للمراقبة السلبية فقط |
+
+**النتيجة**: compileKotlin وcompileJava محلياً = **BUILD SUCCESSFUL** (جولة إصلاح واحدة: خطأ نوعين من settingsHeight)،
+وترقية mod_version وclientVersionText إلى b12.16، ثم البناء والنشر عبر GitHub Actions (run 44745049678) وإصدار
+vb12.16-mc1.8.9 بمرفقات `lizz-b12.16.jar` (**25.25MB** — ضمن النطاق 20-26MB) و`lizz-b12.16-source.zip` (**28.57MB**)،
+والـ changelog بالإنجليزية من RELEASE_NOTES.md (الحذف مذكور صراحة كتنضيف — أول مرة يكون فيها حذف). التحقق بعد النشر:
+manifest سليم (MixinConfigs/FMLAT/TweakClass/FMLCorePluginContainsFMLMod)، mcmod.info = b12.16/LAWIB، SRG reobf مؤكد
+(48 اسماً في MixinEntity)، **صفر كلاسات للموديلات الـ 48 المحذوفة وMixinBlockSlime في الـ jar**، سلاسل أوضاع Velocity
+الستة وإعداداتها غير موجودة في Velocity.class، خيارات Normal/Best/Menu وأسماء دوال Menu (drawMenuPanel/menuHandleMouseClicked/
+openMenu/menuMode) مؤكدة في ClickGUI.class وClickGui.class، ومفاتيح لغة الموديلات المحذوفة محية تماماً من en_US (والبقية).
+
 ## 5) سجل المهام
 
 | التاريخ | المهمة | الحالة |
@@ -468,3 +536,4 @@ WorldResetEvent → مقارنة مرجع العالم في onUpdate. **(LongJum
 | نوفمبر 2026 | المهمة 7 (b12.13): ملاحظات المستخدم الست (OnlyDamage كامل الإلغاء + لون/تجاوز درج ClickGUI + Backward rotations + MatrixNew-Tower-Timer + WaterMark Size + نقل GrimCritical→Criticals/GrimAC مع حذف الموديول) + الدفعة الرابعة من عميل 1.8.9 (fork من Legacy): Velocity 4 (Watchdog-ProtectionNew دمج 5 + AttackReduce + MatrixReduce2/3) + Speed 4 (MatrixLates/IntaveTimer/IntaveNew/Intave14New) + NoWeb 3 (Matrix/MatrixNew/Intave14) + NoSlow 4 (IntaveBlink/Intave14New/GrimNew/GrimTick — دمج Sword/Consume/Bow) + FastUse 1 (Matrix) = 16 وضعاً جديداً + بنية SomeUtil/SilentAttackManager + ترقية b12.13 | ✅ تمت — compileKotlin وcompileJava محلياً نجحا (6 أخطاء استيراد أُصلحت بجولة واحدة) ونجح النشر على Actions والإصدار vb12.13-mc1.8.9 |
 | نوفمبر 2026 | المهمة 8 (b12.14): ملاحظتا المستخدم (Backward يواجه الخلف فعلاً + درج ClickGUI Best لا يتخطى حدود الصنف أبداً: نمو فوري + scissor) + الدفعة الخامسة من عميل الدفعة الأولى المحدَّث (clientnew.zip) بقاعدة الحذف عند تطابق الاسم: Velocity 2 (GrimReduce + WatchdogPrediction إعادة تسمية) + Fly 3 (Watchdog-ProtectionBoat/ MMC/AirJump) + InventoryMove 2 (Grim استبدال + Watchdog-Protection) + NoSlow 2 (Grim 3.0 + WatchdogPrediction إعادة تسمية) + Speed 1 (MineMenClub؛ Grim2 الموجود مطابق للمصدر) = 11 وضعاً جديداً/مستبدلاً + StrafeEvent قابل للتعديل مع replay في mixin + ترقية b12.14 | ✅ تمت — compileKotlin وcompileJava محلياً نجحا ونجح النشر على Actions والإصدار vb12.14-mc1.8.9 |
 | نوفمبر 2026 | المهمة 9 (b12.15): العودة إلى Lizz والدفعة السادسة من عميل Rewound (openadjust): Fly/WatchdogDamage (6 حالات + RewoundFlyTracker بنية تحتية) + LongJump/WatchdogNCP-New + NoSlow/WatchdogNCP-Full (مع حقن rightClickMouse HEAD جديد في MixinMinecraft) + Criticals/WatchdogNCP-Packet = 4 أوضاع جديدة + ترقية b12.15 | ✅ تمت — compileKotlin وcompileJava محلياً نجحا (3 أخطاء S27 أُصلحت بجولة واحدة) ونجح البناء على Actions (run 44681727973) والإصدار vb12.15-mc1.8.9 (lizz-b12.15.jar بـ 25.47MB + source.zip بـ 28.64MB؛ manifest وmcmod.info وreobf SRG وكل الكلاسات الخمسة الجديدة مؤكدة بعد النشر)
+| نوفمبر 2026 | المهمة 10 (b12.16): استايل **Menu** في ClickGUI/StyleSettings (Panel Menu موحّد فوق القائمة الرئيسية: يمين-كليك أي موديل = إعداداته في لوحة واحدة موحدة مع عنوان وزر إغلاق وتمرير وأنيميشن) + حذف 48 موديل نهائياً من الملفات (ملفات + تسجيلات + grim.kt + مفاتيح لغة 177 + مكسرات: MixinBlockSlime حذف كلي + هوكات Liquids/NoFluid/NoSprint/Sneak/Gapple + إصلاح NoSlow/InventoryMove) + حذف 6 أوضاع Velocity (AAC/AACPush/AACZero/AACv4/SmoothReverse/GrimC03 مع إعداداتها ومتغيراتها) + ترقية b12.16 | ✅ تمت — compileKotlin وcompileJava محلياً نجحا (خطأ نوع واحد أُصلح) ونجح البناء على Actions (run 44745049678) والإصدار vb12.16-mc1.8.9 |
